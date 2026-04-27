@@ -176,29 +176,29 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="mb-6">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'Add Patient', href: '/patients', icon: UserPlus, color: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-            { label: 'Add Schedule', href: '/schedule', icon: CalendarPlus, color: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
-            { label: 'Create Invoice', href: '/invoices', icon: FileText, color: 'bg-violet-50 text-violet-700 hover:bg-violet-100' },
-            { label: 'Add Expenses', href: '/expenses', icon: TrendingDown, color: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
-          ].map(({ label, href, icon: Icon, color }) => (
-            <Link
-              key={label}
-              href={href}
-              className={`${color} rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors cursor-pointer`}
-            >
-              <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
-                <Icon size={22} />
-              </div>
-              <span className="text-sm font-semibold">{label}</span>
-            </Link>
-          ))}
+     {/* Quick Actions */}
+<div className="mb-6">
+  <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">Quick action</p>
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    {[
+      { label: 'Add Patient',    href: '/patients',  icon: UserPlus,    iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+      { label: 'Add Schedule',   href: '/schedule',  icon: CalendarPlus, iconBg: 'bg-blue-100',    iconColor: 'text-blue-600'    },
+      { label: 'Create Invoice', href: '/invoices',  icon: FileText,    iconBg: 'bg-teal-100',    iconColor: 'text-teal-600'    },
+      { label: 'Add Expenses',   href: '/expenses',  icon: TrendingDown, iconBg: 'bg-orange-100',  iconColor: 'text-orange-500'  },
+    ].map(({ label, href, icon: Icon, iconBg, iconColor }) => (
+      <Link
+        key={label}
+        href={href}
+        className="flex flex-col items-center justify-center gap-2.5 py-5 px-3 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-all duration-150 hover:-translate-y-0.5 active:scale-95"
+      >
+        <div className={`w-11 h-11 rounded-full flex items-center justify-center ${iconBg}`}>
+          <Icon size={20} className={iconColor} strokeWidth={1.8} />
         </div>
-      </div>
+        <span className="text-sm font-medium text-gray-700 text-center leading-tight">{label}</span>
+      </Link>
+    ))}
+  </div>
+</div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
