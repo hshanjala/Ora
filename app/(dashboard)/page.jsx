@@ -55,14 +55,12 @@ export default function DashboardPage() {
 
       const monthStart = format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd')
 
-      // Bookings today
       const { count: bookings } = await supabase
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('clinic_id', user.id)
         .eq('date', today)
 
-      // Monthly income
       const { data: paidInvoices } = await supabase
         .from('invoices')
         .select('paid_amount')
@@ -71,7 +69,6 @@ export default function DashboardPage() {
 
       const income = paidInvoices?.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0) || 0
 
-      // Monthly expenses
       const { data: expList } = await supabase
         .from('expenses')
         .select('amount')
@@ -80,7 +77,6 @@ export default function DashboardPage() {
 
       const expenses = expList?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0
 
-      // Dues
       const { data: unpaidInvoices } = await supabase
         .from('invoices')
         .select('total, paid_amount')
@@ -91,7 +87,6 @@ export default function DashboardPage() {
 
       setStats({ bookings: bookings || 0, income, expenses, dues })
 
-      // Today's schedule
       const { data: schedule } = await supabase
         .from('appointments')
         .select('*, patients(name)')
@@ -101,7 +96,6 @@ export default function DashboardPage() {
 
       setTodaySchedule(schedule || [])
 
-      // Recent activity - last 5 invoices + appointments
       const { data: recentInv } = await supabase
         .from('invoices')
         .select('*, patients(name)')
@@ -152,7 +146,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Subscription Banner */}
+
       <SubscriptionBanner settings={settings} />
 
       {/* Header */}
@@ -176,73 +170,47 @@ export default function DashboardPage() {
         </div>
       </div>
 
-     {/* Quick Actions */}
-<div className="mb-6">
-  <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">Quick action</p>
-  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-    {[
-      { label: 'Add Patient',    href: '/patients',  icon: UserPlus,    iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-      { label: 'Add Schedule',   href: '/schedule',  icon: CalendarPlus, iconBg: 'bg-blue-100',    iconColor: 'text-blue-600'    },
-      { label: 'Create Invoice', href: '/invoices',  icon: FileText,    iconBg: 'bg-teal-100',    iconColor: 'text-teal-600'    },
-      { label: 'Add Expenses',   href: '/expenses',  icon: TrendingDown, iconBg: 'bg-orange-100',  iconColor: 'text-orange-500'  },
-    ].map(({ label, href, icon: Icon, iconBg, iconColor }) => (
-      <Link
-        key={label}
-        href={href}
-        className="flex flex-col items-center justify-center gap-2.5 py-5 px-3 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-all duration-150 hover:-translate-y-0.5 active:scale-95"
-      >
-        <div className={`w-11 h-11 rounded-full flex items-center justify-center ${iconBg}`}>
-          <Icon size={20} className={iconColor} strokeWidth={1.8} />
+      {/* Quick Actions */}
+      <div className="mb-6">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">Quick action</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Add Patient',    href: '/patients',  icon: UserPlus,     iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+            { label: 'Add Schedule',   href: '/schedule',  icon: CalendarPlus, iconBg: 'bg-blue-100',    iconColor: 'text-blue-600'    },
+            { label: 'Create Invoice', href: '/invoices',  icon: FileText,     iconBg: 'bg-teal-100',    iconColor: 'text-teal-600'    },
+            { label: 'Add Expenses',   href: '/expenses',  icon: TrendingDown, iconBg: 'bg-orange-100',  iconColor: 'text-orange-500'  },
+          ].map(({ label, href, icon: Icon, iconBg, iconColor }) => (
+            <Link
+              key={label}
+              href={href}
+              className="flex flex-col items-center justify-center gap-2.5 py-5 px-3 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-all duration-150 hover:-translate-y-0.5 active:scale-95"
+            >
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center ${iconBg}`}>
+                <Icon size={20} className={iconColor} strokeWidth={1.8} />
+              </div>
+              <span className="text-sm font-medium text-gray-700 text-center leading-tight">{label}</span>
+            </Link>
+          ))}
         </div>
-        <span className="text-sm font-medium text-gray-700 text-center leading-tight">{label}</span>
-      </Link>
-    ))}
-  </div>
-</div>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="Bookings Today"
-          value={stats.bookings}
-          icon={Calendar}
-          color="bg-teal-50"
-          textColor="text-teal-700"
-        />
-        <StatCard
-          label="Monthly Income"
-          value={`৳${stats.income.toLocaleString()}`}
-          icon={TrendingUp}
-          color="bg-blue-50"
-          textColor="text-blue-700"
-        />
-        <StatCard
-          label="Monthly Expenses"
-          value={`৳${stats.expenses.toLocaleString()}`}
-          icon={DollarSign}
-          color="bg-orange-50"
-          textColor="text-orange-700"
-        />
-        <StatCard
-          label="Total Dues"
-          value={`৳${stats.dues.toLocaleString()}`}
-          icon={AlertCircle}
-          color="bg-red-50"
-          textColor="text-red-600"
-        />
+        <StatCard label="Bookings Today"    value={stats.bookings}                      icon={Calendar}    color="bg-teal-50"   textColor="text-teal-700"   />
+        <StatCard label="Monthly Income"    value={`৳${stats.income.toLocaleString()}`}   icon={TrendingUp}  color="bg-blue-50"   textColor="text-blue-700"   />
+        <StatCard label="Monthly Expenses"  value={`৳${stats.expenses.toLocaleString()}`} icon={DollarSign}  color="bg-orange-50" textColor="text-orange-700" />
+        <StatCard label="Total Dues"        value={`৳${stats.dues.toLocaleString()}`}     icon={AlertCircle} color="bg-red-50"    textColor="text-red-600"    />
       </div>
 
       {/* Bottom grid */}
       <div className="grid lg:grid-cols-3 gap-4">
+
         {/* Today's Schedule */}
         <div className="lg:col-span-2 card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-slate-800">Today&apos;s Schedule</h2>
-            <Link href="/schedule" className="text-xs text-emerald-600 font-semibold hover:underline">
-              View all →
-            </Link>
+            <Link href="/schedule" className="text-xs text-emerald-600 font-semibold hover:underline">View all →</Link>
           </div>
-
           {todaySchedule.length === 0 ? (
             <div className="text-center py-10 text-slate-400">
               <Calendar size={32} className="mx-auto mb-2 opacity-40" />
@@ -273,36 +241,13 @@ export default function DashboardPage() {
                       <td className="table-td">
                         {appt.status === 'scheduled' && (
                           <div className="flex gap-1">
-                            <button
-                              onClick={() => updateStatus(appt.id, 'checked-in')}
-                              className="text-blue-600 hover:text-blue-700"
-                              title="Check In"
-                            >
-                              <CheckCircle size={16} />
-                            </button>
-                            <button
-                              onClick={() => updateStatus(appt.id, 'completed')}
-                              className="text-emerald-600 hover:text-emerald-700"
-                              title="Complete"
-                            >
-                              <Clock size={16} />
-                            </button>
-                            <button
-                              onClick={() => updateStatus(appt.id, 'cancelled')}
-                              className="text-red-400 hover:text-red-600"
-                              title="Cancel"
-                            >
-                              <XCircle size={16} />
-                            </button>
+                            <button onClick={() => updateStatus(appt.id, 'checked-in')} className="text-blue-600 hover:text-blue-700" title="Check In"><CheckCircle size={16} /></button>
+                            <button onClick={() => updateStatus(appt.id, 'completed')} className="text-emerald-600 hover:text-emerald-700" title="Complete"><Clock size={16} /></button>
+                            <button onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-400 hover:text-red-600" title="Cancel"><XCircle size={16} /></button>
                           </div>
                         )}
                         {appt.status === 'checked-in' && (
-                          <button
-                            onClick={() => updateStatus(appt.id, 'completed')}
-                            className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold"
-                          >
-                            Mark Done
-                          </button>
+                          <button onClick={() => updateStatus(appt.id, 'completed')} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold">Mark Done</button>
                         )}
                       </td>
                     </tr>
@@ -334,14 +279,12 @@ export default function DashboardPage() {
                     <p className="text-sm font-semibold text-slate-700 truncate">
                       {item.type === 'invoice'
                         ? `Invoice ${item.invoice_number || '#'} — ${item.patients?.name}`
-                        : `Appointment — ${item.patients?.name}`
-                      }
+                        : `Appointment — ${item.patients?.name}`}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {item.type === 'invoice'
                         ? `৳${item.total?.toLocaleString()} • ${item.status}`
-                        : `${item.date} at ${item.time ? format(new Date(`2000-01-01T${item.time}`), 'h:mm a') : '—'}`
-                      }
+                        : `${item.date} at ${item.time ? format(new Date(`2000-01-01T${item.time}`), 'h:mm a') : '—'}`}
                     </p>
                   </div>
                 </div>
@@ -349,6 +292,7 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
       </div>
     </div>
   )
