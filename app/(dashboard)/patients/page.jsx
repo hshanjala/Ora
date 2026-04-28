@@ -2,10 +2,10 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AddPatientModal from '@/components/modals/AddPatientModal'
-import { Plus, Search, User, Phone, Mail, Edit2, Trash2, Users, Calendar } from 'lucide-react'
+import { Plus, Search, User, Phone, Mail, Trash2, Users, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 
-function PatientDetailModal({ patient, onClose, onEdit }) {
+function PatientDetailModal({ patient, onClose }) {
   const supabase = createClient()
   const [appointments, setAppointments] = useState([])
   const [invoices, setInvoices] = useState([])
@@ -39,7 +39,7 @@ function PatientDetailModal({ patient, onClose, onEdit }) {
               <div>
                 <h2 className="text-xl font-bold text-slate-800">{patient.name}</h2>
                 <p className="text-sm text-slate-500">
-                  {patient.gender} {patient.date_of_birth ? `• Born ${format(new Date(patient.date_of_birth), 'MMM d, yyyy')}` : ''}
+                  {patient.gender} {patient.age ? `• Age ${patient.age}` : ''}
                 </p>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function PatientsPage() {
                 <th className="table-th">Phone</th>
                 <th className="table-th">Email</th>
                 <th className="table-th">Gender</th>
-                <th className="table-th">Date of Birth</th>
+                <th className="table-th">Age</th>
                 <th className="table-th">Joined</th>
                 <th className="table-th">Actions</th>
               </tr>
@@ -217,7 +217,7 @@ export default function PatientsPage() {
                   </td>
                   <td className="table-td text-slate-500">{patient.gender || '—'}</td>
                   <td className="table-td text-slate-500">
-                    {patient.date_of_birth ? format(new Date(patient.date_of_birth), 'MMM d, yyyy') : '—'}
+                    {patient.age ? `${patient.age} yrs` : '—'}
                   </td>
                   <td className="table-td text-slate-400 text-xs">
                     {format(new Date(patient.created_at), 'MMM d, yyyy')}
