@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import SubscriptionBanner from '@/components/SubscriptionBanner'
 import QuickAddFlow from '@/components/modals/QuickAddFlow'
+import AddAppointmentModal from '@/components/modals/AddAppointmentModal'
+import CreateInvoiceModal from '@/components/modals/CreateInvoiceModal'
+import AddExpenseModal from '@/components/modals/AddExpenseModal'
 import { format } from 'date-fns'
 import {
   UserPlus, CalendarPlus, FileText, TrendingDown,
@@ -33,6 +36,9 @@ export default function DashboardPage() {
   const [recentActivity, setRecentActivity] = useState([])
   const [loading, setLoading]               = useState(true)
   const [showQuickAdd, setShowQuickAdd]     = useState(false)
+  const [showSchedule, setShowSchedule]     = useState(false)
+  const [showInvoice, setShowInvoice]       = useState(false)
+  const [showExpense, setShowExpense]       = useState(false)
 
   const today = format(new Date(), 'yyyy-MM-dd')
 
@@ -160,35 +166,35 @@ export default function DashboardPage() {
             <span className="text-sm font-semibold text-slate-700">Add Patient</span>
           </button>
 
-          <Link
-            href="/schedule"
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150"
+          <button
+            onClick={() => setShowSchedule(true)}
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer"
           >
             <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
               <CalendarPlus size={17} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-slate-700">Add Schedule</span>
-          </Link>
+          </button>
 
-          <Link
-            href="/invoices"
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150"
+          <button
+            onClick={() => setShowInvoice(true)}
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer"
           >
             <div className="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center shrink-0">
               <FileText size={17} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-slate-700">Create Invoice</span>
-          </Link>
+          </button>
 
-          <Link
-            href="/expenses"
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150"
+          <button
+            onClick={() => setShowExpense(true)}
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer"
           >
             <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
               <TrendingDown size={17} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-slate-700">Add Expenses</span>
-          </Link>
+          </button>
 
         </div>
       </div>
@@ -215,7 +221,7 @@ export default function DashboardPage() {
             <div className="text-center py-10 text-slate-400">
               <Calendar size={32} className="mx-auto mb-2 opacity-40" />
               <p className="text-sm">No appointments today</p>
-              <Link href="/schedule" className="text-emerald-600 text-xs font-semibold mt-1 block hover:underline">Add one →</Link>
+              <button onClick={() => setShowSchedule(true)} className="text-emerald-600 text-xs font-semibold mt-1 block hover:underline mx-auto">Add one →</button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -294,16 +300,35 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* QuickAdd Flow Overlay */}
+      {/* ── Overlays ── */}
       {showQuickAdd && (
         <QuickAddFlow
           onClose={() => setShowQuickAdd(false)}
-          onSuccess={() => {
-            setShowQuickAdd(false)
-            load()
-          }}
+          onSuccess={() => { setShowQuickAdd(false); load() }}
         />
       )}
+
+      {showSchedule && (
+        <AddAppointmentModal
+          onClose={() => setShowSchedule(false)}
+          onSuccess={() => { setShowSchedule(false); load() }}
+        />
+      )}
+
+      {showInvoice && (
+        <CreateInvoiceModal
+          onClose={() => setShowInvoice(false)}
+          onSuccess={() => { setShowInvoice(false); load() }}
+        />
+      )}
+
+      {showExpense && (
+        <AddExpenseModal
+          onClose={() => setShowExpense(false)}
+          onSuccess={() => { setShowExpense(false); load() }}
+        />
+      )}
+
     </div>
   )
 }
