@@ -127,8 +127,8 @@ function Step1Patient({ form, setForm, error }) {
           <input name="email" type="email" className="input" placeholder="patient@email.com" value={form.email} onChange={handleChange} />
         </div>
         <div>
-          <label className="label">Date of Birth</label>
-          <input name="date_of_birth" type="date" className="input" value={form.date_of_birth} onChange={handleChange} />
+          <label className="label">Age</label>
+          <input name="date_of_birth" type="number" min="0" max="120" className="input" placeholder="e.g. 35" value={form.date_of_birth} onChange={handleChange} />
         </div>
         <div>
           <label className="label">Gender</label>
