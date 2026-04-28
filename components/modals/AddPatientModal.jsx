@@ -9,7 +9,7 @@ export default function AddPatientModal({ onClose, onSuccess }) {
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     name: '', phone: '', email: '',
-    date_of_birth: '', gender: '',
+    age: '', gender: '',
     address: '', medical_history: ''
   })
 
@@ -29,7 +29,7 @@ export default function AddPatientModal({ onClose, onSuccess }) {
       name: form.name,
       phone: form.phone || null,
       email: form.email || null,
-      date_of_birth: form.date_of_birth || null,
+      age: form.age ? parseInt(form.age) : null,
       gender: form.gender || null,
       address: form.address || null,
       medical_history: form.medical_history || null,
@@ -70,8 +70,8 @@ export default function AddPatientModal({ onClose, onSuccess }) {
               <input name="email" type="email" className="input" placeholder="patient@email.com" value={form.email} onChange={handleChange} />
             </div>
             <div>
-              <label className="label">Date of Birth</label>
-              <input name="date_of_birth" type="date" className="input" value={form.date_of_birth} onChange={handleChange} />
+              <label className="label">Age</label>
+              <input name="age" type="number" min="0" max="150" className="input" placeholder="e.g. 35" value={form.age} onChange={handleChange} />
             </div>
             <div>
               <label className="label">Gender</label>
