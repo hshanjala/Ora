@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import SubscriptionBanner from '@/components/SubscriptionBanner'
+import QuickAddFlow from '@/components/modals/QuickAddFlow'
 import { format } from 'date-fns'
 import {
   UserPlus, CalendarPlus, FileText, TrendingDown,
@@ -10,7 +11,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-function StatCard({ label, value, icon: Icon, color, textColor, valueColor }) {
+function StatCard({ label, value, icon: Icon, color, textColor }) {
   return (
     <div className={`${color} rounded-2xl p-5 flex flex-col gap-3`}>
       <div className="flex items-center justify-between">
@@ -19,21 +20,22 @@ function StatCard({ label, value, icon: Icon, color, textColor, valueColor }) {
           <Icon size={18} />
         </div>
       </div>
-      <p className={`text-3xl font-black ${valueColor || textColor}`}>{value}</p>
+      <p className={`text-3xl font-black ${textColor}`}>{value}</p>
     </div>
   )
 }
 
 export default function DashboardPage() {
   const supabase = createClient()
-  const [user, setUser] = useState(null)
-  const [settings, setSettings] = useState(null)
-  const [stats, setStats] = useState({ bookings: 0, income: 0, expenses: 0, dues: 0 })
-  const [todaySchedule, setTodaySchedule] = useState([])
+  const [settings, setSettings]             = useState(null)
+  const [stats, setStats]                   = useState({ bookings: 0, income: 0, expenses: 0, dues: 0 })
+  const [todaySchedule, setTodaySchedule]   = useState([])
   const [recentActivity, setRecentActivity] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]               = useState(true)
+  const [showQuickAdd, setShowQuickAdd]     = useState(false)
 
   const today = format(new Date(), 'yyyy-MM-dd')
+
   const greeting = () => {
     const h = new Date().getHours()
     if (h < 12) return 'Good morning'
@@ -41,91 +43,65 @@ export default function DashboardPage() {
     return 'Good evening'
   }
 
-  useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+  async function load() {
+    const { data: { user } } = await supabase.auth.getUser()
 
-      const { data: sett } = await supabase
-        .from('clinic_settings')
-        .select('*')
-        .eq('clinic_id', user.id)
-        .single()
-      setSettings(sett)
+    const { data: sett } = await supabase
+      .from('clinic_settings').select('*').eq('clinic_id', user.id).single()
+    setSettings(sett)
 
-      const monthStart = format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd')
+    const monthStart = format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd')
 
-      const { count: bookings } = await supabase
-        .from('appointments')
-        .select('*', { count: 'exact', head: true })
-        .eq('clinic_id', user.id)
-        .eq('date', today)
+    const { count: bookings } = await supabase
+      .from('appointments').select('*', { count: 'exact', head: true })
+      .eq('clinic_id', user.id).eq('date', today)
 
-      const { data: paidInvoices } = await supabase
-        .from('invoices')
-        .select('paid_amount')
-        .eq('clinic_id', user.id)
-        .gte('date', monthStart)
+    const { data: paidInvoices } = await supabase
+      .from('invoices').select('paid_amount')
+      .eq('clinic_id', user.id).gte('date', monthStart)
+    const income = paidInvoices?.reduce((s, i) => s + (i.paid_amount || 0), 0) || 0
 
-      const income = paidInvoices?.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0) || 0
+    const { data: expList } = await supabase
+      .from('expenses').select('amount')
+      .eq('clinic_id', user.id).gte('date', monthStart)
+    const expenses = expList?.reduce((s, e) => s + (e.amount || 0), 0) || 0
 
-      const { data: expList } = await supabase
-        .from('expenses')
-        .select('amount')
-        .eq('clinic_id', user.id)
-        .gte('date', monthStart)
+    const { data: unpaid } = await supabase
+      .from('invoices').select('total, paid_amount')
+      .eq('clinic_id', user.id).neq('status', 'paid')
+    const dues = unpaid?.reduce((s, i) => s + ((i.total || 0) - (i.paid_amount || 0)), 0) || 0
 
-      const expenses = expList?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0
+    setStats({ bookings: bookings || 0, income, expenses, dues })
 
-      const { data: unpaidInvoices } = await supabase
-        .from('invoices')
-        .select('total, paid_amount')
-        .eq('clinic_id', user.id)
-        .neq('status', 'paid')
+    const { data: schedule } = await supabase
+      .from('appointments').select('*, patients(name)')
+      .eq('clinic_id', user.id).eq('date', today).order('time')
+    setTodaySchedule(schedule || [])
 
-      const dues = unpaidInvoices?.reduce((sum, inv) => sum + ((inv.total || 0) - (inv.paid_amount || 0)), 0) || 0
+    const { data: recentInv } = await supabase
+      .from('invoices').select('*, patients(name)')
+      .eq('clinic_id', user.id).order('created_at', { ascending: false }).limit(3)
 
-      setStats({ bookings: bookings || 0, income, expenses, dues })
+    const { data: recentAppt } = await supabase
+      .from('appointments').select('*, patients(name)')
+      .eq('clinic_id', user.id).order('created_at', { ascending: false }).limit(2)
 
-      const { data: schedule } = await supabase
-        .from('appointments')
-        .select('*, patients(name)')
-        .eq('clinic_id', user.id)
-        .eq('date', today)
-        .order('time')
+    const combined = [
+      ...(recentInv  || []).map(i => ({ ...i, type: 'invoice' })),
+      ...(recentAppt || []).map(a => ({ ...a, type: 'appointment' })),
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5)
 
-      setTodaySchedule(schedule || [])
+    setRecentActivity(combined)
+    setLoading(false)
+  }
 
-      const { data: recentInv } = await supabase
-        .from('invoices')
-        .select('*, patients(name)')
-        .eq('clinic_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3)
-
-      const { data: recentAppt } = await supabase
-        .from('appointments')
-        .select('*, patients(name)')
-        .eq('clinic_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(2)
-
-      const combined = [
-        ...(recentInv || []).map(i => ({ ...i, type: 'invoice' })),
-        ...(recentAppt || []).map(a => ({ ...a, type: 'appointment' })),
-      ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5)
-
-      setRecentActivity(combined)
-      setLoading(false)
-    }
-    load()
-  }, [])
+  useEffect(() => { load() }, [])
 
   function statusBadge(status) {
     const map = {
-      scheduled: <span className="badge-blue">Scheduled</span>,
-      completed: <span className="badge-green">Completed</span>,
-      cancelled: <span className="badge-red">Cancelled</span>,
+      scheduled:    <span className="badge-blue">Scheduled</span>,
+      completed:    <span className="badge-green">Completed</span>,
+      cancelled:    <span className="badge-red">Cancelled</span>,
       'checked-in': <span className="badge-yellow">Checked In</span>,
     }
     return map[status] || <span className="badge-gray">{status}</span>
@@ -146,7 +122,6 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-
       <SubscriptionBanner settings={settings} />
 
       {/* Header */}
@@ -156,10 +131,10 @@ export default function DashboardPage() {
             {greeting()}, {settings?.doctor_name || 'Doctor'}!
           </h1>
           <p className="text-slate-500 text-sm mt-0.5">
-            {format(new Date(), 'EEEE, MMMM d, yyyy')} • Here&apos;s your clinic overview
+            {format(new Date(), 'EEEE, MMMM d, yyyy')} · Here&apos;s your clinic overview
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-right hidden sm:block">
           <p className="text-xs text-slate-400">Profile completion</p>
           <div className="flex items-center gap-2 mt-1">
             <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -172,34 +147,49 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="mb-6">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-3">Quick action</p>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'Add Patient',    href: '/patients',  icon: UserPlus,     iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-            { label: 'Add Schedule',   href: '/schedule',  icon: CalendarPlus, iconBg: 'bg-blue-100',    iconColor: 'text-blue-600'    },
-            { label: 'Create Invoice', href: '/invoices',  icon: FileText,     iconBg: 'bg-teal-100',    iconColor: 'text-teal-600'    },
-            { label: 'Add Expenses',   href: '/expenses',  icon: TrendingDown, iconBg: 'bg-orange-100',  iconColor: 'text-orange-500'  },
-          ].map(({ label, href, icon: Icon, iconBg, iconColor }) => (
-            <Link
-              key={label}
-              href={href}
-              className="flex flex-col items-center justify-center gap-2.5 py-5 px-3 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-all duration-150 hover:-translate-y-0.5 active:scale-95"
-            >
-              <div className={`w-11 h-11 rounded-full flex items-center justify-center ${iconBg}`}>
-                <Icon size={20} className={iconColor} strokeWidth={1.8} />
-              </div>
-              <span className="text-sm font-medium text-gray-700 text-center leading-tight">{label}</span>
-            </Link>
-          ))}
+
+          {/* ADD PATIENT — opens the full QuickAddFlow */}
+          <button
+            onClick={() => setShowQuickAdd(true)}
+            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors cursor-pointer w-full"
+          >
+            <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
+              <UserPlus size={22} />
+            </div>
+            <span className="text-sm font-semibold">Add Patient</span>
+          </button>
+
+          <Link href="/schedule" className="bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors">
+            <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
+              <CalendarPlus size={22} />
+            </div>
+            <span className="text-sm font-semibold">Add Schedule</span>
+          </Link>
+
+          <Link href="/invoices" className="bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors">
+            <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
+              <FileText size={22} />
+            </div>
+            <span className="text-sm font-semibold">Create Invoice</span>
+          </Link>
+
+          <Link href="/expenses" className="bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors">
+            <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
+              <TrendingDown size={22} />
+            </div>
+            <span className="text-sm font-semibold">Add Expenses</span>
+          </Link>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Bookings Today"    value={stats.bookings}                      icon={Calendar}    color="bg-teal-50"   textColor="text-teal-700"   />
-        <StatCard label="Monthly Income"    value={`৳${stats.income.toLocaleString()}`}   icon={TrendingUp}  color="bg-blue-50"   textColor="text-blue-700"   />
-        <StatCard label="Monthly Expenses"  value={`৳${stats.expenses.toLocaleString()}`} icon={DollarSign}  color="bg-orange-50" textColor="text-orange-700" />
-        <StatCard label="Total Dues"        value={`৳${stats.dues.toLocaleString()}`}     icon={AlertCircle} color="bg-red-50"    textColor="text-red-600"    />
+        <StatCard label="Bookings Today"   value={stats.bookings}                        icon={Calendar}    color="bg-teal-50"   textColor="text-teal-700" />
+        <StatCard label="Monthly Income"   value={`৳${stats.income.toLocaleString()}`}    icon={TrendingUp}  color="bg-blue-50"   textColor="text-blue-700" />
+        <StatCard label="Monthly Expenses" value={`৳${stats.expenses.toLocaleString()}`}  icon={DollarSign}  color="bg-orange-50" textColor="text-orange-700" />
+        <StatCard label="Total Dues"       value={`৳${stats.dues.toLocaleString()}`}      icon={AlertCircle} color="bg-red-50"    textColor="text-red-600" />
       </div>
 
       {/* Bottom grid */}
@@ -211,6 +201,7 @@ export default function DashboardPage() {
             <h2 className="font-bold text-slate-800">Today&apos;s Schedule</h2>
             <Link href="/schedule" className="text-xs text-emerald-600 font-semibold hover:underline">View all →</Link>
           </div>
+
           {todaySchedule.length === 0 ? (
             <div className="text-center py-10 text-slate-400">
               <Calendar size={32} className="mx-auto mb-2 opacity-40" />
@@ -247,7 +238,7 @@ export default function DashboardPage() {
                           </div>
                         )}
                         {appt.status === 'checked-in' && (
-                          <button onClick={() => updateStatus(appt.id, 'completed')} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold">Mark Done</button>
+                          <button onClick={() => updateStatus(appt.id, 'completed')} className="text-emerald-600 text-xs font-semibold hover:underline">Mark Done</button>
                         )}
                       </td>
                     </tr>
@@ -268,7 +259,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentActivity.map((item) => (
+              {recentActivity.map(item => (
                 <div key={item.id} className="flex gap-3">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                     item.type === 'invoice' ? 'bg-violet-100 text-violet-600' : 'bg-blue-100 text-blue-600'
@@ -283,7 +274,7 @@ export default function DashboardPage() {
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {item.type === 'invoice'
-                        ? `৳${item.total?.toLocaleString()} • ${item.status}`
+                        ? `৳${item.total?.toLocaleString()} · ${item.status}`
                         : `${item.date} at ${item.time ? format(new Date(`2000-01-01T${item.time}`), 'h:mm a') : '—'}`}
                     </p>
                   </div>
@@ -292,8 +283,18 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-
       </div>
+
+      {/* QuickAdd Flow Overlay */}
+      {showQuickAdd && (
+        <QuickAddFlow
+          onClose={() => setShowQuickAdd(false)}
+          onSuccess={() => {
+            setShowQuickAdd(false)
+            load()
+          }}
+        />
+      )}
     </div>
   )
 }
