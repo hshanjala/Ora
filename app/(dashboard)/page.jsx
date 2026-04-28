@@ -148,39 +148,48 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div className="mb-6">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="flex flex-wrap gap-3">
 
-          {/* ADD PATIENT — opens the full QuickAddFlow */}
           <button
             onClick={() => setShowQuickAdd(true)}
-            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors cursor-pointer w-full"
+            className="flex items-center gap-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold text-sm px-5 py-3 rounded-2xl shadow-sm shadow-emerald-200 transition-all duration-150 cursor-pointer"
           >
-            <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
-              <UserPlus size={22} />
+            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+              <UserPlus size={16} />
             </div>
-            <span className="text-sm font-semibold">Add Patient</span>
+            Add Patient
           </button>
 
-          <Link href="/schedule" className="bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors">
-            <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
-              <CalendarPlus size={22} />
+          <Link
+            href="/schedule"
+            className="flex items-center gap-2.5 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm px-5 py-3 rounded-2xl shadow-sm shadow-blue-200 transition-all duration-150"
+          >
+            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+              <CalendarPlus size={16} />
             </div>
-            <span className="text-sm font-semibold">Add Schedule</span>
+            Add Schedule
           </Link>
 
-          <Link href="/invoices" className="bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors">
-            <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
-              <FileText size={22} />
+          <Link
+            href="/invoices"
+            className="flex items-center gap-2.5 bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-white font-semibold text-sm px-5 py-3 rounded-2xl shadow-sm shadow-violet-200 transition-all duration-150"
+          >
+            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+              <FileText size={16} />
             </div>
-            <span className="text-sm font-semibold">Create Invoice</span>
+            Create Invoice
           </Link>
 
-          <Link href="/expenses" className="bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-2xl p-4 flex flex-col items-center gap-2 transition-colors">
-            <div className="w-11 h-11 bg-white/60 rounded-xl flex items-center justify-center">
-              <TrendingDown size={22} />
+          <Link
+            href="/expenses"
+            className="flex items-center gap-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-semibold text-sm px-5 py-3 rounded-2xl shadow-sm shadow-amber-200 transition-all duration-150"
+          >
+            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+              <TrendingDown size={16} />
             </div>
-            <span className="text-sm font-semibold">Add Expenses</span>
+            Add Expenses
           </Link>
+
         </div>
       </div>
 
