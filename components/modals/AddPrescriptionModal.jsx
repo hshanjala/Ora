@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Loader2, Plus, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
@@ -9,8 +9,13 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [patients, setPatients] = useState([])
   const [error, setError] = useState('')
+  const [patientQuery, setPatientQuery] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedPatientId, setSelectedPatientId] = useState(null)
+  const inputRef = useRef(null)
+  const dropdownRef = useRef(null)
+
   const [form, setForm] = useState({
-    patient_id: '',
     date: format(new Date(), 'yyyy-MM-dd'),
     diagnosis: '',
     notes: '',
@@ -30,8 +35,35 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
     loadPatients()
   }, [])
 
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        inputRef.current &&
+        !inputRef.current.contains(e.target)
+      ) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   function handleFormChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  function handlePatientInput(e) {
+    setPatientQuery(e.target.value)
+    setSelectedPatientId(null)
+    setShowSuggestions(true)
+  }
+
+  function handleSelectPatient(patient) {
+    setPatientQuery(patient.name)
+    setSelectedPatientId(patient.id)
+    setShowSuggestions(false)
   }
 
   function handleMedChange(index, field, value) {
@@ -47,25 +79,37 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
     setMedicines(prev => prev.filter((_, i) => i !== index))
   }
 
+  const filteredPatients = patients.filter(p =>
+    p.name.toLowerCase().includes(patientQuery.toLowerCase())
+  )
+
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.patient_id) { setError('Please select a patient'); return }
+    if (!patientQuery.trim()) { setError('Please enter a patient name.'); return }
     setLoading(true)
     setError('')
 
     const { data: { user } } = await supabase.auth.getUser()
 
+    let patientId = selectedPatientId
+    if (!patientId && patientQuery.trim()) {
+      const { data: newPatient } = await supabase
+        .from('patients')
+        .insert({ clinic_id: user.id, name: patientQuery.trim() })
+        .select().single()
+      patientId = newPatient?.id || null
+    }
+
     const { data: rx, error: rxErr } = await supabase
       .from('prescriptions')
       .insert({
         clinic_id: user.id,
-        patient_id: form.patient_id,
+        patient_id: patientId,
         date: form.date,
         diagnosis: form.diagnosis || null,
         notes: form.notes || null,
       })
-      .select()
-      .single()
+      .select().single()
 
     if (rxErr) {
       setError('Failed to create prescription.')
@@ -73,11 +117,11 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
       return
     }
 
-    const medItems = medicines
-      .filter(m => m.medicine.trim())
-      .map(m => ({ prescription_id: rx.id, ...m }))
-
-    if (medItems.length > 0) {
+    const hasMeds = medicines.some(m => m.medicine.trim())
+    if (rx && hasMeds) {
+      const medItems = medicines
+        .filter(m => m.medicine.trim())
+        .map(m => ({ prescription_id: rx.id, ...m }))
       await supabase.from('prescription_items').insert(medItems)
     }
 
@@ -97,17 +141,67 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
           {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            {/* Patient combobox */}
+            <div className="relative">
               <label className="label">Patient *</label>
-              <select name="patient_id" className="input" value={form.patient_id} onChange={handleFormChange} required>
-                <option value="">Select patient</option>
-                {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+              <input
+                ref={inputRef}
+                type="text"
+                className="input"
+                placeholder="Type patient name..."
+                value={patientQuery}
+                onChange={handlePatientInput}
+                onFocus={() => setShowSuggestions(true)}
+                autoComplete="off"
+              />
+              {showSuggestions && (
+                <div
+                  ref={dropdownRef}
+                  className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto"
+                >
+                  {filteredPatients.length > 0 ? (
+                    <>
+                      {filteredPatients.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleSelectPatient(p)}
+                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 hover:text-emerald-700 transition-colors first:rounded-t-xl last:rounded-b-xl font-medium"
+                        >
+                          {p.name}
+                        </button>
+                      ))}
+                      {patientQuery.trim() &&
+                        !filteredPatients.some(p => p.name.toLowerCase() === patientQuery.toLowerCase()) && (
+                          <button
+                            type="button"
+                            onClick={() => setShowSuggestions(false)}
+                            className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 border-t border-slate-100 transition-colors last:rounded-b-xl font-semibold"
+                          >
+                            + Add &quot;{patientQuery}&quot; as new patient
+                          </button>
+                        )}
+                    </>
+                  ) : patientQuery.trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowSuggestions(false)}
+                      className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors rounded-xl font-semibold"
+                    >
+                      + Add &quot;{patientQuery}&quot; as new patient
+                    </button>
+                  ) : (
+                    <p className="px-4 py-3 text-sm text-slate-400">Start typing to search patients...</p>
+                  )}
+                </div>
+              )}
             </div>
+
             <div>
               <label className="label">Date</label>
               <input name="date" type="date" className="input" value={form.date} onChange={handleFormChange} />
             </div>
+
             <div className="col-span-2">
               <label className="label">Diagnosis</label>
               <input name="diagnosis" className="input" placeholder="e.g. Dental Caries, Gum Disease..." value={form.diagnosis} onChange={handleFormChange} />
