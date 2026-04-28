@@ -152,42 +152,42 @@ export default function DashboardPage() {
 
           <button
             onClick={() => setShowQuickAdd(true)}
-            className="flex items-center gap-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold text-sm px-5 py-3 rounded-2xl shadow-sm shadow-emerald-200 transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer"
           >
-            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
-              <UserPlus size={16} />
+            <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+              <UserPlus size={17} className="text-white" />
             </div>
-            Add Patient
+            <span className="text-sm font-semibold text-slate-700">Add Patient</span>
           </button>
 
           <Link
             href="/schedule"
-            className="flex items-center gap-2.5 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm px-5 py-3 rounded-2xl shadow-sm shadow-blue-200 transition-all duration-150"
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150"
           >
-            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
-              <CalendarPlus size={16} />
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
+              <CalendarPlus size={17} className="text-white" />
             </div>
-            Add Schedule
+            <span className="text-sm font-semibold text-slate-700">Add Schedule</span>
           </Link>
 
           <Link
             href="/invoices"
-            className="flex items-center gap-2.5 bg-violet-500 hover:bg-violet-600 active:bg-violet-700 text-white font-semibold text-sm px-5 py-3 rounded-2xl shadow-sm shadow-violet-200 transition-all duration-150"
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150"
           >
-            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
-              <FileText size={16} />
+            <div className="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center shrink-0">
+              <FileText size={17} className="text-white" />
             </div>
-            Create Invoice
+            <span className="text-sm font-semibold text-slate-700">Create Invoice</span>
           </Link>
 
           <Link
             href="/expenses"
-            className="flex items-center gap-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-semibold text-sm px-5 py-3 rounded-2xl shadow-sm shadow-amber-200 transition-all duration-150"
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150"
           >
-            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
-              <TrendingDown size={16} />
+            <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
+              <TrendingDown size={17} className="text-white" />
             </div>
-            Add Expenses
+            <span className="text-sm font-semibold text-slate-700">Add Expenses</span>
           </Link>
 
         </div>
