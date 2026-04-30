@@ -124,7 +124,7 @@ export default function PatientsPage() {
                   </td>
                   <td className="table-td text-slate-500">{patient.gender || '—'}</td>
                   <td className="table-td text-slate-500">
-                    {patient.date_of_birth ? `${patient.date_of_birth} yrs` : '—'}
+                    {patient.age ? `${patient.age} yrs` : '—'}
                   </td>
                   <td className="table-td text-slate-400 text-xs">
                     {format(new Date(patient.created_at), 'MMM d, yyyy')}
