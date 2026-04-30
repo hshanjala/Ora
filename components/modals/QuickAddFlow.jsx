@@ -1,10 +1,10 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import {
   X, ChevronRight, ChevronLeft, Check,
-  User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward
+  User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward, Camera
 } from 'lucide-react'
 
 // ─── Step indicators ───────────────────────────────────────────────────────
@@ -106,18 +106,39 @@ function StepFooter({ step, onBack, onNext, onSkip, onFinish, loading, nextLabel
 }
 
 // ─── STEP 1: Add Patient ────────────────────────────────────────────────────
-function Step1Patient({ form, setForm, error }) {
+function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
+  const photoRef = useRef(null)
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
   return (
     <div className="p-6 space-y-4">
       {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
+
+      {/* Photo + Name row */}
+      <div className="flex items-start gap-4">
+        <button
+          type="button"
+          onClick={() => photoRef.current?.click()}
+          className="shrink-0 w-20 h-20 rounded-full border-2 border-dashed border-slate-300 hover:border-emerald-400 flex flex-col items-center justify-center gap-1 transition-colors overflow-hidden"
+        >
+          {photoPreview ? (
+            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover rounded-full" />
+          ) : (
+            <>
+              <Camera size={20} className="text-slate-400" />
+              <span className="text-xs text-slate-400 font-medium">Add Photo</span>
+            </>
+          )}
+        </button>
+        <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={onPhotoChange} />
+        <div className="flex-1">
           <label className="label">Full Name *</label>
           <input name="name" className="input" placeholder="Patient's full name" value={form.name} onChange={handleChange} required />
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="label">Phone</label>
           <input name="phone" className="input" placeholder="01XXXXXXXXX" value={form.phone} onChange={handleChange} />
@@ -141,7 +162,7 @@ function Step1Patient({ form, setForm, error }) {
         </div>
         <div className="col-span-2">
           <label className="label">Address</label>
-          <input name="address" className="input" placeholder="Full address" value={form.address} onChange={handleChange} />
+          <input name="address" className="input" placeholder="Full address" value={form.age} onChange={handleChange} />
         </div>
         <div className="col-span-2">
           <label className="label">Medical History / Allergies</label>
@@ -402,6 +423,17 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   const [done, setDone]     = useState(false)
   const [completed, setCompleted] = useState([])
 
+  // Photo
+  const [photoFile, setPhotoFile] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
+
+  function handlePhotoChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPhotoFile(file)
+    setPhotoPreview(URL.createObjectURL(file))
+  }
+
   // Saved IDs
   const [patientId, setPatientId] = useState(null)
 
@@ -446,6 +478,20 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
+    // Upload photo if provided
+    let photo_url = null
+    if (photoFile) {
+      const ext = photoFile.name.split('.').pop()
+      const path = `${user.id}/${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from('patient-photos').upload(path, photoFile)
+      if (!upErr) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('patient-photos').getPublicUrl(path)
+        photo_url = publicUrl
+      }
+    }
+
     const { data, error: err } = await supabase.from('patients').insert({
       clinic_id: user.id,
       name: patientForm.name.trim(),
@@ -455,6 +501,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       gender: patientForm.gender || null,
       address: patientForm.address || null,
       medical_history: patientForm.medical_history || null,
+      photo_url,
     }).select().single()
 
     setLoading(false)
@@ -619,7 +666,13 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto">
               {step === 1 && (
-                <Step1Patient form={patientForm} setForm={setPatientForm} error={error} />
+                <Step1Patient
+                  form={patientForm}
+                  setForm={setPatientForm}
+                  error={error}
+                  photoPreview={photoPreview}
+                  onPhotoChange={handlePhotoChange}
+                />
               )}
               {step === 2 && (
                 <Step2Schedule form={scheduleForm} setForm={setScheduleForm} patientName={patientForm.name} />
