@@ -310,7 +310,7 @@ function EditModal({ patient, onClose, onSaved }) {
     name: patient.name || '',
     phone: patient.phone || '',
     email: patient.email || '',
-    date_of_birth: patient.date_of_birth || '',
+    age: patient.age || '',
     gender: patient.gender || '',
     address: patient.address || '',
     medical_history: patient.medical_history || '',
@@ -328,7 +328,7 @@ function EditModal({ patient, onClose, onSaved }) {
       name: form.name,
       phone: form.phone || null,
       email: form.email || null,
-      date_of_birth: form.date_of_birth || null,
+      age: form.age || null,
       gender: form.gender || null,
       address: form.address || null,
       medical_history: form.medical_history || null,
@@ -361,7 +361,7 @@ function EditModal({ patient, onClose, onSaved }) {
             </div>
             <div>
               <label className="label">Age</label>
-              <input name="date_of_birth" type="number" min="0" max="120" className="input" placeholder="e.g. 35" value={form.date_of_birth} onChange={handleChange} />
+              <input name="age" type="number" min="0" max="120" className="input" placeholder="e.g. 35" value={form.age} onChange={handleChange} />
             </div>
             <div>
               <label className="label">Gender</label>
@@ -440,11 +440,7 @@ export default function PatientPanel({ patient: initialPatient, onClose }) {
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const age = patient.date_of_birth
-    ? isNaN(patient.date_of_birth)
-      ? null
-      : patient.date_of_birth
-    : null
+  const age = patient.age || null
 
   return (
     <>
