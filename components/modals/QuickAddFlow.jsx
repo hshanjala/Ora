@@ -128,7 +128,7 @@ function Step1Patient({ form, setForm, error }) {
         </div>
         <div>
           <label className="label">Age</label>
-          <input name="date_of_birth" type="number" min="0" max="120" className="input" placeholder="e.g. 35" value={form.date_of_birth} onChange={handleChange} />
+          <input name="age" type="number" min="0" max="120" className="input" placeholder="e.g. 35" value={form.age} onChange={handleChange} />
         </div>
         <div>
           <label className="label">Gender</label>
@@ -408,7 +408,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   // Step 1 — patient form
   const [patientForm, setPatientForm] = useState({
     name: '', phone: '', email: '',
-    date_of_birth: '', gender: '', address: '', medical_history: ''
+    age: '', gender: '', address: '', medical_history: ''
   })
 
   // Step 2 — schedule form
@@ -451,7 +451,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       name: patientForm.name.trim(),
       phone: patientForm.phone || null,
       email: patientForm.email || null,
-      date_of_birth: patientForm.date_of_birth || null,
+      age: patientForm.age || null,
       gender: patientForm.gender || null,
       address: patientForm.address || null,
       medical_history: patientForm.medical_history || null,

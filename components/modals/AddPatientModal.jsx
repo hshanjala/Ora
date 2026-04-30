@@ -29,7 +29,7 @@ export default function AddPatientModal({ onClose, onSuccess }) {
       name: form.name,
       phone: form.phone || null,
       email: form.email || null,
-      age: form.age ? parseInt(form.age) : null,
+      age: form.age || null,
       gender: form.gender || null,
       address: form.address || null,
       medical_history: form.medical_history || null,
@@ -71,7 +71,7 @@ export default function AddPatientModal({ onClose, onSuccess }) {
             </div>
             <div>
               <label className="label">Age</label>
-              <input name="age" type="number" min="0" max="150" className="input" placeholder="e.g. 35" value={form.age} onChange={handleChange} />
+              <input name="age" type="number" min="0" max="120" className="input" placeholder="e.g. 35" value={form.age} onChange={handleChange} />
             </div>
             <div>
               <label className="label">Gender</label>
