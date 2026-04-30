@@ -8,10 +8,25 @@ import {
 } from 'lucide-react'
 
 // ── Initials avatar ──────────────────────────────────────────────────────────
-function Avatar({ name, size = 50 }) {
+function Avatar({ name, photoUrl, size = 50 }) {
   const initials = name
     ? name.trim().split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
     : '?'
+
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={name}
+        style={{
+          width: size, height: size, borderRadius: '50%',
+          objectFit: 'cover', flexShrink: 0,
+          border: '2px solid #d1fae5',
+        }}
+      />
+    )
+  }
+
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
@@ -472,7 +487,7 @@ export default function PatientPanel({ patient: initialPatient, onClose }) {
         <div style={{ padding: '20px 20px 16px', borderBottom: '0.5px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Avatar name={patient.name} size={50} />
+              <Avatar name={patient.name} photoUrl={patient.photo_url} size={50} />
               <div>
                 <p style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', margin: 0 }}>{patient.name}</p>
                 <p style={{ fontSize: 12, color: '#64748b', margin: '3px 0 0' }}>
