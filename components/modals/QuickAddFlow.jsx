@@ -162,7 +162,7 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
         </div>
         <div className="col-span-2">
           <label className="label">Address</label>
-          <input name="address" className="input" placeholder="Full address" value={form.age} onChange={handleChange} />
+          <input name="address" className="input" placeholder="Full address" value={form.address} onChange={handleChange} />
         </div>
         <div className="col-span-2">
           <label className="label">Medical History / Allergies</label>
