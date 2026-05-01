@@ -17,8 +17,8 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
 
   const [form, setForm] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
-    due_date: format(new Date(Date.now() + 7 * 86400000), 'yyyy-MM-dd'),
     notes: '',
+    paid_now: '',
   })
   const [items, setItems] = useState([
     { description: '', quantity: 1, unit_price: '' }
@@ -38,13 +38,9 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
   useEffect(() => {
     function handleClickOutside(e) {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target) &&
-        inputRef.current &&
-        !inputRef.current.contains(e.target)
-      ) {
-        setShowSuggestions(false)
-      }
+        dropdownRef.current && !dropdownRef.current.contains(e.target) &&
+        inputRef.current && !inputRef.current.contains(e.target)
+      ) setShowSuggestions(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -67,9 +63,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
   }
 
   function handleItemChange(index, field, value) {
-    setItems(prev => prev.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    ))
+    setItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item))
   }
 
   function addItem() {
@@ -81,9 +75,12 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
     setItems(prev => prev.filter((_, i) => i !== index))
   }
 
-  const total = items.reduce((sum, item) => {
-    return sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1))
-  }, 0)
+  const total = items.reduce((sum, item) =>
+    sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)), 0)
+
+  const paidNow = parseFloat(form.paid_now || 0)
+  const due = Math.max(0, total - paidNow)
+  const status = paidNow >= total && total > 0 ? 'paid' : paidNow > 0 ? 'partial' : 'unpaid'
 
   const filteredPatients = patients.filter(p =>
     p.name.toLowerCase().includes(patientQuery.toLowerCase())
@@ -93,8 +90,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
     e.preventDefault()
     if (!patientQuery.trim()) { setError('Please enter a patient name.'); return }
     if (items.some(i => !i.description || !i.unit_price)) {
-      setError('Please fill in all item fields')
-      return
+      setError('Please fill in all item fields'); return
     }
     setLoading(true)
     setError('')
@@ -104,8 +100,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
     let patientId = selectedPatientId
     if (!patientId && patientQuery.trim()) {
       const { data: newPatient } = await supabase
-        .from('patients')
-        .insert({ clinic_id: user.id, name: patientQuery.trim() })
+        .from('patients').insert({ clinic_id: user.id, name: patientQuery.trim() })
         .select().single()
       patientId = newPatient?.id || null
     }
@@ -113,35 +108,29 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
     const invoiceNum = `INV-${Date.now().toString().slice(-6)}`
 
     const { data: invoice, error: invErr } = await supabase
-      .from('invoices')
-      .insert({
+      .from('invoices').insert({
         clinic_id: user.id,
         patient_id: patientId,
         invoice_number: invoiceNum,
         date: form.date,
-        due_date: form.due_date || null,
-        status: 'unpaid',
-        total: total,
-        paid_amount: 0,
+        due_date: null,
+        status,
+        total,
+        paid_amount: paidNow,
         notes: form.notes || null,
-      })
-      .select().single()
+      }).select().single()
 
-    if (invErr) {
-      setError('Failed to create invoice.')
-      setLoading(false)
-      return
-    }
+    if (invErr) { setError('Failed to create invoice.'); setLoading(false); return }
 
-    const invoiceItems = items.map(item => ({
-      invoice_id: invoice.id,
-      description: item.description,
-      quantity: parseInt(item.quantity),
-      unit_price: parseFloat(item.unit_price),
-      total: parseFloat(item.unit_price) * parseInt(item.quantity),
-    }))
-
-    await supabase.from('invoice_items').insert(invoiceItems)
+    await supabase.from('invoice_items').insert(
+      items.map(item => ({
+        invoice_id: invoice.id,
+        description: item.description,
+        quantity: parseInt(item.quantity),
+        unit_price: parseFloat(item.unit_price),
+        total: parseFloat(item.unit_price) * parseInt(item.quantity),
+      }))
+    )
 
     onSuccess()
     onClose()
@@ -164,8 +153,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
               <label className="label">Patient *</label>
               <input
                 ref={inputRef}
-                type="text"
-                className="input"
+                type="text" className="input"
                 placeholder="Type patient name..."
                 value={patientQuery}
                 onChange={handlePatientInput}
@@ -173,39 +161,25 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
                 autoComplete="off"
               />
               {showSuggestions && (
-                <div
-                  ref={dropdownRef}
-                  className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto"
-                >
+                <div ref={dropdownRef} className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto">
                   {filteredPatients.length > 0 ? (
                     <>
                       {filteredPatients.map(p => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => handleSelectPatient(p)}
-                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 hover:text-emerald-700 transition-colors first:rounded-t-xl last:rounded-b-xl font-medium"
-                        >
+                        <button key={p.id} type="button" onClick={() => handleSelectPatient(p)}
+                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 hover:text-emerald-700 transition-colors first:rounded-t-xl last:rounded-b-xl font-medium">
                           {p.name}
                         </button>
                       ))}
-                      {patientQuery.trim() &&
-                        !filteredPatients.some(p => p.name.toLowerCase() === patientQuery.toLowerCase()) && (
-                          <button
-                            type="button"
-                            onClick={() => setShowSuggestions(false)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 border-t border-slate-100 transition-colors last:rounded-b-xl font-semibold"
-                          >
-                            + Add &quot;{patientQuery}&quot; as new patient
-                          </button>
-                        )}
+                      {patientQuery.trim() && !filteredPatients.some(p => p.name.toLowerCase() === patientQuery.toLowerCase()) && (
+                        <button type="button" onClick={() => setShowSuggestions(false)}
+                          className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 border-t border-slate-100 transition-colors last:rounded-b-xl font-semibold">
+                          + Add &quot;{patientQuery}&quot; as new patient
+                        </button>
+                      )}
                     </>
                   ) : patientQuery.trim() ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowSuggestions(false)}
-                      className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors rounded-xl font-semibold"
-                    >
+                    <button type="button" onClick={() => setShowSuggestions(false)}
+                      className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors rounded-xl font-semibold">
                       + Add &quot;{patientQuery}&quot; as new patient
                     </button>
                   ) : (
@@ -218,10 +192,6 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
             <div>
               <label className="label">Invoice Date</label>
               <input name="date" type="date" className="input" value={form.date} onChange={handleFormChange} />
-            </div>
-            <div>
-              <label className="label">Due Date</label>
-              <input name="due_date" type="date" className="input" value={form.due_date} onChange={handleFormChange} />
             </div>
           </div>
 
@@ -237,36 +207,17 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
               </div>
               {items.map((item, i) => (
                 <div key={i} className="grid grid-cols-12 gap-2 items-center">
-                  <input
-                    className="input col-span-5 text-sm"
-                    placeholder="e.g. Root Canal"
-                    value={item.description}
-                    onChange={e => handleItemChange(i, 'description', e.target.value)}
-                    required
-                  />
-                  <input
-                    className="input col-span-2 text-sm"
-                    type="number" min="1"
-                    value={item.quantity}
-                    onChange={e => handleItemChange(i, 'quantity', e.target.value)}
-                  />
-                  <input
-                    className="input col-span-3 text-sm"
-                    type="number" min="0" step="0.01"
-                    placeholder="0.00"
-                    value={item.unit_price}
-                    onChange={e => handleItemChange(i, 'unit_price', e.target.value)}
-                    required
-                  />
+                  <input className="input col-span-5 text-sm" placeholder="e.g. Root Canal"
+                    value={item.description} onChange={e => handleItemChange(i, 'description', e.target.value)} required />
+                  <input className="input col-span-2 text-sm" type="number" min="1"
+                    value={item.quantity} onChange={e => handleItemChange(i, 'quantity', e.target.value)} />
+                  <input className="input col-span-3 text-sm" type="number" min="0" step="0.01" placeholder="0.00"
+                    value={item.unit_price} onChange={e => handleItemChange(i, 'unit_price', e.target.value)} required />
                   <div className="col-span-1 text-right text-sm font-semibold text-slate-700">
-                    ৳{((parseFloat(item.unit_price || 0)) * parseInt(item.quantity || 1)).toLocaleString()}
+                    ৳{(parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)).toLocaleString()}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(i)}
-                    className="col-span-1 text-red-400 hover:text-red-600 flex justify-center"
-                    disabled={items.length === 1}
-                  >
+                  <button type="button" onClick={() => removeItem(i)} disabled={items.length === 1}
+                    className="col-span-1 text-red-400 hover:text-red-600 flex justify-center">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -277,15 +228,51 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
             </button>
           </div>
 
-          {/* Total */}
-          <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between">
-            <span className="font-semibold text-slate-600">Total Amount</span>
-            <span className="text-xl font-black text-slate-800">৳{total.toLocaleString()}</span>
+          {/* Total + Paid + Due */}
+          <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <span className="font-semibold text-slate-600 text-sm">Total Amount</span>
+              <span className="text-xl font-black text-slate-800">৳{total.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <label className="font-semibold text-emerald-700 text-sm">Paid Now</label>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 text-sm">৳</span>
+                <input
+                  name="paid_now"
+                  type="number" min="0" step="0.01"
+                  max={total}
+                  placeholder="0.00"
+                  value={form.paid_now}
+                  onChange={handleFormChange}
+                  className="w-32 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="font-semibold text-red-600 text-sm">Due</span>
+              <span className={`text-xl font-black ${due > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                ৳{due.toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          {/* Status indicator */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">Status will be set to:</span>
+            <span className={`badge text-xs font-bold px-3 py-1 rounded-lg ${
+              status === 'paid' ? 'bg-emerald-50 text-emerald-700' :
+              status === 'partial' ? 'bg-amber-50 text-amber-700' :
+              'bg-red-50 text-red-600'
+            }`}>
+              {status === 'paid' ? '✓ Paid' : status === 'partial' ? '◑ Partial' : '○ Unpaid'}
+            </span>
           </div>
 
           <div>
             <label className="label">Notes</label>
-            <textarea name="notes" className="input min-h-[60px] resize-none" placeholder="Payment terms, notes to patient..." value={form.notes} onChange={handleFormChange} />
+            <textarea name="notes" className="input min-h-[60px] resize-none"
+              placeholder="Any notes..." value={form.notes} onChange={handleFormChange} />
           </div>
 
           <div className="flex gap-3 pt-2">
