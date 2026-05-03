@@ -162,7 +162,7 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
         </div>
         <div className="col-span-2">
           <label className="label">Address</label>
-          <input name="address" className="input" placeholder="Full address" value={form.age} onChange={handleChange} />
+          <input name="address" className="input" placeholder="Full address" value={form.address} onChange={handleChange} />
         </div>
         <div className="col-span-2">
           <label className="label">Medical History / Allergies</label>
@@ -394,8 +394,8 @@ function SuccessScreen({ patientName, patientPhone, onClose, savedInvoice, saved
 
   function printInvoice() {
     if (!savedInvoice) return
-    const remaining = Math.max(0, (savedInvoice.total || 0) - (savedInvoice.paid_amount || 0))
     const items = savedInvoice.invoice_items || []
+    const remaining = Math.max(0, (savedInvoice.total || 0) - (savedInvoice.paid_amount || 0))
     const win = window.open('', '_blank')
     win.document.write(`<!DOCTYPE html><html><head><title>Invoice ${savedInvoice.invoice_number}</title>
 <style>
@@ -419,9 +419,6 @@ td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
 .trow.grand{border-top:2px solid #e2e8f0;padding-top:12px;margin-top:4px;font-weight:800;font-size:16px}
 .trow.paid-r{color:#065f46;font-weight:600}
 .trow.due-r{color:#b91c1c;font-weight:700;font-size:15px}
-.sbadge{display:inline-block;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;margin-bottom:24px}
-.spaid{background:#d1fae5;color:#065f46}
-.sunpaid{background:#fee2e2;color:#991b1b}
 .footer{text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;padding-top:16px}
 </style></head><body>
 <div class="hdr">
@@ -438,7 +435,6 @@ td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
   <div class="trow paid-r"><span>Paid</span><span>&#2547;${Number(savedInvoice.paid_amount || 0).toLocaleString()}</span></div>
   ${remaining > 0 ? `<div class="trow due-r"><span>Due</span><span>&#2547;${remaining.toLocaleString()}</span></div>` : ''}
 </div>
-<span class="sbadge ${savedInvoice.status === 'paid' ? 'spaid' : 'sunpaid'}">${(savedInvoice.status || '').toUpperCase()}</span>
 <div class="footer">Thank you for choosing ${clinicName || 'Ora Dental Clinic'} &middot; Powered by Ora</div>
 </body></html>`)
     win.document.close()
@@ -476,10 +472,7 @@ ${savedRx.diagnosis ? `<div class="section"><div class="label">Diagnosis</div><d
   ${items.map((item, i) => `
     <div class="med-box">
       <div class="med-name">${i + 1}. ${item.medicine}</div>
-      <div class="med-detail">
-        ${[item.dosage, item.frequency, item.duration].filter(Boolean).join(' &nbsp;·&nbsp; ')}
-        ${item.instructions ? `<br>Note: ${item.instructions}` : ''}
-      </div>
+      <div class="med-detail">${[item.dosage, item.frequency, item.duration].filter(Boolean).join(' &nbsp;&middot;&nbsp; ')}${item.instructions ? `<br>Note: ${item.instructions}` : ''}</div>
     </div>
   `).join('')}
 </div>
@@ -494,7 +487,7 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
   function shareInvoiceWhatsApp() {
     if (!savedInvoice || !patientPhone) return
     const due = Math.max(0, (savedInvoice.total || 0) - (savedInvoice.paid_amount || 0))
-    const msg = `Hello ${patientName}, your invoice ${savedInvoice.invoice_number} from Ora Dental Clinic:\nTotal: ৳${savedInvoice.total?.toLocaleString()}\nPaid: ৳${(savedInvoice.paid_amount || 0).toLocaleString()}${due > 0 ? `\nDue: ৳${due.toLocaleString()}` : '\nStatus: Fully Paid'}\nThank you!`
+    const msg = `Hello ${patientName}, your invoice ${savedInvoice.invoice_number} from ${clinicName || 'Ora Dental Clinic'}:\nTotal: ৳${savedInvoice.total?.toLocaleString()}\nPaid: ৳${(savedInvoice.paid_amount || 0).toLocaleString()}${due > 0 ? `\nDue: ৳${due.toLocaleString()}` : '\nStatus: Fully Paid'}\nThank you!`
     const phone = patientPhone.replace(/\D/g, '')
     window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }
@@ -503,7 +496,7 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
     if (!savedRx || !patientPhone) return
     const items = savedRx.prescription_items || []
     const medList = items.map((m, i) => `${i + 1}. ${m.medicine}${m.dosage ? ` ${m.dosage}` : ''}${m.frequency ? ` - ${m.frequency}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join('\n')
-    const msg = `Hello ${patientName}, your prescription from Ora Dental Clinic:${savedRx.diagnosis ? `\nDiagnosis: ${savedRx.diagnosis}` : ''}\n\nMedicines:\n${medList}${savedRx.notes ? `\n\nNote: ${savedRx.notes}` : ''}\n\nGet well soon!`
+    const msg = `Hello ${patientName}, your prescription from ${clinicName || 'Ora Dental Clinic'}:${savedRx.diagnosis ? `\nDiagnosis: ${savedRx.diagnosis}` : ''}\n\nMedicines:\n${medList}${savedRx.notes ? `\n\nNote: ${savedRx.notes}` : ''}\n\nGet well soon!`
     const phone = patientPhone.replace(/\D/g, '')
     window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }
@@ -607,7 +600,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     setPhotoPreview(URL.createObjectURL(file))
   }
 
-  // Saved IDs
+  // Saved data for success screen
   const [patientId, setPatientId] = useState(null)
   const [savedInvoice, setSavedInvoice] = useState(null)
   const [savedRx, setSavedRx] = useState(null)
@@ -704,7 +697,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
 
   // ── Step 2: Save appointment ────────────────────────────────────────────
   async function saveSchedule() {
-    if (!scheduleForm.date || !scheduleForm.time) return true // skip if empty
+    if (!scheduleForm.date || !scheduleForm.time) return true
     setLoading(true)
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -727,7 +720,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   // ── Step 3: Save prescription ───────────────────────────────────────────
   async function savePrescription() {
     const hasMeds = medicines.some(m => m.medicine.trim())
-    if (!rxForm.diagnosis && !hasMeds) return true // skip if totally empty
+    if (!rxForm.diagnosis && !hasMeds) return true
 
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -747,7 +740,6 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       await supabase.from('prescription_items').insert(medItems)
     }
 
-    // Store full rx for success screen
     if (rx) setSavedRx({ ...rx, prescription_items: medItems })
 
     setLoading(false)
@@ -758,7 +750,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   // ── Step 4: Save invoice ────────────────────────────────────────────────
   async function saveInvoice() {
     const hasItems = invoiceItems.some(i => i.description.trim() && i.unit_price)
-    if (!hasItems) return true // skip if empty
+    if (!hasItems) return true
 
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -780,9 +772,8 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       notes: invoiceForm.notes || null,
     }).select().single()
 
-    let invItems = []
     if (inv) {
-      invItems = invoiceItems
+      const items = invoiceItems
         .filter(i => i.description.trim() && i.unit_price)
         .map(i => ({
           invoice_id: inv.id,
@@ -791,9 +782,8 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
           unit_price: parseFloat(i.unit_price),
           total: parseFloat(i.unit_price) * parseInt(i.quantity),
         }))
-      await supabase.from('invoice_items').insert(invItems)
-      // Store full invoice for success screen
-      setSavedInvoice({ ...inv, invoice_items: invItems })
+      await supabase.from('invoice_items').insert(items)
+      setSavedInvoice({ ...inv, invoice_items: items })
     }
 
     setLoading(false)
@@ -817,96 +807,3 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   }
 
   async function handleFinish() {
-    await saveInvoice()
-    setDone(true)
-    onSuccess?.()
-  }
-
-  function handleSkip() {
-    if (step === 2) setCompleted(prev => prev) // no entry for skipped
-    setStep(prev => prev + 1)
-  }
-
-  function handleBack() {
-    setStep(prev => prev - 1)
-  }
-
-  // ── Close with outside click ────────────────────────────────────────────
-  function handleOverlayClick(e) {
-    if (e.target === e.currentTarget) onClose()
-  }
-
-  return (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={handleOverlayClick}
-    >
-      <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden"
-        style={{ animation: 'slideUp 0.25s ease' }}
-      >
-        {done ? (
-          <SuccessScreen
-            patientName={patientForm.name}
-            patientPhone={patientForm.phone}
-            savedInvoice={savedInvoice}
-            savedRx={savedRx}
-            clinicName={clinicName}
-            onClose={onClose}
-          />
-        ) : (
-          <>
-            <StepHeader step={step} onClose={onClose} />
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto">
-              {step === 1 && (
-                <Step1Patient
-                  form={patientForm}
-                  setForm={setPatientForm}
-                  error={error}
-                  photoPreview={photoPreview}
-                  onPhotoChange={handlePhotoChange}
-                />
-              )}
-              {step === 2 && (
-                <Step2Schedule form={scheduleForm} setForm={setScheduleForm} patientName={patientForm.name} />
-              )}
-              {step === 3 && (
-                <Step3Prescription
-                  form={rxForm} setForm={setRxForm}
-                  medicines={medicines} setMedicines={setMedicines}
-                  patientName={patientForm.name}
-                />
-              )}
-              {step === 4 && (
-                <Step4Invoice
-                  items={invoiceItems} setItems={setInvoiceItems}
-                  form={invoiceForm} setForm={setInvoiceForm}
-                  patientName={patientForm.name}
-                />
-              )}
-            </div>
-
-            <StepFooter
-              step={step}
-              onBack={handleBack}
-              onNext={handleNext}
-              onSkip={step > 1 ? handleSkip : null}
-              onFinish={handleFinish}
-              loading={loading}
-              nextLabel={step === 1 ? 'Save & Continue' : 'Next'}
-            />
-          </>
-        )}
-      </div>
-
-      <style jsx global>{`
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(24px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)     scale(1); }
-        }
-      `}</style>
-    </div>
-  )
-}
