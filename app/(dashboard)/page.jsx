@@ -84,13 +84,14 @@ function SubscriptionIndicator({ settings }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const isOnTrial = settings.subscription_status === 'trial'
+  const isOnTrial = settings.subscription_status === 'trial' || !settings.subscription_status
   const endDateStr = isOnTrial ? settings.trial_end : settings.subscription_end
 
   let daysLeft = null
   let endDateFormatted = ''
+
   if (endDateStr) {
-    const end = new Date(endDateStr)
+    const end = new Date(endDateStr + 'T00:00:00')
     daysLeft = Math.ceil((end - today) / (1000 * 60 * 60 * 24))
     endDateFormatted = format(end, 'MMM d, yyyy')
   }
@@ -99,6 +100,25 @@ function SubscriptionIndicator({ settings }) {
   const isUrgent  = daysLeft !== null && daysLeft <= 7 && daysLeft > 0
   const isHealthy = !isExpired && !isUrgent
   const clickable = isExpired || isUrgent
+
+  const label = isOnTrial ? 'Free Trial' : 'Subscription'
+
+  let statusText = ''
+  let subText = ''
+
+  if (!endDateStr) {
+    statusText = 'Trial active'
+    subText = ''
+  } else if (isExpired) {
+    statusText = isOnTrial ? 'Trial expired' : 'Plan expired'
+    subText = 'Tap to renew →'
+  } else if (isUrgent) {
+    statusText = `Ends ${endDateFormatted}`
+    subText = 'Tap to renew →'
+  } else {
+    statusText = `Active till ${endDateFormatted}`
+    subText = `${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining`
+  }
 
   return (
     <>
@@ -110,28 +130,27 @@ function SubscriptionIndicator({ settings }) {
             : 'bg-white border-red-200 hover:bg-red-50 cursor-pointer'
         }`}
       >
-        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${isHealthy ? 'bg-emerald-500' : 'bg-red-500'}`} />
+        {/* Pulsing dot for urgent/expired */}
+        <div className="relative shrink-0 flex items-center justify-center w-3 h-3">
+          {!isHealthy && (
+            <span className="absolute inline-flex w-3 h-3 rounded-full bg-red-400 opacity-60 animate-ping" />
+          )}
+          <span className={`relative inline-flex w-2.5 h-2.5 rounded-full ${isHealthy ? 'bg-emerald-500' : 'bg-red-500'}`} />
+        </div>
+
         <div className="text-left">
-          <p className="text-xs font-semibold text-slate-400 leading-none mb-0.5">
-            {isOnTrial ? 'Free Trial' : 'Subscription'}
+          <p className="text-xs font-semibold text-slate-400 leading-none mb-0.5">{label}</p>
+          <p className={`text-sm font-bold leading-tight ${isHealthy ? 'text-emerald-600' : 'text-red-600'}`}>
+            {statusText}
           </p>
-          {isExpired ? (
-            <>
-              <p className="text-sm font-bold text-red-600 leading-tight">Plan expired</p>
-              <p className="text-xs text-red-400 leading-none mt-0.5">Tap to renew →</p>
-            </>
-          ) : isUrgent ? (
-            <>
-              <p className="text-sm font-bold text-red-600 leading-tight">Deactivates {endDateFormatted}</p>
-              <p className="text-xs text-red-400 leading-none mt-0.5">Tap to renew →</p>
-            </>
-          ) : (
-            <p className="text-sm font-bold text-emerald-600 leading-tight">
-              Active till {endDateFormatted || '—'}
+          {subText && (
+            <p className={`text-xs leading-none mt-0.5 ${isHealthy ? 'text-slate-400' : 'text-red-400'}`}>
+              {subText}
             </p>
           )}
         </div>
       </button>
+
       {showPayment && <PaymentModal onClose={() => setShowPayment(false)} />}
     </>
   )
