@@ -263,7 +263,6 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
   )
 }
 
-// ── FIX 1: Added paid_now field and due calculation ──
 function Step4Invoice({ items, setItems, form, setForm, patientName }) {
   function handleFormChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -291,16 +290,13 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
         </div>
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="label">Invoice Date</label>
-          <input name="date" type="date" className="input" value={form.date} onChange={handleFormChange} />
-        </div>
-        <div>
-          <label className="label">Due Date</label>
-          <input name="due_date" type="date" className="input" value={form.due_date} onChange={handleFormChange} />
-        </div>
+
+      {/* Invoice Date only — no Due Date */}
+      <div>
+        <label className="label">Invoice Date</label>
+        <input name="date" type="date" className="input" value={form.date} onChange={handleFormChange} />
       </div>
+
       <div>
         <label className="label">Services / Items</label>
         <div className="space-y-2">
@@ -580,10 +576,8 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     { medicine: '', dosage: '', frequency: '', duration: '', instructions: '' }
   ])
 
-  // ── FIX 2: Added paid_now to invoiceForm ──
   const [invoiceForm, setInvoiceForm] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
-    due_date: format(new Date(Date.now() + 7 * 86400000), 'yyyy-MM-dd'),
     notes: '',
     paid_now: '',
   })
@@ -671,10 +665,10 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     return true
   }
 
-  // ── FIX 3: saveInvoice now uses paid_now and sets correct status ──
+  // KEY FIX: returns the invoice data directly instead of relying on state
   async function saveInvoice() {
     const hasItems = invoiceItems.some(i => i.description.trim() && i.unit_price)
-    if (!hasItems) return true
+    if (!hasItems) return null
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     const total = invoiceItems.reduce((sum, item) =>
@@ -687,7 +681,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       patient_id: patientId,
       invoice_number: invoiceNum,
       date: invoiceForm.date,
-      due_date: invoiceForm.due_date || null,
+      due_date: null,
       status,
       total,
       paid_amount: paidNow,
@@ -704,11 +698,12 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
           total: parseFloat(i.unit_price) * parseInt(i.quantity),
         }))
       await supabase.from('invoice_items').insert(items)
-      setSavedInvoice({ ...inv, invoice_items: items })
+      setLoading(false)
+      setCompleted(prev => [...prev, 'Invoice Created'])
+      return { ...inv, invoice_items: items }
     }
     setLoading(false)
-    setCompleted(prev => [...prev, 'Invoice Created'])
-    return true
+    return null
   }
 
   async function handleNext() {
@@ -725,11 +720,12 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     }
   }
 
-  // ── FIX 4: restored onSuccess callback ──
+  // KEY FIX: pass invoice directly to state before setDone
   async function handleFinish() {
-    await saveInvoice()
-    setDone(true)
+    const inv = await saveInvoice()
+    if (inv) setSavedInvoice(inv)
     onSuccess?.()
+    setDone(true)
   }
 
   function handleSkip() {
