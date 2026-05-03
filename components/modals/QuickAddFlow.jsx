@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import {
   X, ChevronRight, ChevronLeft, Check,
-  User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward, Camera
+  User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward, Camera, Printer, Phone
 } from 'lucide-react'
 
 // ─── Step indicators ───────────────────────────────────────────────────────
@@ -162,7 +162,7 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
         </div>
         <div className="col-span-2">
           <label className="label">Address</label>
-          <input name="address" className="input" placeholder="Full address" value={form.address} onChange={handleChange} />
+          <input name="address" className="input" placeholder="Full address" value={form.age} onChange={handleChange} />
         </div>
         <div className="col-span-2">
           <label className="label">Medical History / Allergies</label>
@@ -390,26 +390,199 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
 }
 
 // ─── SUCCESS screen ─────────────────────────────────────────────────────────
-function SuccessScreen({ patientName, onClose, completed }) {
+function SuccessScreen({ patientName, patientPhone, onClose, savedInvoice, savedRx, clinicName }) {
+
+  function printInvoice() {
+    if (!savedInvoice) return
+    const remaining = Math.max(0, (savedInvoice.total || 0) - (savedInvoice.paid_amount || 0))
+    const items = savedInvoice.invoice_items || []
+    const win = window.open('', '_blank')
+    win.document.write(`<!DOCTYPE html><html><head><title>Invoice ${savedInvoice.invoice_number}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#1e293b;font-size:14px}
+.hdr{display:flex;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #e2e8f0}
+.clinic{font-size:24px;font-weight:800;color:#065f46}
+.sub{color:#64748b;font-size:13px;margin-top:4px}
+.inv-num{font-size:20px;font-weight:700;text-align:right}
+.inv-date{color:#64748b;font-size:12px;margin-top:4px;text-align:right}
+.bill-box{background:#f8fafc;border-radius:10px;padding:14px 18px;margin-bottom:24px}
+.bill-label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.bill-name{font-size:16px;font-weight:700}
+table{width:100%;border-collapse:collapse;margin-bottom:20px}
+thead{background:#f0fdf4}
+th{padding:10px 12px;text-align:left;font-size:12px;color:#065f46;font-weight:600}
+.tr{text-align:right}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
+.totals{margin-left:auto;width:260px;margin-bottom:24px}
+.trow{display:flex;justify-content:space-between;padding:8px 0;font-size:13px}
+.trow.grand{border-top:2px solid #e2e8f0;padding-top:12px;margin-top:4px;font-weight:800;font-size:16px}
+.trow.paid-r{color:#065f46;font-weight:600}
+.trow.due-r{color:#b91c1c;font-weight:700;font-size:15px}
+.sbadge{display:inline-block;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;margin-bottom:24px}
+.spaid{background:#d1fae5;color:#065f46}
+.sunpaid{background:#fee2e2;color:#991b1b}
+.footer{text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;padding-top:16px}
+</style></head><body>
+<div class="hdr">
+  <div><div class="clinic">${clinicName || 'Ora Dental Clinic'}</div><div class="sub">Dental Clinic</div></div>
+  <div><div class="inv-num">${savedInvoice.invoice_number}</div><div class="inv-date">${format(new Date(savedInvoice.date), 'MMMM d, yyyy')}</div></div>
+</div>
+<div class="bill-box"><div class="bill-label">Bill To</div><div class="bill-name">${patientName}</div></div>
+<table>
+  <thead><tr><th>Description</th><th class="tr">Qty</th><th class="tr">Unit Price</th><th class="tr">Total</th></tr></thead>
+  <tbody>${items.map(item => `<tr><td>${item.description}</td><td class="tr">${item.quantity}</td><td class="tr">&#2547;${Number(item.unit_price).toLocaleString()}</td><td class="tr">&#2547;${Number(item.total).toLocaleString()}</td></tr>`).join('')}</tbody>
+</table>
+<div class="totals">
+  <div class="trow grand"><span>Total</span><span>&#2547;${Number(savedInvoice.total).toLocaleString()}</span></div>
+  <div class="trow paid-r"><span>Paid</span><span>&#2547;${Number(savedInvoice.paid_amount || 0).toLocaleString()}</span></div>
+  ${remaining > 0 ? `<div class="trow due-r"><span>Due</span><span>&#2547;${remaining.toLocaleString()}</span></div>` : ''}
+</div>
+<span class="sbadge ${savedInvoice.status === 'paid' ? 'spaid' : 'sunpaid'}">${(savedInvoice.status || '').toUpperCase()}</span>
+<div class="footer">Thank you for choosing ${clinicName || 'Ora Dental Clinic'} &middot; Powered by Ora</div>
+</body></html>`)
+    win.document.close()
+    setTimeout(() => win.print(), 400)
+  }
+
+  function printRx() {
+    if (!savedRx) return
+    const items = savedRx.prescription_items || []
+    const win = window.open('', '_blank')
+    win.document.write(`<!DOCTYPE html><html><head><title>Prescription</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#1e293b;font-size:14px}
+.hdr{display:flex;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #e2e8f0}
+.clinic{font-size:24px;font-weight:800;color:#065f46}
+.sub{color:#64748b;font-size:13px;margin-top:4px}
+.section{margin-bottom:20px}
+.label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.value{font-size:15px;font-weight:600}
+.med-box{background:#f8fafc;border-radius:8px;padding:12px 16px;margin-bottom:8px}
+.med-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.med-detail{font-size:12px;color:#64748b}
+.footer{text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;padding-top:16px;margin-top:40px}
+.sig{margin-top:60px;border-top:1px solid #111;width:200px;text-align:center;padding-top:6px;font-size:12px}
+</style></head><body>
+<div class="hdr">
+  <div><div class="clinic">${clinicName || 'Ora Dental Clinic'}</div><div class="sub">Prescription</div></div>
+  <div style="text-align:right"><div style="font-size:13px;color:#64748b">${format(new Date(savedRx.date), 'MMMM d, yyyy')}</div></div>
+</div>
+<div class="section"><div class="label">Patient</div><div class="value">${patientName}</div></div>
+${savedRx.diagnosis ? `<div class="section"><div class="label">Diagnosis</div><div class="value">${savedRx.diagnosis}</div></div>` : ''}
+<div class="section">
+  <div class="label">Prescribed Medicines</div>
+  ${items.map((item, i) => `
+    <div class="med-box">
+      <div class="med-name">${i + 1}. ${item.medicine}</div>
+      <div class="med-detail">
+        ${[item.dosage, item.frequency, item.duration].filter(Boolean).join(' &nbsp;·&nbsp; ')}
+        ${item.instructions ? `<br>Note: ${item.instructions}` : ''}
+      </div>
+    </div>
+  `).join('')}
+</div>
+${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><div class="value">${savedRx.notes}</div></div>` : ''}
+<div style="display:flex;justify-content:flex-end"><div class="sig">Doctor's Signature</div></div>
+<div class="footer">Powered by Ora &middot; ${clinicName || 'Ora Dental Clinic'}</div>
+</body></html>`)
+    win.document.close()
+    setTimeout(() => win.print(), 400)
+  }
+
+  function shareInvoiceWhatsApp() {
+    if (!savedInvoice || !patientPhone) return
+    const due = Math.max(0, (savedInvoice.total || 0) - (savedInvoice.paid_amount || 0))
+    const msg = `Hello ${patientName}, your invoice ${savedInvoice.invoice_number} from Ora Dental Clinic:\nTotal: ৳${savedInvoice.total?.toLocaleString()}\nPaid: ৳${(savedInvoice.paid_amount || 0).toLocaleString()}${due > 0 ? `\nDue: ৳${due.toLocaleString()}` : '\nStatus: Fully Paid'}\nThank you!`
+    const phone = patientPhone.replace(/\D/g, '')
+    window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+
+  function shareRxWhatsApp() {
+    if (!savedRx || !patientPhone) return
+    const items = savedRx.prescription_items || []
+    const medList = items.map((m, i) => `${i + 1}. ${m.medicine}${m.dosage ? ` ${m.dosage}` : ''}${m.frequency ? ` - ${m.frequency}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join('\n')
+    const msg = `Hello ${patientName}, your prescription from Ora Dental Clinic:${savedRx.diagnosis ? `\nDiagnosis: ${savedRx.diagnosis}` : ''}\n\nMedicines:\n${medList}${savedRx.notes ? `\n\nNote: ${savedRx.notes}` : ''}\n\nGet well soon!`
+    const phone = patientPhone.replace(/\D/g, '')
+    window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+
+  const hasInvoice = !!savedInvoice
+  const hasRx = !!savedRx
+  const hasPhone = !!patientPhone
+
   return (
-    <div className="p-8 text-center">
-      <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
-        <Check size={36} className="text-emerald-600" />
+    <div>
+      {/* Header */}
+      <div className="px-8 pt-8 pb-6 text-center border-b border-slate-100">
+        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Check size={30} className="text-emerald-600" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800 mb-1">All Done!</h2>
+        <p className="text-slate-500 text-sm">
+          <span className="font-bold text-slate-700">{patientName}</span> has been added successfully
+        </p>
       </div>
-      <h2 className="text-2xl font-black text-slate-800 mb-2">All Done!</h2>
-      <p className="text-slate-500 mb-6">
-        <span className="font-bold text-slate-700">{patientName}</span> has been added successfully.
-      </p>
-      <div className="flex flex-wrap gap-2 justify-center mb-8">
-        {completed.map(item => (
-          <span key={item} className="badge-green px-3 py-1.5">
-            <Check size={12} className="mr-1" /> {item}
-          </span>
-        ))}
+
+      {/* Invoice section */}
+      {hasInvoice && (
+        <div className="px-6 py-5 border-b border-slate-100">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Invoice</p>
+          <div className="flex gap-2">
+            <button
+              onClick={printInvoice}
+              className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors"
+            >
+              <Printer size={15} /> Print
+            </button>
+            <button
+              onClick={shareInvoiceWhatsApp}
+              disabled={!hasPhone}
+              title={!hasPhone ? 'No phone number saved for this patient' : ''}
+              className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Phone size={15} /> Share via WhatsApp
+            </button>
+          </div>
+          {!hasPhone && (
+            <p className="text-xs text-slate-400 mt-2 text-center">Add a phone number to enable WhatsApp sharing</p>
+          )}
+        </div>
+      )}
+
+      {/* Prescription section */}
+      {hasRx && (
+        <div className="px-6 py-5 border-b border-slate-100">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Prescription</p>
+          <div className="flex gap-2">
+            <button
+              onClick={printRx}
+              className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors"
+            >
+              <Printer size={15} /> Print
+            </button>
+            <button
+              onClick={shareRxWhatsApp}
+              disabled={!hasPhone}
+              title={!hasPhone ? 'No phone number saved for this patient' : ''}
+              className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Phone size={15} /> Share via WhatsApp
+            </button>
+          </div>
+          {!hasPhone && (
+            <p className="text-xs text-slate-400 mt-2 text-center">Add a phone number to enable WhatsApp sharing</p>
+          )}
+        </div>
+      )}
+
+      {/* Back to dashboard */}
+      <div className="px-6 py-5">
+        <button onClick={onClose} className="btn-primary w-full justify-center py-3">
+          Back to Dashboard
+        </button>
       </div>
-      <button onClick={onClose} className="btn-primary mx-auto justify-center px-8">
-        Back to Dashboard
-      </button>
     </div>
   )
 }
@@ -436,6 +609,19 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
 
   // Saved IDs
   const [patientId, setPatientId] = useState(null)
+  const [savedInvoice, setSavedInvoice] = useState(null)
+  const [savedRx, setSavedRx] = useState(null)
+  const [clinicName, setClinicName] = useState('')
+
+  useEffect(() => {
+    async function fetchClinicName() {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data } = await supabase
+        .from('clinic_settings').select('clinic_name').eq('clinic_id', user.id).single()
+      setClinicName(data?.clinic_name || '')
+    }
+    fetchClinicName()
+  }, [])
 
   // Step 1 — patient form
   const [patientForm, setPatientForm] = useState({
@@ -554,12 +740,15 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       notes: rxForm.notes || null,
     }).select().single()
 
+    let medItems = []
     if (rx && hasMeds) {
-      const medItems = medicines
-        .filter(m => m.medicine.trim())
+      medItems = medicines.filter(m => m.medicine.trim())
         .map(m => ({ prescription_id: rx.id, ...m }))
       await supabase.from('prescription_items').insert(medItems)
     }
+
+    // Store full rx for success screen
+    if (rx) setSavedRx({ ...rx, prescription_items: medItems })
 
     setLoading(false)
     setCompleted(prev => [...prev, 'Prescription Written'])
@@ -591,8 +780,9 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       notes: invoiceForm.notes || null,
     }).select().single()
 
+    let invItems = []
     if (inv) {
-      const items = invoiceItems
+      invItems = invoiceItems
         .filter(i => i.description.trim() && i.unit_price)
         .map(i => ({
           invoice_id: inv.id,
@@ -601,7 +791,9 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
           unit_price: parseFloat(i.unit_price),
           total: parseFloat(i.unit_price) * parseInt(i.quantity),
         }))
-      await supabase.from('invoice_items').insert(items)
+      await supabase.from('invoice_items').insert(invItems)
+      // Store full invoice for success screen
+      setSavedInvoice({ ...inv, invoice_items: invItems })
     }
 
     setLoading(false)
@@ -656,7 +848,10 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
         {done ? (
           <SuccessScreen
             patientName={patientForm.name}
-            completed={completed}
+            patientPhone={patientForm.phone}
+            savedInvoice={savedInvoice}
+            savedRx={savedRx}
+            clinicName={clinicName}
             onClose={onClose}
           />
         ) : (
