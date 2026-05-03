@@ -10,10 +10,134 @@ import { format } from 'date-fns'
 import {
   UserPlus, CalendarPlus, FileText, TrendingDown,
   Calendar, DollarSign, TrendingUp, AlertCircle,
-  CheckCircle, Clock, XCircle, RefreshCw
+  CheckCircle, Clock, XCircle, RefreshCw, Copy
 } from 'lucide-react'
 import Link from 'next/link'
 
+// ── Payment Modal ─────────────────────────────────────────────────────────────
+function PaymentModal({ onClose }) {
+  const [copied, setCopied] = useState(null)
+  function copy(num, type) {
+    navigator.clipboard.writeText(num)
+    setCopied(type)
+    setTimeout(() => setCopied(null), 2000)
+  }
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="p-6">
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Renew Subscription</h2>
+              <p className="text-sm text-slate-500 mt-0.5">Send ৳299 to renew for 1 month</p>
+            </div>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+            <p className="text-sm font-semibold text-amber-800 mb-2">How to pay</p>
+            <ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside">
+              <li>Send ৳299 to one of the numbers below</li>
+              <li>Use &quot;Send Money&quot; option</li>
+              <li>Screenshot your transaction</li>
+              <li>WhatsApp us the screenshot</li>
+            </ol>
+          </div>
+          {[
+            { label: 'bKash', num: '01629775202', bg: 'bg-pink-100', text: 'text-pink-600', code: 'bkash' },
+            { label: 'Nagad', num: '01799900323', bg: 'bg-orange-100', text: 'text-orange-600', code: 'nagad' },
+          ].map(({ label, num, bg, text, code }) => (
+            <div key={code} className="border border-slate-200 rounded-xl p-4 mb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 ${bg} ${text} rounded-xl flex items-center justify-center font-black text-sm`}>
+                    {label.slice(0, 2)}
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">{label}</p>
+                    <p className="font-bold text-slate-800 text-lg">{num}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => copy(num, code)}
+                  className="flex items-center gap-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  <Copy size={13} />
+                  {copied === code ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+          ))}
+          <p className="text-xs text-slate-400 text-center mt-2">
+            Account extended within 24 hours after payment.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Subscription Indicator ────────────────────────────────────────────────────
+function SubscriptionIndicator({ settings }) {
+  const [showPayment, setShowPayment] = useState(false)
+  if (!settings) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const isOnTrial = settings.subscription_status === 'trial'
+  const endDateStr = isOnTrial ? settings.trial_end : settings.subscription_end
+
+  let daysLeft = null
+  let endDateFormatted = ''
+  if (endDateStr) {
+    const end = new Date(endDateStr)
+    daysLeft = Math.ceil((end - today) / (1000 * 60 * 60 * 24))
+    endDateFormatted = format(end, 'MMM d, yyyy')
+  }
+
+  const isExpired = daysLeft !== null && daysLeft <= 0
+  const isUrgent  = daysLeft !== null && daysLeft <= 7 && daysLeft > 0
+  const isHealthy = !isExpired && !isUrgent
+  const clickable = isExpired || isUrgent
+
+  return (
+    <>
+      <button
+        onClick={clickable ? () => setShowPayment(true) : undefined}
+        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border transition-all duration-150 ${
+          isHealthy
+            ? 'bg-white border-slate-200 cursor-default'
+            : 'bg-white border-red-200 hover:bg-red-50 cursor-pointer'
+        }`}
+      >
+        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${isHealthy ? 'bg-emerald-500' : 'bg-red-500'}`} />
+        <div className="text-left">
+          <p className="text-xs font-semibold text-slate-400 leading-none mb-0.5">
+            {isOnTrial ? 'Free Trial' : 'Subscription'}
+          </p>
+          {isExpired ? (
+            <>
+              <p className="text-sm font-bold text-red-600 leading-tight">Plan expired</p>
+              <p className="text-xs text-red-400 leading-none mt-0.5">Tap to renew →</p>
+            </>
+          ) : isUrgent ? (
+            <>
+              <p className="text-sm font-bold text-red-600 leading-tight">Deactivates {endDateFormatted}</p>
+              <p className="text-xs text-red-400 leading-none mt-0.5">Tap to renew →</p>
+            </>
+          ) : (
+            <p className="text-sm font-bold text-emerald-600 leading-tight">
+              Active till {endDateFormatted || '—'}
+            </p>
+          )}
+        </div>
+      </button>
+      {showPayment && <PaymentModal onClose={() => setShowPayment(false)} />}
+    </>
+  )
+}
+
+// ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, color, textColor }) {
   return (
     <div className={`${color} rounded-2xl p-5 flex flex-col gap-3`}>
@@ -140,14 +264,8 @@ export default function DashboardPage() {
             {format(new Date(), 'EEEE, MMMM d, yyyy')} · Here&apos;s your clinic overview
           </p>
         </div>
-        <div className="text-right hidden sm:block">
-          <p className="text-xs text-slate-400">Profile completion</p>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500 rounded-full" style={{ width: '75%' }} />
-            </div>
-            <span className="text-xs font-bold text-emerald-600">75%</span>
-          </div>
+        <div className="hidden sm:block">
+          <SubscriptionIndicator settings={settings} />
         </div>
       </div>
 
