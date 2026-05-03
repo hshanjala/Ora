@@ -56,10 +56,7 @@ function StepHeader({ step, onClose }) {
             {step === 4 && 'Create Invoice'}
           </h2>
         </div>
-        <button
-          onClick={onClose}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-        >
+        <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
           <X size={20} />
         </button>
       </div>
@@ -266,6 +263,7 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
   )
 }
 
+// ── FIX 1: Added paid_now field and due calculation ──
 function Step4Invoice({ items, setItems, form, setForm, patientName }) {
   function handleFormChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -282,6 +280,9 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
   }
   const total = items.reduce((sum, item) =>
     sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)), 0)
+  const paidNow = parseFloat(form.paid_now || 0)
+  const due = Math.max(0, total - paidNow)
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
@@ -327,10 +328,35 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
           <Plus size={15} /> Add Item
         </button>
       </div>
-      <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between">
-        <span className="font-semibold text-slate-600 text-sm">Total Amount</span>
-        <span className="text-xl font-black text-slate-800">৳{total.toLocaleString()}</span>
+
+      {/* Total + Paid Now + Due */}
+      <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <span className="font-semibold text-slate-600 text-sm">Total Amount</span>
+          <span className="text-xl font-black text-slate-800">৳{total.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <label className="font-semibold text-emerald-700 text-sm">Paid Now</label>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-500 text-sm">৳</span>
+            <input
+              name="paid_now"
+              type="number" min="0" step="0.01"
+              placeholder="0.00"
+              value={form.paid_now}
+              onChange={handleFormChange}
+              className="w-28 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-4 py-3">
+          <span className="font-semibold text-red-600 text-sm">Due</span>
+          <span className={`text-xl font-black ${due > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+            ৳{due.toLocaleString()}
+          </span>
+        </div>
       </div>
+
       <div>
         <label className="label">Notes</label>
         <textarea name="notes" className="input min-h-[55px] resize-none" placeholder="Payment terms, notes to patient..." value={form.notes} onChange={handleFormChange} />
@@ -340,7 +366,6 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
 }
 
 function SuccessScreen({ patientName, patientPhone, onClose, savedInvoice, savedRx, clinicName }) {
-
   function printInvoice() {
     if (!savedInvoice) return
     const items = savedInvoice.invoice_items || []
@@ -513,7 +538,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   const [done, setDone]       = useState(false)
   const [completed, setCompleted] = useState([])
 
-  const [photoFile, setPhotoFile]     = useState(null)
+  const [photoFile, setPhotoFile]       = useState(null)
   const [photoPreview, setPhotoPreview] = useState(null)
 
   function handlePhotoChange(e) {
@@ -555,10 +580,12 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     { medicine: '', dosage: '', frequency: '', duration: '', instructions: '' }
   ])
 
+  // ── FIX 2: Added paid_now to invoiceForm ──
   const [invoiceForm, setInvoiceForm] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     due_date: format(new Date(Date.now() + 7 * 86400000), 'yyyy-MM-dd'),
     notes: '',
+    paid_now: '',
   })
   const [invoiceItems, setInvoiceItems] = useState([
     { description: '', quantity: 1, unit_price: '' }
@@ -571,9 +598,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     }
     setError('')
     setLoading(true)
-
     const { data: { user } } = await supabase.auth.getUser()
-
     let photo_url = null
     if (photoFile) {
       const ext = photoFile.name.split('.').pop()
@@ -584,7 +609,6 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
         photo_url = publicUrl
       }
     }
-
     const { data, error: err } = await supabase.from('patients').insert({
       clinic_id: user.id,
       name: patientForm.name.trim(),
@@ -596,14 +620,11 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       medical_history: patientForm.medical_history || null,
       photo_url,
     }).select().single()
-
     setLoading(false)
-
     if (err) {
       setError('Failed to save patient. Please try again.')
       return false
     }
-
     setPatientId(data.id)
     setCompleted(prev => [...prev, 'Patient Added'])
     return true
@@ -650,6 +671,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     return true
   }
 
+  // ── FIX 3: saveInvoice now uses paid_now and sets correct status ──
   async function saveInvoice() {
     const hasItems = invoiceItems.some(i => i.description.trim() && i.unit_price)
     if (!hasItems) return true
@@ -657,6 +679,8 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     const { data: { user } } = await supabase.auth.getUser()
     const total = invoiceItems.reduce((sum, item) =>
       sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)), 0)
+    const paidNow = parseFloat(invoiceForm.paid_now || 0)
+    const status = paidNow >= total && total > 0 ? 'paid' : paidNow > 0 ? 'partial' : 'unpaid'
     const invoiceNum = `INV-${Date.now().toString().slice(-6)}`
     const { data: inv } = await supabase.from('invoices').insert({
       clinic_id: user.id,
@@ -664,9 +688,9 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       invoice_number: invoiceNum,
       date: invoiceForm.date,
       due_date: invoiceForm.due_date || null,
-      status: 'unpaid',
+      status,
       total,
-      paid_amount: 0,
+      paid_amount: paidNow,
       notes: invoiceForm.notes || null,
     }).select().single()
     if (inv) {
@@ -701,6 +725,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     }
   }
 
+  // ── FIX 4: restored onSuccess callback ──
   async function handleFinish() {
     await saveInvoice()
     setDone(true)
