@@ -7,7 +7,6 @@ import {
   User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward, Camera, Printer, Phone
 } from 'lucide-react'
 
-// ─── Step indicators ───────────────────────────────────────────────────────
 const STEPS = [
   { id: 1, label: 'Patient',      icon: User },
   { id: 2, label: 'Schedule',     icon: Calendar },
@@ -15,11 +14,9 @@ const STEPS = [
   { id: 4, label: 'Invoice',      icon: FileText },
 ]
 
-// ─── Shared header ─────────────────────────────────────────────────────────
 function StepHeader({ step, onClose }) {
   return (
     <div className="px-6 pt-6 pb-4 border-b border-slate-100">
-      {/* Progress bar */}
       <div className="flex items-center gap-1.5 mb-5">
         {STEPS.map((s, i) => {
           const Icon = s.icon
@@ -47,8 +44,6 @@ function StepHeader({ step, onClose }) {
           )
         })}
       </div>
-
-      {/* Title row */}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
@@ -72,7 +67,6 @@ function StepHeader({ step, onClose }) {
   )
 }
 
-// ─── Footer buttons ─────────────────────────────────────────────────────────
 function StepFooter({ step, onBack, onNext, onSkip, onFinish, loading, nextLabel }) {
   return (
     <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -105,7 +99,6 @@ function StepFooter({ step, onBack, onNext, onSkip, onFinish, loading, nextLabel
   )
 }
 
-// ─── STEP 1: Add Patient ────────────────────────────────────────────────────
 function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
   const photoRef = useRef(null)
   function handleChange(e) {
@@ -114,8 +107,6 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
   return (
     <div className="p-6 space-y-4">
       {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
-
-      {/* Photo + Name row */}
       <div className="flex items-start gap-4">
         <button
           type="button"
@@ -137,7 +128,6 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
           <input name="name" className="input" placeholder="Patient's full name" value={form.name} onChange={handleChange} required />
         </div>
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="label">Phone</label>
@@ -173,7 +163,6 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
   )
 }
 
-// ─── STEP 2: Add Schedule ───────────────────────────────────────────────────
 function Step2Schedule({ form, setForm, patientName }) {
   const PROCEDURES = [
     'General Checkup','Cleaning & Scaling','Tooth Extraction',
@@ -185,14 +174,12 @@ function Step2Schedule({ form, setForm, patientName }) {
   }
   return (
     <div className="p-6 space-y-4">
-      {/* Patient pill */}
       <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
         <div className="w-7 h-7 bg-emerald-200 rounded-full flex items-center justify-center">
           <User size={14} className="text-emerald-700" />
         </div>
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="label">Date *</label>
@@ -218,7 +205,6 @@ function Step2Schedule({ form, setForm, patientName }) {
   )
 }
 
-// ─── STEP 3: Add Prescription ───────────────────────────────────────────────
 function Step3Prescription({ form, setForm, medicines, setMedicines, patientName }) {
   function handleFormChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -233,22 +219,18 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
     if (medicines.length === 1) return
     setMedicines(prev => prev.filter((_, idx) => idx !== i))
   }
-
   return (
     <div className="p-6 space-y-4">
-      {/* Patient pill */}
       <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
         <div className="w-7 h-7 bg-emerald-200 rounded-full flex items-center justify-center">
           <User size={14} className="text-emerald-700" />
         </div>
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
-
       <div>
         <label className="label">Diagnosis</label>
         <input name="diagnosis" className="input" placeholder="e.g. Dental Caries, Gum Disease..." value={form.diagnosis} onChange={handleFormChange} />
       </div>
-
       <div>
         <label className="label">Medicines</label>
         <div className="space-y-3">
@@ -276,7 +258,6 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
           <Plus size={15} /> Add Medicine
         </button>
       </div>
-
       <div>
         <label className="label">Doctor&apos;s Notes</label>
         <textarea name="notes" className="input min-h-[60px] resize-none" placeholder="Additional instructions for patient..." value={form.notes} onChange={handleFormChange} />
@@ -285,7 +266,6 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
   )
 }
 
-// ─── STEP 4: Create Invoice ─────────────────────────────────────────────────
 function Step4Invoice({ items, setItems, form, setForm, patientName }) {
   function handleFormChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -300,20 +280,16 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
     if (items.length === 1) return
     setItems(prev => prev.filter((_, idx) => idx !== i))
   }
-
   const total = items.reduce((sum, item) =>
     sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)), 0)
-
   return (
     <div className="p-6 space-y-4">
-      {/* Patient pill */}
       <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
         <div className="w-7 h-7 bg-emerald-200 rounded-full flex items-center justify-center">
           <User size={14} className="text-emerald-700" />
         </div>
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="label">Invoice Date</label>
@@ -324,8 +300,6 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
           <input name="due_date" type="date" className="input" value={form.due_date} onChange={handleFormChange} />
         </div>
       </div>
-
-      {/* Line Items */}
       <div>
         <label className="label">Services / Items</label>
         <div className="space-y-2">
@@ -337,34 +311,13 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
           </div>
           {items.map((item, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-center">
-              <input
-                className="input col-span-5 text-sm"
-                placeholder="e.g. Root Canal"
-                value={item.description}
-                onChange={e => handleItemChange(i, 'description', e.target.value)}
-              />
-              <input
-                className="input col-span-2 text-sm"
-                type="number" min="1"
-                value={item.quantity}
-                onChange={e => handleItemChange(i, 'quantity', e.target.value)}
-              />
-              <input
-                className="input col-span-3 text-sm"
-                type="number" min="0" step="0.01"
-                placeholder="0.00"
-                value={item.unit_price}
-                onChange={e => handleItemChange(i, 'unit_price', e.target.value)}
-              />
+              <input className="input col-span-5 text-sm" placeholder="e.g. Root Canal" value={item.description} onChange={e => handleItemChange(i, 'description', e.target.value)} />
+              <input className="input col-span-2 text-sm" type="number" min="1" value={item.quantity} onChange={e => handleItemChange(i, 'quantity', e.target.value)} />
+              <input className="input col-span-3 text-sm" type="number" min="0" step="0.01" placeholder="0.00" value={item.unit_price} onChange={e => handleItemChange(i, 'unit_price', e.target.value)} />
               <div className="col-span-1 text-right text-xs font-bold text-slate-700">
                 ৳{(parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)).toLocaleString()}
               </div>
-              <button
-                type="button"
-                onClick={() => removeItem(i)}
-                className="col-span-1 text-red-400 hover:text-red-600 flex justify-center disabled:opacity-30"
-                disabled={items.length === 1}
-              >
+              <button type="button" onClick={() => removeItem(i)} className="col-span-1 text-red-400 hover:text-red-600 flex justify-center disabled:opacity-30" disabled={items.length === 1}>
                 <Trash2 size={14} />
               </button>
             </div>
@@ -374,13 +327,10 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
           <Plus size={15} /> Add Item
         </button>
       </div>
-
-      {/* Total */}
       <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between">
         <span className="font-semibold text-slate-600 text-sm">Total Amount</span>
         <span className="text-xl font-black text-slate-800">৳{total.toLocaleString()}</span>
       </div>
-
       <div>
         <label className="label">Notes</label>
         <textarea name="notes" className="input min-h-[55px] resize-none" placeholder="Payment terms, notes to patient..." value={form.notes} onChange={handleFormChange} />
@@ -389,7 +339,6 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
   )
 }
 
-// ─── SUCCESS screen ─────────────────────────────────────────────────────────
 function SuccessScreen({ patientName, patientPhone, onClose, savedInvoice, savedRx, clinicName }) {
 
   function printInvoice() {
@@ -507,7 +456,6 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
 
   return (
     <div>
-      {/* Header */}
       <div className="px-8 pt-8 pb-6 text-center border-b border-slate-100">
         <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Check size={30} className="text-emerald-600" />
@@ -518,59 +466,36 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
         </p>
       </div>
 
-      {/* Invoice section */}
       {hasInvoice && (
         <div className="px-6 py-5 border-b border-slate-100">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Invoice</p>
           <div className="flex gap-2">
-            <button
-              onClick={printInvoice}
-              className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors"
-            >
+            <button onClick={printInvoice} className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors">
               <Printer size={15} /> Print
             </button>
-            <button
-              onClick={shareInvoiceWhatsApp}
-              disabled={!hasPhone}
-              title={!hasPhone ? 'No phone number saved for this patient' : ''}
-              className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            <button onClick={shareInvoiceWhatsApp} disabled={!hasPhone} title={!hasPhone ? 'No phone number saved' : ''} className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
               <Phone size={15} /> Share via WhatsApp
             </button>
           </div>
-          {!hasPhone && (
-            <p className="text-xs text-slate-400 mt-2 text-center">Add a phone number to enable WhatsApp sharing</p>
-          )}
+          {!hasPhone && <p className="text-xs text-slate-400 mt-2 text-center">Add a phone number to enable WhatsApp sharing</p>}
         </div>
       )}
 
-      {/* Prescription section */}
       {hasRx && (
         <div className="px-6 py-5 border-b border-slate-100">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Prescription</p>
           <div className="flex gap-2">
-            <button
-              onClick={printRx}
-              className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors"
-            >
+            <button onClick={printRx} className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors">
               <Printer size={15} /> Print
             </button>
-            <button
-              onClick={shareRxWhatsApp}
-              disabled={!hasPhone}
-              title={!hasPhone ? 'No phone number saved for this patient' : ''}
-              className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            <button onClick={shareRxWhatsApp} disabled={!hasPhone} title={!hasPhone ? 'No phone number saved' : ''} className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
               <Phone size={15} /> Share via WhatsApp
             </button>
           </div>
-          {!hasPhone && (
-            <p className="text-xs text-slate-400 mt-2 text-center">Add a phone number to enable WhatsApp sharing</p>
-          )}
+          {!hasPhone && <p className="text-xs text-slate-400 mt-2 text-center">Add a phone number to enable WhatsApp sharing</p>}
         </div>
       )}
 
-      {/* Back to dashboard */}
       <div className="px-6 py-5">
         <button onClick={onClose} className="btn-primary w-full justify-center py-3">
           Back to Dashboard
@@ -580,17 +505,15 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
   )
 }
 
-// ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function QuickAddFlow({ onClose, onSuccess }) {
   const supabase = createClient()
-  const [step, setStep]     = useState(1)
+  const [step, setStep]       = useState(1)
   const [loading, setLoading] = useState(false)
-  const [error, setError]   = useState('')
-  const [done, setDone]     = useState(false)
+  const [error, setError]     = useState('')
+  const [done, setDone]       = useState(false)
   const [completed, setCompleted] = useState([])
 
-  // Photo
-  const [photoFile, setPhotoFile] = useState(null)
+  const [photoFile, setPhotoFile]     = useState(null)
   const [photoPreview, setPhotoPreview] = useState(null)
 
   function handlePhotoChange(e) {
@@ -600,11 +523,10 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     setPhotoPreview(URL.createObjectURL(file))
   }
 
-  // Saved data for success screen
-  const [patientId, setPatientId] = useState(null)
+  const [patientId, setPatientId]       = useState(null)
   const [savedInvoice, setSavedInvoice] = useState(null)
-  const [savedRx, setSavedRx] = useState(null)
-  const [clinicName, setClinicName] = useState('')
+  const [savedRx, setSavedRx]           = useState(null)
+  const [clinicName, setClinicName]     = useState('')
 
   useEffect(() => {
     async function fetchClinicName() {
@@ -616,13 +538,11 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     fetchClinicName()
   }, [])
 
-  // Step 1 — patient form
   const [patientForm, setPatientForm] = useState({
     name: '', phone: '', email: '',
     age: '', gender: '', address: '', medical_history: ''
   })
 
-  // Step 2 — schedule form
   const [scheduleForm, setScheduleForm] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     time: '09:00',
@@ -630,13 +550,11 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     notes: '',
   })
 
-  // Step 3 — prescription
   const [rxForm, setRxForm] = useState({ diagnosis: '', notes: '' })
   const [medicines, setMedicines] = useState([
     { medicine: '', dosage: '', frequency: '', duration: '', instructions: '' }
   ])
 
-  // Step 4 — invoice
   const [invoiceForm, setInvoiceForm] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     due_date: format(new Date(Date.now() + 7 * 86400000), 'yyyy-MM-dd'),
@@ -646,10 +564,9 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     { description: '', quantity: 1, unit_price: '' }
   ])
 
-  // ── Step 1: Save patient ────────────────────────────────────────────────
   async function savePatient() {
     if (!patientForm.name.trim()) {
-      setError('Please enter the patient\'s full name.')
+      setError("Please enter the patient's full name.")
       return false
     }
     setError('')
@@ -657,16 +574,13 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Upload photo if provided
     let photo_url = null
     if (photoFile) {
       const ext = photoFile.name.split('.').pop()
       const path = `${user.id}/${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage
-        .from('patient-photos').upload(path, photoFile)
+      const { error: upErr } = await supabase.storage.from('patient-photos').upload(path, photoFile)
       if (!upErr) {
-        const { data: { publicUrl } } = supabase.storage
-          .from('patient-photos').getPublicUrl(path)
+        const { data: { publicUrl } } = supabase.storage.from('patient-photos').getPublicUrl(path)
         photo_url = publicUrl
       }
     }
@@ -695,13 +609,10 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     return true
   }
 
-  // ── Step 2: Save appointment ────────────────────────────────────────────
   async function saveSchedule() {
     if (!scheduleForm.date || !scheduleForm.time) return true
     setLoading(true)
-
     const { data: { user } } = await supabase.auth.getUser()
-
     await supabase.from('appointments').insert({
       clinic_id: user.id,
       patient_id: patientId,
@@ -711,20 +622,16 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       notes: scheduleForm.notes || null,
       status: 'scheduled',
     })
-
     setLoading(false)
     setCompleted(prev => [...prev, 'Appointment Booked'])
     return true
   }
 
-  // ── Step 3: Save prescription ───────────────────────────────────────────
   async function savePrescription() {
     const hasMeds = medicines.some(m => m.medicine.trim())
     if (!rxForm.diagnosis && !hasMeds) return true
-
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-
     const { data: rx } = await supabase.from('prescriptions').insert({
       clinic_id: user.id,
       patient_id: patientId,
@@ -732,34 +639,25 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       diagnosis: rxForm.diagnosis || null,
       notes: rxForm.notes || null,
     }).select().single()
-
     let medItems = []
     if (rx && hasMeds) {
-      medItems = medicines.filter(m => m.medicine.trim())
-        .map(m => ({ prescription_id: rx.id, ...m }))
+      medItems = medicines.filter(m => m.medicine.trim()).map(m => ({ prescription_id: rx.id, ...m }))
       await supabase.from('prescription_items').insert(medItems)
     }
-
     if (rx) setSavedRx({ ...rx, prescription_items: medItems })
-
     setLoading(false)
     setCompleted(prev => [...prev, 'Prescription Written'])
     return true
   }
 
-  // ── Step 4: Save invoice ────────────────────────────────────────────────
   async function saveInvoice() {
     const hasItems = invoiceItems.some(i => i.description.trim() && i.unit_price)
     if (!hasItems) return true
-
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-
     const total = invoiceItems.reduce((sum, item) =>
       sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)), 0)
-
     const invoiceNum = `INV-${Date.now().toString().slice(-6)}`
-
     const { data: inv } = await supabase.from('invoices').insert({
       clinic_id: user.id,
       patient_id: patientId,
@@ -771,7 +669,6 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       paid_amount: 0,
       notes: invoiceForm.notes || null,
     }).select().single()
-
     if (inv) {
       const items = invoiceItems
         .filter(i => i.description.trim() && i.unit_price)
@@ -785,13 +682,11 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       await supabase.from('invoice_items').insert(items)
       setSavedInvoice({ ...inv, invoice_items: items })
     }
-
     setLoading(false)
     setCompleted(prev => [...prev, 'Invoice Created'])
     return true
   }
 
-  // ── Navigation ──────────────────────────────────────────────────────────
   async function handleNext() {
     if (step === 1) {
       const ok = await savePatient()
@@ -807,3 +702,91 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   }
 
   async function handleFinish() {
+    await saveInvoice()
+    setDone(true)
+    onSuccess?.()
+  }
+
+  function handleSkip() {
+    setStep(prev => prev + 1)
+  }
+
+  function handleBack() {
+    setStep(prev => prev - 1)
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === e.currentTarget) onClose()
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={handleOverlayClick}
+    >
+      <div
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden"
+        style={{ animation: 'slideUp 0.25s ease' }}
+      >
+        {done ? (
+          <SuccessScreen
+            patientName={patientForm.name}
+            patientPhone={patientForm.phone}
+            savedInvoice={savedInvoice}
+            savedRx={savedRx}
+            clinicName={clinicName}
+            onClose={onClose}
+          />
+        ) : (
+          <>
+            <StepHeader step={step} onClose={onClose} />
+            <div className="flex-1 overflow-y-auto">
+              {step === 1 && (
+                <Step1Patient
+                  form={patientForm}
+                  setForm={setPatientForm}
+                  error={error}
+                  photoPreview={photoPreview}
+                  onPhotoChange={handlePhotoChange}
+                />
+              )}
+              {step === 2 && (
+                <Step2Schedule form={scheduleForm} setForm={setScheduleForm} patientName={patientForm.name} />
+              )}
+              {step === 3 && (
+                <Step3Prescription
+                  form={rxForm} setForm={setRxForm}
+                  medicines={medicines} setMedicines={setMedicines}
+                  patientName={patientForm.name}
+                />
+              )}
+              {step === 4 && (
+                <Step4Invoice
+                  items={invoiceItems} setItems={setInvoiceItems}
+                  form={invoiceForm} setForm={setInvoiceForm}
+                  patientName={patientForm.name}
+                />
+              )}
+            </div>
+            <StepFooter
+              step={step}
+              onBack={handleBack}
+              onNext={handleNext}
+              onSkip={step > 1 ? handleSkip : null}
+              onFinish={handleFinish}
+              loading={loading}
+              nextLabel={step === 1 ? 'Save & Continue' : 'Next'}
+            />
+          </>
+        )}
+      </div>
+
+      <style jsx global>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(24px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
+    </div>
+  )
+}
