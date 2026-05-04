@@ -724,7 +724,6 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   async function handleFinish() {
     const inv = await saveInvoice()
     if (inv) setSavedInvoice(inv)
-    onSuccess?.()
     setDone(true)
   }
 
@@ -756,7 +755,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
             savedInvoice={savedInvoice}
             savedRx={savedRx}
             clinicName={clinicName}
-            onClose={onClose}
+            onClose={() => { onSuccess?.(); onClose() }}
           />
         ) : (
           <>
