@@ -6,6 +6,7 @@ import {
   X, ChevronRight, ChevronLeft, Check,
   User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward, Camera, Printer, Phone
 } from 'lucide-react'
+import { searchMedicines } from '@/lib/medicines'
 
 const STEPS = [
   { id: 1, label: 'Patient',      icon: User },
@@ -15,7 +16,61 @@ const STEPS = [
 ]
 
 const FREQ_PILLS = ['1+1+1', '1+0+1', '1+0+0', '0+1+0', '0+0+1', '1+1+0']
-const INSTR_PILLS = ['Before meal', 'After meal', 'At bedtime', 'With water', 'Empty stomach']
+
+function MedicineInput({ value, onChange }) {
+  const [suggestions, setSuggestions] = useState([])
+  const [show, setShow] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setShow(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  function handleChange(e) {
+    const val = e.target.value
+    onChange(val)
+    if (val.length >= 2) {
+      setSuggestions(searchMedicines(val))
+      setShow(true)
+    } else {
+      setSuggestions([])
+      setShow(false)
+    }
+  }
+
+  function handleSelect(med) {
+    onChange(med)
+    setShow(false)
+    setSuggestions([])
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        className="input text-sm w-full"
+        placeholder="Type medicine name..."
+        value={value}
+        onChange={handleChange}
+        onFocus={() => value.length >= 2 && suggestions.length > 0 && setShow(true)}
+        autoComplete="off"
+      />
+      {show && suggestions.length > 0 && (
+        <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
+          {suggestions.map((med, i) => (
+            <button key={i} type="button" onMouseDown={() => handleSelect(med)}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 transition-colors">
+              {med}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function StepHeader({ step, onClose }) {
   return (
@@ -270,8 +325,10 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
                   <Trash2 size={14} />
                 </button>
               </div>
-              <input className="input text-sm" placeholder="Medicine name"
-                value={med.medicine} onChange={e => handleMedChange(i, 'medicine', e.target.value)} />
+              <MedicineInput
+                value={med.medicine}
+                onChange={val => handleMedChange(i, 'medicine', val)}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-500 mb-1">Frequency</p>
