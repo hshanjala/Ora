@@ -1,10 +1,66 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Loader2, Plus, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
+import { searchMedicines } from '@/lib/medicines'
 
 const FREQ_PILLS = ['1+1+1', '1+0+1', '1+0+0', '0+1+0', '0+0+1', '1+1+0']
+
+function MedicineInput({ value, onChange }) {
+  const [suggestions, setSuggestions] = useState([])
+  const [show, setShow] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setShow(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  function handleChange(e) {
+    const val = e.target.value
+    onChange(val)
+    if (val.length >= 2) {
+      setSuggestions(searchMedicines(val))
+      setShow(true)
+    } else {
+      setSuggestions([])
+      setShow(false)
+    }
+  }
+
+  function handleSelect(med) {
+    onChange(med)
+    setShow(false)
+    setSuggestions([])
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        className="input text-sm w-full"
+        placeholder="Type medicine name..."
+        value={value}
+        onChange={handleChange}
+        onFocus={() => value.length >= 2 && suggestions.length > 0 && setShow(true)}
+        autoComplete="off"
+      />
+      {show && suggestions.length > 0 && (
+        <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
+          {suggestions.map((med, i) => (
+            <button key={i} type="button" onMouseDown={() => handleSelect(med)}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 transition-colors">
+              {med}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
   return (
@@ -16,60 +72,33 @@ function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
           <Trash2 size={14} />
         </button>
       </div>
-
-      <input
-        className="input text-sm"
-        placeholder="Medicine name"
-        value={med.medicine}
-        onChange={e => onChange(index, 'medicine', e.target.value)}
-      />
-
+      <MedicineInput value={med.medicine} onChange={val => onChange(index, 'medicine', val)} />
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-xs font-semibold text-slate-500 mb-1 block">Frequency</label>
-          <input
-            className="input text-sm mb-1.5"
-            placeholder="e.g. 1+1+1 or 3x daily"
-            value={med.frequency}
-            onChange={e => onChange(index, 'frequency', e.target.value)}
-          />
+          <input className="input text-sm mb-1.5" placeholder="e.g. 1+1+1"
+            value={med.frequency} onChange={e => onChange(index, 'frequency', e.target.value)} />
           <div className="flex flex-wrap gap-1">
             {FREQ_PILLS.map(pill => (
-              <button
-                key={pill}
-                type="button"
-                onClick={() => onChange(index, 'frequency', pill)}
+              <button key={pill} type="button" onClick={() => onChange(index, 'frequency', pill)}
                 className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
                   med.frequency === pill
                     ? 'bg-emerald-100 border-emerald-400 text-emerald-700 font-semibold'
                     : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
-                }`}
-              >
-                {pill}
-              </button>
+                }`}>{pill}</button>
             ))}
           </div>
         </div>
-
         <div>
           <label className="text-xs font-semibold text-slate-500 mb-1 block">Duration</label>
-          <input
-            className="input text-sm"
-            placeholder="e.g. 5 days"
-            value={med.duration}
-            onChange={e => onChange(index, 'duration', e.target.value)}
-          />
+          <input className="input text-sm" placeholder="e.g. 5 days"
+            value={med.duration} onChange={e => onChange(index, 'duration', e.target.value)} />
         </div>
       </div>
-
       <div>
         <label className="text-xs font-semibold text-slate-500 mb-1 block">Special Instructions</label>
-        <input
-          className="input text-sm"
-          placeholder="e.g. After meal, At bedtime..."
-          value={med.instructions}
-          onChange={e => onChange(index, 'instructions', e.target.value)}
-        />
+        <input className="input text-sm" placeholder="e.g. After meal, At bedtime..."
+          value={med.instructions} onChange={e => onChange(index, 'instructions', e.target.value)} />
       </div>
     </div>
   )
@@ -80,7 +109,6 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [patients, setPatients] = useState([])
   const [error, setError] = useState('')
-
   const [form, setForm] = useState({
     patient_id: '',
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -88,7 +116,6 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
     on_examination: '',
     advice: '',
   })
-
   const [medicines, setMedicines] = useState([
     { medicine: '', frequency: '', duration: '', instructions: '' }
   ])
@@ -96,8 +123,7 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
   useEffect(() => {
     async function loadPatients() {
       const { data: { user } } = await supabase.auth.getUser()
-      const { data } = await supabase
-        .from('patients').select('id, name')
+      const { data } = await supabase.from('patients').select('id, name')
         .eq('clinic_id', user.id).order('name')
       setPatients(data || [])
     }
@@ -107,15 +133,12 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
   function handleFormChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
-
   function handleMedChange(index, field, value) {
     setMedicines(prev => prev.map((m, i) => i === index ? { ...m, [field]: value } : m))
   }
-
   function addMed() {
     setMedicines(prev => [...prev, { medicine: '', frequency: '', duration: '', instructions: '' }])
   }
-
   function removeMed(index) {
     if (medicines.length === 1) return
     setMedicines(prev => prev.filter((_, i) => i !== index))
@@ -126,44 +149,26 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
     if (!form.patient_id) { setError('Please select a patient'); return }
     setLoading(true)
     setError('')
-
     const { data: { user } } = await supabase.auth.getUser()
-
-    const { data: rx, error: rxErr } = await supabase
-      .from('prescriptions')
-      .insert({
-        clinic_id: user.id,
-        patient_id: form.patient_id,
-        date: form.date,
-        diagnosis: form.on_examination || null,
-        chief_complaint: form.chief_complaint || null,
-        advice: form.advice || null,
-        notes: null,
-      })
-      .select()
-      .single()
-
-    if (rxErr) {
-      setError('Failed to create prescription.')
-      setLoading(false)
-      return
-    }
-
-    const medItems = medicines
-      .filter(m => m.medicine.trim())
-      .map(m => ({
-        prescription_id: rx.id,
-        medicine: m.medicine,
-        dosage: null,
-        frequency: m.frequency || null,
-        duration: m.duration || null,
-        instructions: m.instructions || null,
-      }))
-
-    if (medItems.length > 0) {
-      await supabase.from('prescription_items').insert(medItems)
-    }
-
+    const { data: rx, error: rxErr } = await supabase.from('prescriptions').insert({
+      clinic_id: user.id,
+      patient_id: form.patient_id,
+      date: form.date,
+      diagnosis: form.on_examination || null,
+      chief_complaint: form.chief_complaint || null,
+      advice: form.advice || null,
+      notes: null,
+    }).select().single()
+    if (rxErr) { setError('Failed to create prescription.'); setLoading(false); return }
+    const medItems = medicines.filter(m => m.medicine.trim()).map(m => ({
+      prescription_id: rx.id,
+      medicine: m.medicine,
+      dosage: null,
+      frequency: m.frequency || null,
+      duration: m.duration || null,
+      instructions: m.instructions || null,
+    }))
+    if (medItems.length > 0) await supabase.from('prescription_items').insert(medItems)
     onSuccess()
     onClose()
   }
@@ -175,10 +180,8 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
           <h2 className="font-bold text-slate-800 text-lg">New Prescription</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
         </div>
-
         <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[80vh]">
           {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Patient *</label>
@@ -192,62 +195,42 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
               <input name="date" type="date" className="input" value={form.date} onChange={handleFormChange} />
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <label className="label !mb-0">C/C</label>
                 <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Chief Complaint</span>
               </div>
-              <textarea
-                name="chief_complaint"
-                className="input min-h-[72px] resize-none text-sm"
+              <textarea name="chief_complaint" className="input min-h-[72px] resize-none text-sm"
                 placeholder="What is the patient complaining of..."
-                value={form.chief_complaint}
-                onChange={handleFormChange}
-              />
+                value={form.chief_complaint} onChange={handleFormChange} />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <label className="label !mb-0">O/E</label>
                 <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">On Examination</span>
               </div>
-              <textarea
-                name="on_examination"
-                className="input min-h-[72px] resize-none text-sm"
+              <textarea name="on_examination" className="input min-h-[72px] resize-none text-sm"
                 placeholder="Examination findings..."
-                value={form.on_examination}
-                onChange={handleFormChange}
-              />
+                value={form.on_examination} onChange={handleFormChange} />
             </div>
           </div>
-
           <div>
             <div className="flex items-center gap-2 mb-1">
               <label className="label !mb-0">Adv</label>
               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Advice</span>
             </div>
-            <textarea
-              name="advice"
-              className="input min-h-[56px] resize-none text-sm"
+            <textarea name="advice" className="input min-h-[56px] resize-none text-sm"
               placeholder="Advice given to patient..."
-              value={form.advice}
-              onChange={handleFormChange}
-            />
+              value={form.advice} onChange={handleFormChange} />
           </div>
-
           <div>
             <label className="label">Medicines</label>
             <div className="space-y-3">
               {medicines.map((med, i) => (
-                <MedicineRow
-                  key={i}
-                  med={med}
-                  index={i}
-                  onChange={handleMedChange}
-                  onRemove={removeMed}
-                  disableRemove={medicines.length === 1}
-                />
+                <MedicineRow key={i} med={med} index={i}
+                  onChange={handleMedChange} onRemove={removeMed}
+                  disableRemove={medicines.length === 1} />
               ))}
             </div>
             <button type="button" onClick={addMed}
@@ -255,7 +238,6 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
               <Plus size={16} /> Add Medicine
             </button>
           </div>
-
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">Cancel</button>
             <button type="submit" disabled={loading} className="btn-primary flex-1 justify-center">
