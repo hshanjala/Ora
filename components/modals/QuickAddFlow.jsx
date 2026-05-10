@@ -202,66 +202,27 @@ function Step2Schedule({ form, setForm, patientName }) {
   )
 }
 
-function Step3Prescription({ form, setForm, medicines, setMedicines, patientName }) {
-  function handleFormChange(e) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
-  }
-  function handleMedChange(i, field, value) {
-    setMedicines(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m))
-  }
-  function addMed() {
-    setMedicines(prev => [...prev, { medicine: '', dosage: '', frequency: '', duration: '', instructions: '' }])
-  }
-  function removeMed(i) {
-    if (medicines.length === 1) return
-    setMedicines(prev => prev.filter((_, idx) => idx !== i))
-  }
-  return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
-        <div className="w-7 h-7 bg-emerald-200 rounded-full flex items-center justify-center">
-          <User size={14} className="text-emerald-700" />
-        </div>
-        <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
-      </div>
-      <div>
-        <label className="label">Diagnosis</label>
-        <input name="diagnosis" className="input" placeholder="e.g. Dental Caries, Gum Disease..." value={form.diagnosis} onChange={handleFormChange} />
-      </div>
-      <div>
-        <label className="label">Medicines</label>
-        <div className="space-y-3">
-          {medicines.map((med, i) => (
-            <div key={i} className="bg-slate-50 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500">Medicine {i + 1}</span>
-                <button type="button" onClick={() => removeMed(i)} disabled={medicines.length === 1} className="text-red-400 hover:text-red-600 disabled:opacity-30">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="col-span-2">
-                  <input className="input text-sm" placeholder="Medicine name" value={med.medicine} onChange={e => handleMedChange(i, 'medicine', e.target.value)} />
-                </div>
-                <input className="input text-sm" placeholder="Dosage (e.g. 500mg)" value={med.dosage} onChange={e => handleMedChange(i, 'dosage', e.target.value)} />
-                <input className="input text-sm" placeholder="Frequency (e.g. 3x daily)" value={med.frequency} onChange={e => handleMedChange(i, 'frequency', e.target.value)} />
-                <input className="input text-sm" placeholder="Duration (e.g. 5 days)" value={med.duration} onChange={e => handleMedChange(i, 'duration', e.target.value)} />
-                <input className="input text-sm" placeholder="Special instructions" value={med.instructions} onChange={e => handleMedChange(i, 'instructions', e.target.value)} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <button type="button" onClick={addMed} className="mt-2 flex items-center gap-1.5 text-emerald-600 text-sm font-semibold hover:text-emerald-700">
-          <Plus size={15} /> Add Medicine
-        </button>
-      </div>
-      <div>
-        <label className="label">Doctor&apos;s Notes</label>
-        <textarea name="notes" className="input min-h-[60px] resize-none" placeholder="Additional instructions for patient..." value={form.notes} onChange={handleFormChange} />
-      </div>
-    </div>
-  )
-}
+const { data: rx } = await supabase.from('prescriptions').insert({
+      clinic_id: user.id,
+      patient_id: patientId,
+      date: format(new Date(), 'yyyy-MM-dd'),
+      diagnosis: rxForm.on_examination || null,
+      chief_complaint: rxForm.chief_complaint || null,
+      advice: rxForm.advice || null,
+      notes: null,
+    }).select().single()
+    let medItems = []
+    if (rx && hasMeds) {
+      medItems = medicines.filter(m => m.medicine.trim()).map(m => ({
+        prescription_id: rx.id,
+        medicine: m.medicine,
+        dosage: null,
+        frequency: m.frequency || null,
+        duration: m.duration || null,
+        instructions: m.instructions || null,
+      }))
+      await supabase.from('prescription_items').insert(medItems)
+    }
 
 function Step4Invoice({ items, setItems, form, setForm, patientName }) {
   function handleFormChange(e) {
@@ -644,7 +605,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
 
   async function savePrescription() {
     const hasMeds = medicines.some(m => m.medicine.trim())
-    if (!rxForm.diagnosis && !hasMeds) return true
+if (!rxForm.chief_complaint && !rxForm.on_examination && !rxForm.advice && !hasMeds) return true
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     const { data: rx } = await supabase.from('prescriptions').insert({
