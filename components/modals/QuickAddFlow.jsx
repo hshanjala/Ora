@@ -14,6 +14,9 @@ const STEPS = [
   { id: 4, label: 'Invoice',      icon: FileText },
 ]
 
+const FREQ_PILLS = ['1+1+1', '1+0+1', '1+0+0', '0+1+0', '0+0+1', '1+1+0']
+const INSTR_PILLS = ['Before meal', 'After meal', 'At bedtime', 'With water', 'Empty stomach']
+
 function StepHeader({ step, onClose }) {
   return (
     <div className="px-6 pt-6 pb-4 border-b border-slate-100">
@@ -202,27 +205,120 @@ function Step2Schedule({ form, setForm, patientName }) {
   )
 }
 
-const { data: rx } = await supabase.from('prescriptions').insert({
-      clinic_id: user.id,
-      patient_id: patientId,
-      date: format(new Date(), 'yyyy-MM-dd'),
-      diagnosis: rxForm.on_examination || null,
-      chief_complaint: rxForm.chief_complaint || null,
-      advice: rxForm.advice || null,
-      notes: null,
-    }).select().single()
-    let medItems = []
-    if (rx && hasMeds) {
-      medItems = medicines.filter(m => m.medicine.trim()).map(m => ({
-        prescription_id: rx.id,
-        medicine: m.medicine,
-        dosage: null,
-        frequency: m.frequency || null,
-        duration: m.duration || null,
-        instructions: m.instructions || null,
-      }))
-      await supabase.from('prescription_items').insert(medItems)
-    }
+function Step3Prescription({ form, setForm, medicines, setMedicines, patientName }) {
+  function handleFormChange(e) {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+  function handleMedChange(i, field, value) {
+    setMedicines(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m))
+  }
+  function addMed() {
+    setMedicines(prev => [...prev, { medicine: '', frequency: '', duration: '', instructions: '' }])
+  }
+  function removeMed(i) {
+    if (medicines.length === 1) return
+    setMedicines(prev => prev.filter((_, idx) => idx !== i))
+  }
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
+        <div className="w-7 h-7 bg-emerald-200 rounded-full flex items-center justify-center">
+          <User size={14} className="text-emerald-700" />
+        </div>
+        <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <label className="label !mb-0">C/C</label>
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Chief Complaint</span>
+          </div>
+          <textarea name="chief_complaint" className="input min-h-[72px] resize-none text-sm"
+            placeholder="What is the patient complaining of..."
+            value={form.chief_complaint} onChange={handleFormChange} />
+        </div>
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <label className="label !mb-0">O/E</label>
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">On Examination</span>
+          </div>
+          <textarea name="on_examination" className="input min-h-[72px] resize-none text-sm"
+            placeholder="Examination findings..."
+            value={form.on_examination} onChange={handleFormChange} />
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <label className="label !mb-0">Adv</label>
+          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Advice</span>
+        </div>
+        <textarea name="advice" className="input min-h-[56px] resize-none text-sm"
+          placeholder="Advice given to patient..."
+          value={form.advice} onChange={handleFormChange} />
+      </div>
+
+      <div>
+        <label className="label">Medicines</label>
+        <div className="space-y-3">
+          {medicines.map((med, i) => (
+            <div key={i} className="bg-slate-50 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-600">Medicine {i + 1}</span>
+                <button type="button" onClick={() => removeMed(i)} disabled={medicines.length === 1} className="text-red-400 hover:text-red-600 disabled:opacity-30">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <input className="input text-sm" placeholder="Medicine name"
+                value={med.medicine} onChange={e => handleMedChange(i, 'medicine', e.target.value)} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 mb-1">Frequency</p>
+                  <input className="input text-sm mb-1.5" placeholder="e.g. 1+1+1"
+                    value={med.frequency} onChange={e => handleMedChange(i, 'frequency', e.target.value)} />
+                  <div className="flex flex-wrap gap-1">
+                    {FREQ_PILLS.map(pill => (
+                      <button key={pill} type="button" onClick={() => handleMedChange(i, 'frequency', pill)}
+                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                          med.frequency === pill
+                            ? 'bg-emerald-100 border-emerald-400 text-emerald-700 font-semibold'
+                            : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
+                        }`}>{pill}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 mb-1">Duration</p>
+                  <input className="input text-sm" placeholder="e.g. 5 days"
+                    value={med.duration} onChange={e => handleMedChange(i, 'duration', e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-500 mb-1">Special Instructions</p>
+                <input className="input text-sm mb-1.5" placeholder="e.g. After meal..."
+                  value={med.instructions} onChange={e => handleMedChange(i, 'instructions', e.target.value)} />
+                <div className="flex flex-wrap gap-1">
+                  {INSTR_PILLS.map(pill => (
+                    <button key={pill} type="button" onClick={() => handleMedChange(i, 'instructions', pill)}
+                      className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                        med.instructions === pill
+                          ? 'bg-blue-100 border-blue-400 text-blue-700 font-semibold'
+                          : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600'
+                      }`}>{pill}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={addMed} className="mt-2 flex items-center gap-1.5 text-emerald-600 text-sm font-semibold hover:text-emerald-700">
+          <Plus size={15} /> Add Medicine
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function Step4Invoice({ items, setItems, form, setForm, patientName }) {
   function handleFormChange(e) {
@@ -251,13 +347,10 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
         </div>
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
-
-      {/* Invoice Date only — no Due Date */}
       <div>
         <label className="label">Invoice Date</label>
         <input name="date" type="date" className="input" value={form.date} onChange={handleFormChange} />
       </div>
-
       <div>
         <label className="label">Services / Items</label>
         <div className="space-y-2">
@@ -285,8 +378,6 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
           <Plus size={15} /> Add Item
         </button>
       </div>
-
-      {/* Total + Paid Now + Due */}
       <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
           <span className="font-semibold text-slate-600 text-sm">Total Amount</span>
@@ -296,14 +387,9 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
           <label className="font-semibold text-emerald-700 text-sm">Paid Now</label>
           <div className="flex items-center gap-2">
             <span className="text-slate-500 text-sm">৳</span>
-            <input
-              name="paid_now"
-              type="number" min="0" step="0.01"
-              placeholder="0.00"
-              value={form.paid_now}
-              onChange={handleFormChange}
-              className="w-28 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+            <input name="paid_now" type="number" min="0" step="0.01" placeholder="0.00"
+              value={form.paid_now} onChange={handleFormChange}
+              className="w-28 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
         </div>
         <div className="flex items-center justify-between px-4 py-3">
@@ -313,7 +399,6 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
           </span>
         </div>
       </div>
-
       <div>
         <label className="label">Notes</label>
         <textarea name="notes" className="input min-h-[55px] resize-none" placeholder="Payment terms, notes to patient..." value={form.notes} onChange={handleFormChange} />
@@ -384,11 +469,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#1e293b;font-siz
 .clinic{font-size:24px;font-weight:800;color:#065f46}
 .sub{color:#64748b;font-size:13px;margin-top:4px}
 .section{margin-bottom:20px}
-.label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.value{font-size:15px;font-weight:600}
+.lbl{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
+.val{font-size:14px;font-weight:600;color:#1e293b}
 .med-box{background:#f8fafc;border-radius:8px;padding:12px 16px;margin-bottom:8px}
 .med-name{font-size:14px;font-weight:700;margin-bottom:4px}
 .med-detail{font-size:12px;color:#64748b}
+.adv-box{background:#fefce8;border-left:3px solid #eab308;padding:10px 14px;margin-top:16px;font-size:13px}
 .footer{text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;padding-top:16px;margin-top:40px}
 .sig{margin-top:60px;border-top:1px solid #111;width:200px;text-align:center;padding-top:6px;font-size:12px}
 </style></head><body>
@@ -396,19 +482,18 @@ body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#1e293b;font-siz
   <div><div class="clinic">${clinicName || 'Ora Dental Clinic'}</div><div class="sub">Prescription</div></div>
   <div style="text-align:right"><div style="font-size:13px;color:#64748b">${format(new Date(savedRx.date), 'MMMM d, yyyy')}</div></div>
 </div>
-<div class="section"><div class="label">Patient</div><div class="value">${patientName}</div></div>
-${savedRx.diagnosis ? `<div class="section"><div class="label">Diagnosis</div><div class="value">${savedRx.diagnosis}</div></div>` : ''}
-<div class="section">
-  <div class="label">Prescribed Medicines</div>
-  ${items.map((item, i) => `
-    <div class="med-box">
-      <div class="med-name">${i + 1}. ${item.medicine}</div>
-      <div class="med-detail">${[item.dosage, item.frequency, item.duration].filter(Boolean).join(' &nbsp;&middot;&nbsp; ')}${item.instructions ? `<br>Note: ${item.instructions}` : ''}</div>
-    </div>
-  `).join('')}
-</div>
-${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><div class="value">${savedRx.notes}</div></div>` : ''}
-<div style="display:flex;justify-content:flex-end"><div class="sig">Doctor's Signature</div></div>
+<div class="section"><div class="lbl">Patient</div><div class="val">${patientName}</div></div>
+${savedRx.chief_complaint ? `<div class="section"><div class="lbl">C/C — Chief Complaint</div><div class="val">${savedRx.chief_complaint}</div></div>` : ''}
+${savedRx.diagnosis ? `<div class="section"><div class="lbl">O/E — On Examination</div><div class="val">${savedRx.diagnosis}</div></div>` : ''}
+<div style="font-size:20px;font-weight:800;color:#065f46;margin-bottom:8px;">&#8478;</div>
+${items.map((item, i) => `
+  <div class="med-box">
+    <div class="med-name">${i + 1}. ${item.medicine}</div>
+    <div class="med-detail">${[item.frequency, item.duration, item.instructions].filter(Boolean).join(' &nbsp;&middot;&nbsp; ')}</div>
+  </div>
+`).join('')}
+${savedRx.advice ? `<div class="adv-box"><strong>Adv:</strong> ${savedRx.advice}</div>` : ''}
+<div style="display:flex;justify-content:flex-end;margin-top:48px"><div class="sig">Doctor's Signature</div></div>
 <div class="footer">Powered by Ora &middot; ${clinicName || 'Ora Dental Clinic'}</div>
 </body></html>`)
     win.document.close()
@@ -426,8 +511,8 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
   function shareRxWhatsApp() {
     if (!savedRx || !patientPhone) return
     const items = savedRx.prescription_items || []
-    const medList = items.map((m, i) => `${i + 1}. ${m.medicine}${m.dosage ? ` ${m.dosage}` : ''}${m.frequency ? ` - ${m.frequency}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join('\n')
-    const msg = `Hello ${patientName}, your prescription from ${clinicName || 'Ora Dental Clinic'}:${savedRx.diagnosis ? `\nDiagnosis: ${savedRx.diagnosis}` : ''}\n\nMedicines:\n${medList}${savedRx.notes ? `\n\nNote: ${savedRx.notes}` : ''}\n\nGet well soon!`
+    const medList = items.map((m, i) => `${i + 1}. ${m.medicine}${m.frequency ? ` - ${m.frequency}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join('\n')
+    const msg = `Hello ${patientName}, your prescription from ${clinicName || 'Ora Dental Clinic'}:${savedRx.chief_complaint ? `\nC/C: ${savedRx.chief_complaint}` : ''}${savedRx.diagnosis ? `\nO/E: ${savedRx.diagnosis}` : ''}\n\nMedicines:\n${medList}${savedRx.advice ? `\n\nAdv: ${savedRx.advice}` : ''}\n\nGet well soon!`
     const phone = patientPhone.replace(/\D/g, '')
     window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }
@@ -447,7 +532,6 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
           <span className="font-bold text-slate-700">{patientName}</span> has been added successfully
         </p>
       </div>
-
       {hasInvoice && (
         <div className="px-6 py-5 border-b border-slate-100">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Invoice</p>
@@ -455,14 +539,13 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
             <button onClick={printInvoice} className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors">
               <Printer size={15} /> Print
             </button>
-            <button onClick={shareInvoiceWhatsApp} disabled={!hasPhone} title={!hasPhone ? 'No phone number saved' : ''} className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+            <button onClick={shareInvoiceWhatsApp} disabled={!hasPhone} className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
               <Phone size={15} /> Share via WhatsApp
             </button>
           </div>
           {!hasPhone && <p className="text-xs text-slate-400 mt-2 text-center">Add a phone number to enable WhatsApp sharing</p>}
         </div>
       )}
-
       {hasRx && (
         <div className="px-6 py-5 border-b border-slate-100">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Prescription</p>
@@ -470,14 +553,13 @@ ${savedRx.notes ? `<div class="section"><div class="label">Doctor's Notes</div><
             <button onClick={printRx} className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors">
               <Printer size={15} /> Print
             </button>
-            <button onClick={shareRxWhatsApp} disabled={!hasPhone} title={!hasPhone ? 'No phone number saved' : ''} className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+            <button onClick={shareRxWhatsApp} disabled={!hasPhone} className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
               <Phone size={15} /> Share via WhatsApp
             </button>
           </div>
           {!hasPhone && <p className="text-xs text-slate-400 mt-2 text-center">Add a phone number to enable WhatsApp sharing</p>}
         </div>
       )}
-
       <div className="px-6 py-5">
         <button onClick={onClose} className="btn-primary w-full justify-center py-3">
           Back to Dashboard
@@ -532,9 +614,11 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     notes: '',
   })
 
-  const [rxForm, setRxForm] = useState({ diagnosis: '', notes: '' })
+  const [rxForm, setRxForm] = useState({
+    chief_complaint: '', on_examination: '', advice: ''
+  })
   const [medicines, setMedicines] = useState([
-    { medicine: '', dosage: '', frequency: '', duration: '', instructions: '' }
+    { medicine: '', frequency: '', duration: '', instructions: '' }
   ])
 
   const [invoiceForm, setInvoiceForm] = useState({
@@ -605,19 +689,28 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
 
   async function savePrescription() {
     const hasMeds = medicines.some(m => m.medicine.trim())
-if (!rxForm.chief_complaint && !rxForm.on_examination && !rxForm.advice && !hasMeds) return true
+    if (!rxForm.chief_complaint && !rxForm.on_examination && !rxForm.advice && !hasMeds) return true
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     const { data: rx } = await supabase.from('prescriptions').insert({
       clinic_id: user.id,
       patient_id: patientId,
       date: format(new Date(), 'yyyy-MM-dd'),
-      diagnosis: rxForm.diagnosis || null,
-      notes: rxForm.notes || null,
+      diagnosis: rxForm.on_examination || null,
+      chief_complaint: rxForm.chief_complaint || null,
+      advice: rxForm.advice || null,
+      notes: null,
     }).select().single()
     let medItems = []
     if (rx && hasMeds) {
-      medItems = medicines.filter(m => m.medicine.trim()).map(m => ({ prescription_id: rx.id, ...m }))
+      medItems = medicines.filter(m => m.medicine.trim()).map(m => ({
+        prescription_id: rx.id,
+        medicine: m.medicine,
+        dosage: null,
+        frequency: m.frequency || null,
+        duration: m.duration || null,
+        instructions: m.instructions || null,
+      }))
       await supabase.from('prescription_items').insert(medItems)
     }
     if (rx) setSavedRx({ ...rx, prescription_items: medItems })
@@ -626,7 +719,6 @@ if (!rxForm.chief_complaint && !rxForm.on_examination && !rxForm.advice && !hasM
     return true
   }
 
-  // KEY FIX: returns the invoice data directly instead of relying on state
   async function saveInvoice() {
     const hasItems = invoiceItems.some(i => i.description.trim() && i.unit_price)
     if (!hasItems) return null
@@ -681,7 +773,6 @@ if (!rxForm.chief_complaint && !rxForm.on_examination && !rxForm.advice && !hasM
     }
   }
 
-  // KEY FIX: pass invoice directly to state before setDone
   async function handleFinish() {
     const inv = await saveInvoice()
     if (inv) setSavedInvoice(inv)
@@ -761,7 +852,6 @@ if (!rxForm.chief_complaint && !rxForm.on_examination && !rxForm.advice && !hasM
           </>
         )}
       </div>
-
       <style jsx global>{`
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(24px) scale(0.98); }
