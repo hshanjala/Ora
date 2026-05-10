@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 
 const FREQ_PILLS = ['1+1+1', '1+0+1', '1+0+0', '0+1+0', '0+0+1', '1+1+0']
-const INSTR_PILLS = ['Before meal', 'After meal', 'At bedtime', 'With water', 'Empty stomach']
 
 function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
   return (
@@ -18,7 +17,6 @@ function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
         </button>
       </div>
 
-      {/* Medicine name */}
       <input
         className="input text-sm"
         placeholder="Medicine name"
@@ -27,7 +25,6 @@ function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
       />
 
       <div className="grid grid-cols-2 gap-3">
-        {/* Frequency */}
         <div>
           <label className="text-xs font-semibold text-slate-500 mb-1 block">Frequency</label>
           <input
@@ -54,7 +51,6 @@ function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
           </div>
         </div>
 
-        {/* Duration */}
         <div>
           <label className="text-xs font-semibold text-slate-500 mb-1 block">Duration</label>
           <input
@@ -66,31 +62,14 @@ function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
         </div>
       </div>
 
-      {/* Special instructions */}
       <div>
         <label className="text-xs font-semibold text-slate-500 mb-1 block">Special Instructions</label>
         <input
-          className="input text-sm mb-1.5"
+          className="input text-sm"
           placeholder="e.g. After meal, At bedtime..."
           value={med.instructions}
           onChange={e => onChange(index, 'instructions', e.target.value)}
         />
-        <div className="flex flex-wrap gap-1">
-          {INSTR_PILLS.map(pill => (
-            <button
-              key={pill}
-              type="button"
-              onClick={() => onChange(index, 'instructions', pill)}
-              className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                med.instructions === pill
-                  ? 'bg-blue-100 border-blue-400 text-blue-700 font-semibold'
-                  : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600'
-              }`}
-            >
-              {pill}
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   )
@@ -200,12 +179,11 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[80vh]">
           {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
 
-          {/* Patient + Date */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Patient *</label>
               <select name="patient_id" className="input" value={form.patient_id} onChange={handleFormChange} required>
-                <option value="">Type patient name...</option>
+                <option value="">Select patient...</option>
                 {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
@@ -215,7 +193,6 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* C/C and O/E side by side */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -245,7 +222,6 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Adv full width */}
           <div>
             <div className="flex items-center gap-2 mb-1">
               <label className="label !mb-0">Adv</label>
@@ -260,7 +236,6 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
             />
           </div>
 
-          {/* Medicines */}
           <div>
             <label className="label">Medicines</label>
             <div className="space-y-3">
