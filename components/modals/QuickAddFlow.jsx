@@ -16,6 +16,8 @@ const STEPS = [
 ]
 
 const FREQ_OPTIONS  = ['1+1+1', '1+0+1', '1+0+0', '0+1+0', '0+0+1', '1+1+0']
+const DUR_OPTIONS   = ['3 days', '5 days', '7 days', '1 month']
+const INSTR_OPTIONS = ['After meal', 'Before meal', 'Empty stomach']
 const CC_OPTIONS    = ['C/C', 'P/C', 'Hx', 'Complaint', 'Chief Complaint']
 const OE_OPTIONS    = ['O/E', 'Dx', 'Findings', 'Ix', 'On Examination', 'Investigation']
 const ADV_OPTIONS   = ['Adv', 'Rx Note', 'Follow-up', 'Instructions', 'Plan']
@@ -55,7 +57,7 @@ function LabelDropdown({ label, options, onChange }) {
   )
 }
 
-function FrequencyInput({ value, onChange }) {
+function SelectDropdown({ value, options, onChange, placeholder }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -67,20 +69,15 @@ function FrequencyInput({ value, onChange }) {
   }, [])
   return (
     <div ref={ref} className="relative">
-      <div className="relative">
-        <input className="input text-sm pr-8" placeholder="e.g. 1+1+1"
-          value={value} onChange={e => onChange(e.target.value)}
-          onFocus={() => setOpen(true)} />
-        <button type="button" onClick={() => setOpen(o => !o)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
-          <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="input text-sm w-full flex items-center justify-between text-left">
+        <span className={value ? 'text-slate-800' : 'text-slate-400'}>{value || placeholder}</span>
+        <ChevronDown size={14} className={`text-slate-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
+      </button>
       {open && (
         <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
-          {FREQ_OPTIONS.map(opt => (
-            <button key={opt} type="button"
-              onMouseDown={() => { onChange(opt); setOpen(false) }}
+          {options.map(opt => (
+            <button key={opt} type="button" onMouseDown={() => { onChange(opt); setOpen(false) }}
               className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 ${
                 value === opt ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600'
               }`}>
@@ -105,10 +102,10 @@ function AddFieldButton({ onAdd, existingLabels }) {
   }, [])
   const available = EXTRA_OPTIONS.filter(o => !existingLabels.includes(o))
   return (
-    <div ref={ref} className="relative inline-block">
+    <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:text-emerald-700 px-2 py-1 rounded-lg hover:bg-emerald-50 transition-colors border border-dashed border-emerald-300">
-        <Plus size={14} /> Add Field
+        className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
+        <Plus size={14} /> Add field
       </button>
       {open && available.length > 0 && (
         <div className="absolute z-50 top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden min-w-[160px]">
@@ -404,53 +401,46 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
       {/* C/C and O/E */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <LabelDropdown label={ccLabel} options={CC_OPTIONS} onChange={setCcLabel} />
-            <span className="text-xs text-slate-400">Chief Complaint</span>
-          </div>
+          <div className="mb-1"><LabelDropdown label={ccLabel} options={CC_OPTIONS} onChange={setCcLabel} /></div>
           <textarea name="chief_complaint" className="input min-h-[72px] resize-none text-sm"
-            placeholder="What is the patient complaining of..."
+            placeholder="Chief complaint..."
             value={form.chief_complaint} onChange={handleFormChange} />
         </div>
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <LabelDropdown label={oeLabel} options={OE_OPTIONS} onChange={setOeLabel} />
-            <span className="text-xs text-slate-400">On Examination</span>
-          </div>
+          <div className="mb-1"><LabelDropdown label={oeLabel} options={OE_OPTIONS} onChange={setOeLabel} /></div>
           <textarea name="on_examination" className="input min-h-[72px] resize-none text-sm"
             placeholder="Examination findings..."
             value={form.on_examination} onChange={handleFormChange} />
         </div>
       </div>
 
-      {/* Adv */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <LabelDropdown label={advLabel} options={ADV_OPTIONS} onChange={setAdvLabel} />
-          <span className="text-xs text-slate-400">Advice</span>
+      {/* Adv left + Add field right */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="mb-1"><LabelDropdown label={advLabel} options={ADV_OPTIONS} onChange={setAdvLabel} /></div>
+          <textarea name="advice" className="input min-h-[72px] resize-none text-sm"
+            placeholder="Advice given to patient..."
+            value={form.advice} onChange={handleFormChange} />
         </div>
-        <textarea name="advice" className="input min-h-[56px] resize-none text-sm"
-          placeholder="Advice given to patient..."
-          value={form.advice} onChange={handleFormChange} />
+        <div className="mt-6 flex items-center justify-center h-[72px] border border-dashed border-slate-300 rounded-xl hover:border-emerald-400 hover:bg-emerald-50 transition-colors">
+          <AddFieldButton onAdd={addExtraField} existingLabels={extraFields.map(f => f.label)} />
+        </div>
       </div>
 
       {/* Extra fields */}
       {extraFields.length > 0 && (
         <div className="space-y-3">
           {extraFields.map(field => (
-            <div key={field.id} className="flex items-start gap-2">
-              <span className="shrink-0 pt-2 text-sm font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{field.label}:</span>
+            <div key={field.id} className="flex items-center gap-2">
+              <span className="shrink-0 text-sm font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg">{field.label}:</span>
               <input className="input text-sm flex-1" placeholder={`Enter ${field.label}...`}
                 value={field.value} onChange={e => updateExtraField(field.id, e.target.value)} />
               <button type="button" onClick={() => removeExtraField(field.id)}
-                className="text-red-400 hover:text-red-600 pt-2"><X size={14} /></button>
+                className="text-red-400 hover:text-red-600"><X size={14} /></button>
             </div>
           ))}
         </div>
       )}
-
-      {/* Add field */}
-      <AddFieldButton onAdd={addExtraField} existingLabels={extraFields.map(f => f.label)} />
 
       {/* Medicines */}
       <div>
@@ -460,7 +450,8 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
             <div key={i} className="bg-slate-50 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-600">Medicine {i + 1}</span>
-                <button type="button" onClick={() => removeMed(i)} disabled={medicines.length === 1} className="text-red-400 hover:text-red-600 disabled:opacity-30">
+                <button type="button" onClick={() => removeMed(i)} disabled={medicines.length === 1}
+                  className="text-red-400 hover:text-red-600 disabled:opacity-30">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -468,18 +459,19 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-500 mb-1">Frequency</p>
-                  <FrequencyInput value={med.frequency} onChange={val => handleMedChange(i, 'frequency', val)} />
+                  <SelectDropdown value={med.frequency} options={FREQ_OPTIONS}
+                    onChange={val => handleMedChange(i, 'frequency', val)} placeholder="Select..." />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-500 mb-1">Duration</p>
-                  <input className="input text-sm" placeholder="e.g. 5 days"
-                    value={med.duration} onChange={e => handleMedChange(i, 'duration', e.target.value)} />
+                  <SelectDropdown value={med.duration} options={DUR_OPTIONS}
+                    onChange={val => handleMedChange(i, 'duration', val)} placeholder="Select..." />
                 </div>
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-500 mb-1">Special Instructions</p>
-                <input className="input text-sm" placeholder="e.g. After meal, At bedtime..."
-                  value={med.instructions} onChange={e => handleMedChange(i, 'instructions', e.target.value)} />
+                <SelectDropdown value={med.instructions} options={INSTR_OPTIONS}
+                  onChange={val => handleMedChange(i, 'instructions', val)} placeholder="Select..." />
               </div>
             </div>
           ))}
@@ -764,7 +756,6 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   const [savedRx, setSavedRx]           = useState(null)
   const [clinicName, setClinicName]     = useState('')
 
-  // Prescription label states
   const [ccLabel,  setCcLabel]  = useState('C/C')
   const [oeLabel,  setOeLabel]  = useState('O/E')
   const [advLabel, setAdvLabel] = useState('Adv')
