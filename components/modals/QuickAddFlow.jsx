@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import {
   X, ChevronRight, ChevronLeft, Check,
-  User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward, Camera, Printer, Phone
+  User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward, Camera, Printer, Phone, ChevronDown
 } from 'lucide-react'
 import { searchMedicines } from '@/lib/medicines'
 
@@ -15,7 +15,115 @@ const STEPS = [
   { id: 4, label: 'Invoice',      icon: FileText },
 ]
 
-const FREQ_PILLS = ['1+1+1', '1+0+1', '1+0+0', '0+1+0', '0+0+1', '1+1+0']
+const FREQ_OPTIONS  = ['1+1+1', '1+0+1', '1+0+0', '0+1+0', '0+0+1', '1+1+0']
+const CC_OPTIONS    = ['C/C', 'P/C', 'Hx', 'Complaint', 'Chief Complaint']
+const OE_OPTIONS    = ['O/E', 'Dx', 'Findings', 'Ix', 'On Examination', 'Investigation']
+const ADV_OPTIONS   = ['Adv', 'Rx Note', 'Follow-up', 'Instructions', 'Plan']
+const EXTRA_OPTIONS = ['BP', 'Weight', 'Temperature', 'Sugar Level', 'SpO2', 'Pulse', 'Referral', 'Investigation', 'Diet', 'Next Visit']
+
+function LabelDropdown({ label, options, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+  return (
+    <div ref={ref} className="relative inline-block">
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-lg transition-colors">
+        {label}
+        <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute z-50 top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden min-w-[140px]">
+          {options.map(opt => (
+            <button key={opt} type="button"
+              onMouseDown={() => { onChange(opt); setOpen(false) }}
+              className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-700 ${
+                label === opt ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600'
+              }`}>
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FrequencyInput({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <input className="input text-sm pr-8" placeholder="e.g. 1+1+1"
+          value={value} onChange={e => onChange(e.target.value)}
+          onFocus={() => setOpen(true)} />
+        <button type="button" onClick={() => setOpen(o => !o)}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+          <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+      {open && (
+        <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
+          {FREQ_OPTIONS.map(opt => (
+            <button key={opt} type="button"
+              onMouseDown={() => { onChange(opt); setOpen(false) }}
+              className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 ${
+                value === opt ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600'
+              }`}>
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AddFieldButton({ onAdd, existingLabels }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+  const available = EXTRA_OPTIONS.filter(o => !existingLabels.includes(o))
+  return (
+    <div ref={ref} className="relative inline-block">
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:text-emerald-700 px-2 py-1 rounded-lg hover:bg-emerald-50 transition-colors border border-dashed border-emerald-300">
+        <Plus size={14} /> Add Field
+      </button>
+      {open && available.length > 0 && (
+        <div className="absolute z-50 top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden min-w-[160px]">
+          {available.map(opt => (
+            <button key={opt} type="button"
+              onMouseDown={() => { onAdd(opt); setOpen(false) }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 transition-colors text-slate-600">
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function MedicineInput({ value, onChange }) {
   const [suggestions, setSuggestions] = useState([])
@@ -59,7 +167,7 @@ function MedicineInput({ value, onChange }) {
         autoComplete="off"
       />
       {show && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
+        <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden max-h-48 overflow-y-auto">
           {suggestions.map((med, i) => (
             <button key={i} type="button" onMouseDown={() => handleSelect(med)}
               className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 transition-colors">
@@ -260,7 +368,7 @@ function Step2Schedule({ form, setForm, patientName }) {
   )
 }
 
-function Step3Prescription({ form, setForm, medicines, setMedicines, patientName }) {
+function Step3Prescription({ form, setForm, medicines, setMedicines, patientName, extraFields, setExtraFields, ccLabel, setCcLabel, oeLabel, setOeLabel, advLabel, setAdvLabel }) {
   function handleFormChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
@@ -274,6 +382,16 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
     if (medicines.length === 1) return
     setMedicines(prev => prev.filter((_, idx) => idx !== i))
   }
+  function addExtraField(label) {
+    setExtraFields(prev => [...prev, { id: Date.now(), label, value: '' }])
+  }
+  function removeExtraField(id) {
+    setExtraFields(prev => prev.filter(f => f.id !== id))
+  }
+  function updateExtraField(id, value) {
+    setExtraFields(prev => prev.map(f => f.id === id ? { ...f, value } : f))
+  }
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
@@ -283,11 +401,12 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
 
+      {/* C/C and O/E */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <label className="label !mb-0">C/C</label>
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Chief Complaint</span>
+            <LabelDropdown label={ccLabel} options={CC_OPTIONS} onChange={setCcLabel} />
+            <span className="text-xs text-slate-400">Chief Complaint</span>
           </div>
           <textarea name="chief_complaint" className="input min-h-[72px] resize-none text-sm"
             placeholder="What is the patient complaining of..."
@@ -295,8 +414,8 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
         </div>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <label className="label !mb-0">O/E</label>
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">On Examination</span>
+            <LabelDropdown label={oeLabel} options={OE_OPTIONS} onChange={setOeLabel} />
+            <span className="text-xs text-slate-400">On Examination</span>
           </div>
           <textarea name="on_examination" className="input min-h-[72px] resize-none text-sm"
             placeholder="Examination findings..."
@@ -304,16 +423,36 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
         </div>
       </div>
 
+      {/* Adv */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <label className="label !mb-0">Adv</label>
-          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Advice</span>
+          <LabelDropdown label={advLabel} options={ADV_OPTIONS} onChange={setAdvLabel} />
+          <span className="text-xs text-slate-400">Advice</span>
         </div>
         <textarea name="advice" className="input min-h-[56px] resize-none text-sm"
           placeholder="Advice given to patient..."
           value={form.advice} onChange={handleFormChange} />
       </div>
 
+      {/* Extra fields */}
+      {extraFields.length > 0 && (
+        <div className="space-y-3">
+          {extraFields.map(field => (
+            <div key={field.id} className="flex items-start gap-2">
+              <span className="shrink-0 pt-2 text-sm font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{field.label}:</span>
+              <input className="input text-sm flex-1" placeholder={`Enter ${field.label}...`}
+                value={field.value} onChange={e => updateExtraField(field.id, e.target.value)} />
+              <button type="button" onClick={() => removeExtraField(field.id)}
+                className="text-red-400 hover:text-red-600 pt-2"><X size={14} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add field */}
+      <AddFieldButton onAdd={addExtraField} existingLabels={extraFields.map(f => f.label)} />
+
+      {/* Medicines */}
       <div>
         <label className="label">Medicines</label>
         <div className="space-y-3">
@@ -325,25 +464,11 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
                   <Trash2 size={14} />
                 </button>
               </div>
-              <MedicineInput
-                value={med.medicine}
-                onChange={val => handleMedChange(i, 'medicine', val)}
-              />
+              <MedicineInput value={med.medicine} onChange={val => handleMedChange(i, 'medicine', val)} />
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-500 mb-1">Frequency</p>
-                  <input className="input text-sm mb-1.5" placeholder="e.g. 1+1+1"
-                    value={med.frequency} onChange={e => handleMedChange(i, 'frequency', e.target.value)} />
-                  <div className="flex flex-wrap gap-1">
-                    {FREQ_PILLS.map(pill => (
-                      <button key={pill} type="button" onClick={() => handleMedChange(i, 'frequency', pill)}
-                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                          med.frequency === pill
-                            ? 'bg-emerald-100 border-emerald-400 text-emerald-700 font-semibold'
-                            : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
-                        }`}>{pill}</button>
-                    ))}
-                  </div>
+                  <FrequencyInput value={med.frequency} onChange={val => handleMedChange(i, 'frequency', val)} />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-500 mb-1">Duration</p>
@@ -639,6 +764,12 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   const [savedRx, setSavedRx]           = useState(null)
   const [clinicName, setClinicName]     = useState('')
 
+  // Prescription label states
+  const [ccLabel,  setCcLabel]  = useState('C/C')
+  const [oeLabel,  setOeLabel]  = useState('O/E')
+  const [advLabel, setAdvLabel] = useState('Adv')
+  const [extraFields, setExtraFields] = useState([])
+
   useEffect(() => {
     async function fetchClinicName() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -739,6 +870,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     if (!rxForm.chief_complaint && !rxForm.on_examination && !rxForm.advice && !hasMeds) return true
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
+    const extraNotes = extraFields.filter(f => f.value).map(f => `${f.label}: ${f.value}`).join('\n')
     const { data: rx } = await supabase.from('prescriptions').insert({
       clinic_id: user.id,
       patient_id: patientId,
@@ -746,7 +878,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       diagnosis: rxForm.on_examination || null,
       chief_complaint: rxForm.chief_complaint || null,
       advice: rxForm.advice || null,
-      notes: null,
+      notes: extraNotes || null,
     }).select().single()
     let medItems = []
     if (rx && hasMeds) {
@@ -877,6 +1009,10 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
                   form={rxForm} setForm={setRxForm}
                   medicines={medicines} setMedicines={setMedicines}
                   patientName={patientForm.name}
+                  extraFields={extraFields} setExtraFields={setExtraFields}
+                  ccLabel={ccLabel} setCcLabel={setCcLabel}
+                  oeLabel={oeLabel} setOeLabel={setOeLabel}
+                  advLabel={advLabel} setAdvLabel={setAdvLabel}
                 />
               )}
               {step === 4 && (
