@@ -20,80 +20,50 @@ function PrescriptionDetailModal({ prescription, onClose }) {
   }, [prescription.id])
 
   function handlePrint() {
-    const printContent = `
-      <html>
-      <head>
-        <title>Prescription - ${prescription.patients?.name}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 40px; color: #111; }
-          h1 { font-size: 28px; color: #065f46; margin-bottom: 4px; }
-          .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 30px; }
-          .section { margin-bottom: 24px; }
-          .label { font-size: 11px; text-transform: uppercase; color: #9ca3af; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 6px; }
-          .value { font-size: 15px; font-weight: 600; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          th { text-align: left; background: #f0fdf4; padding: 10px 12px; font-size: 12px; color: #065f46; border: 1px solid #d1fae5; }
-          td { padding: 10px 12px; border: 1px solid #e5e7eb; font-size: 13px; }
-          .footer { margin-top: 60px; border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center; color: #9ca3af; font-size: 12px; }
-          .signature-line { margin-top: 60px; border-top: 1px solid #111; width: 200px; text-align: center; padding-top: 6px; font-size: 12px; }
-        </style>
-      </head>
-      <body>
-        <h1>Ora Clinic</h1>
-        <div class="subtitle">Prescription</div>
-        
-        <div class="section">
-          <div class="label">Patient</div>
-          <div class="value">${prescription.patients?.name || '—'}</div>
-        </div>
-        
-        <div class="section">
-          <div class="label">Date</div>
-          <div class="value">${format(new Date(prescription.date), 'MMMM d, yyyy')}</div>
-        </div>
-        
-        ${prescription.diagnosis ? `<div class="section"><div class="label">Diagnosis</div><div class="value">${prescription.diagnosis}</div></div>` : ''}
-        
-        <div class="section">
-          <div class="label">Prescribed Medicines</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Medicine</th>
-                <th>Dosage</th>
-                <th>Frequency</th>
-                <th>Duration</th>
-                <th>Instructions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(item => `
-                <tr>
-                  <td><strong>${item.medicine}</strong></td>
-                  <td>${item.dosage || '—'}</td>
-                  <td>${item.frequency || '—'}</td>
-                  <td>${item.duration || '—'}</td>
-                  <td>${item.instructions || '—'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        
-        ${prescription.notes ? `<div class="section"><div class="label">Doctor's Notes</div><div class="value">${prescription.notes}</div></div>` : ''}
-        
-        <div style="margin-top: 60px; display: flex; justify-content: flex-end;">
-          <div class="signature-line">Doctor's Signature</div>
-        </div>
-        
-        <div class="footer">Powered by Ora — Dental Clinic Management</div>
-      </body>
-      </html>
-    `
     const win = window.open('', '_blank')
-    win.document.write(printContent)
+    win.document.write(`<!DOCTYPE html><html><head><title>Prescription - ${prescription.patients?.name}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#1e293b;font-size:14px}
+.clinic{font-size:22px;font-weight:800;color:#065f46}
+.sub{color:#64748b;font-size:13px;margin-top:2px;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #e2e8f0}
+.section{margin-bottom:16px}
+.field-label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-weight:600}
+.field-value{font-size:14px;font-weight:600;color:#1e293b}
+.patient-row{display:flex;gap:32px;background:#f8fafc;border-radius:8px;padding:10px 14px;margin-bottom:16px}
+.patient-item{font-size:13px;color:#475569}
+.patient-item strong{color:#1e293b}
+.rx-symbol{font-size:22px;font-weight:800;color:#065f46;margin-bottom:8px}
+.med-row{padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.med-name{font-weight:700;color:#1e293b;margin-bottom:3px}
+.med-detail{color:#64748b;font-size:12px}
+.adv-box{background:#fefce8;border-left:3px solid #eab308;padding:10px 14px;border-radius:0 8px 8px 0;margin-top:16px;font-size:13px}
+.sig{margin-top:48px;display:flex;justify-content:flex-end}
+.sig-line{border-top:1px solid #1e293b;width:180px;text-align:center;padding-top:6px;font-size:11px;color:#94a3b8}
+.footer{text-align:center;color:#94a3b8;font-size:11px;border-top:1px solid #e2e8f0;padding-top:12px;margin-top:32px}
+</style></head><body>
+<div class="clinic">Ora Dental Clinic</div>
+<div class="sub">Prescription</div>
+<div class="patient-row">
+  <span class="patient-item">Patient: <strong>${prescription.patients?.name || '—'}</strong></span>
+  <span class="patient-item">Date: <strong>${format(new Date(prescription.date), 'MMMM d, yyyy')}</strong></span>
+</div>
+${prescription.chief_complaint ? `<div class="section"><div class="field-label">C/C — Chief Complaint</div><div class="field-value">${prescription.chief_complaint}</div></div>` : ''}
+${prescription.diagnosis ? `<div class="section"><div class="field-label">O/E — On Examination</div><div class="field-value">${prescription.diagnosis}</div></div>` : ''}
+<div class="rx-symbol">℞</div>
+${items.map((item, i) => `
+  <div class="med-row">
+    <div class="med-name">${i + 1}. ${item.medicine}</div>
+    <div class="med-detail">${[item.frequency, item.duration, item.instructions].filter(Boolean).join(' &nbsp;·&nbsp; ')}</div>
+  </div>
+`).join('')}
+${prescription.advice ? `<div class="adv-box"><strong>Adv:</strong> ${prescription.advice}</div>` : ''}
+${prescription.notes ? `<div class="section" style="margin-top:16px"><div class="field-label">Doctor's Notes</div><div class="field-value">${prescription.notes}</div></div>` : ''}
+<div class="sig"><div class="sig-line">Doctor's Signature</div></div>
+<div class="footer">Powered by Ora &middot; Dental Clinic Management</div>
+</body></html>`)
     win.document.close()
-    win.print()
+    setTimeout(() => win.print(), 400)
   }
 
   return (
@@ -102,7 +72,7 @@ function PrescriptionDetailModal({ prescription, onClose }) {
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="font-bold text-slate-800 text-lg">Prescription</h2>
-            <p className="text-sm text-slate-500">{prescription.patients?.name} • {format(new Date(prescription.date), 'MMM d, yyyy')}</p>
+            <p className="text-sm text-slate-500">{prescription.patients?.name} · {format(new Date(prescription.date), 'MMM d, yyyy')}</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={handlePrint} className="btn-secondary !px-3 !py-2">
@@ -112,28 +82,46 @@ function PrescriptionDetailModal({ prescription, onClose }) {
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
-          {prescription.diagnosis && (
-            <div className="bg-blue-50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-blue-600 mb-1">Diagnosis</p>
-              <p className="text-sm font-semibold text-slate-800">{prescription.diagnosis}</p>
+        <div className="p-6 space-y-4 overflow-y-auto max-h-[75vh]">
+
+          {/* C/C and O/E */}
+          {(prescription.chief_complaint || prescription.diagnosis) && (
+            <div className="grid grid-cols-2 gap-3">
+              {prescription.chief_complaint && (
+                <div className="bg-blue-50 rounded-xl p-3">
+                  <p className="text-xs font-bold text-blue-600 mb-1">C/C — Chief Complaint</p>
+                  <p className="text-sm text-slate-700">{prescription.chief_complaint}</p>
+                </div>
+              )}
+              {prescription.diagnosis && (
+                <div className="bg-emerald-50 rounded-xl p-3">
+                  <p className="text-xs font-bold text-emerald-600 mb-1">O/E — On Examination</p>
+                  <p className="text-sm text-slate-700">{prescription.diagnosis}</p>
+                </div>
+              )}
             </div>
           )}
 
+          {/* Medicines */}
           <div>
-            <p className="text-sm font-bold text-slate-700 mb-3">Prescribed Medicines</p>
+            <p className="text-sm font-bold text-slate-700 mb-3">℞ Prescribed Medicines</p>
             {items.length === 0 ? (
               <p className="text-sm text-slate-400">No medicines listed</p>
             ) : (
               <div className="space-y-2">
                 {items.map((item, i) => (
-                  <div key={item.id} className="bg-slate-50 rounded-xl p-4">
-                    <p className="font-bold text-slate-800 mb-2">{i + 1}. {item.medicine}</p>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      {item.dosage && <div><span className="text-slate-500">Dosage: </span><span className="font-medium">{item.dosage}</span></div>}
-                      {item.frequency && <div><span className="text-slate-500">Frequency: </span><span className="font-medium">{item.frequency}</span></div>}
-                      {item.duration && <div><span className="text-slate-500">Duration: </span><span className="font-medium">{item.duration}</span></div>}
-                      {item.instructions && <div className="col-span-2"><span className="text-slate-500">Instructions: </span><span className="font-medium">{item.instructions}</span></div>}
+                  <div key={item.id} className="bg-slate-50 rounded-xl p-3">
+                    <p className="font-bold text-slate-800 text-sm mb-1">{i + 1}. {item.medicine}</p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {item.frequency && (
+                        <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">{item.frequency}</span>
+                      )}
+                      {item.duration && (
+                        <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{item.duration}</span>
+                      )}
+                      {item.instructions && (
+                        <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{item.instructions}</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -141,8 +129,16 @@ function PrescriptionDetailModal({ prescription, onClose }) {
             )}
           </div>
 
+          {/* Adv */}
+          {prescription.advice && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-r-xl p-3">
+              <p className="text-xs font-bold text-yellow-700 mb-1">Adv — Advice</p>
+              <p className="text-sm text-slate-700">{prescription.advice}</p>
+            </div>
+          )}
+
           {prescription.notes && (
-            <div className="bg-amber-50 rounded-xl p-4">
+            <div className="bg-amber-50 rounded-xl p-3">
               <p className="text-xs font-semibold text-amber-600 mb-1">Doctor&apos;s Notes</p>
               <p className="text-sm text-slate-700">{prescription.notes}</p>
             </div>
@@ -182,7 +178,8 @@ export default function PrescriptionsPage() {
 
   const filtered = prescriptions.filter(rx =>
     (rx.patients?.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (rx.diagnosis || '').toLowerCase().includes(search.toLowerCase())
+    (rx.diagnosis || '').toLowerCase().includes(search.toLowerCase()) ||
+    (rx.chief_complaint || '').toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -197,13 +194,12 @@ export default function PrescriptionsPage() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="relative mb-4">
         <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input className="input pl-10" placeholder="Search by patient name or diagnosis..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input className="input pl-10" placeholder="Search by patient name, complaint or findings..."
+          value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {/* Table */}
       <div className="card">
         {loading ? (
           <div className="flex justify-center py-12"><div className="spinner" /></div>
@@ -223,9 +219,9 @@ export default function PrescriptionsPage() {
               <tr className="border-b border-slate-100">
                 <th className="table-th">Date</th>
                 <th className="table-th">Patient</th>
-                <th className="table-th">Diagnosis</th>
+                <th className="table-th">C/C</th>
+                <th className="table-th">O/E</th>
                 <th className="table-th">Medicines</th>
-                <th className="table-th">Notes</th>
                 <th className="table-th">Actions</th>
               </tr>
             </thead>
@@ -234,14 +230,14 @@ export default function PrescriptionsPage() {
                 <tr key={rx.id} className="table-tr cursor-pointer" onClick={() => setSelected(rx)}>
                   <td className="table-td text-slate-500 whitespace-nowrap">{format(new Date(rx.date), 'MMM d, yyyy')}</td>
                   <td className="table-td font-semibold">{rx.patients?.name || '—'}</td>
-                  <td className="table-td">{rx.diagnosis || <span className="text-slate-400">—</span>}</td>
+                  <td className="table-td text-slate-500 max-w-[140px] truncate">{rx.chief_complaint || <span className="text-slate-300">—</span>}</td>
+                  <td className="table-td text-slate-500 max-w-[140px] truncate">{rx.diagnosis || <span className="text-slate-300">—</span>}</td>
                   <td className="table-td">
                     <span className="badge-blue">{rx.prescription_items?.length || 0} medicine{rx.prescription_items?.length !== 1 ? 's' : ''}</span>
                   </td>
-                  <td className="table-td text-slate-500 max-w-[180px] truncate">{rx.notes || '—'}</td>
                   <td className="table-td" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => setSelected(rx)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="View">
+                      <button onClick={() => setSelected(rx)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="View & Print">
                         <Printer size={15} />
                       </button>
                       <button onClick={() => deletePrescription(rx.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
