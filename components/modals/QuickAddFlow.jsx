@@ -296,18 +296,8 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-500 mb-1">Special Instructions</p>
-                <input className="input text-sm mb-1.5" placeholder="e.g. After meal..."
+                <input className="input text-sm" placeholder="e.g. After meal, At bedtime..."
                   value={med.instructions} onChange={e => handleMedChange(i, 'instructions', e.target.value)} />
-                <div className="flex flex-wrap gap-1">
-                  {INSTR_PILLS.map(pill => (
-                    <button key={pill} type="button" onClick={() => handleMedChange(i, 'instructions', pill)}
-                      className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                        med.instructions === pill
-                          ? 'bg-blue-100 border-blue-400 text-blue-700 font-semibold'
-                          : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600'
-                      }`}>{pill}</button>
-                  ))}
-                </div>
               </div>
             </div>
           ))}
