@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AddAppointmentModal from '@/components/modals/AddAppointmentModal'
 import { format, addDays, subDays } from 'date-fns'
-import { Plus, ChevronLeft, ChevronRight, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, Calendar, CheckCircle, XCircle, Clock, List, X } from 'lucide-react'
 
 export default function SchedulePage() {
   const supabase = createClient()
@@ -12,6 +12,14 @@ export default function SchedulePage() {
   const [showModal, setShowModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [filter, setFilter] = useState('all')
+
+  // List view state
+  const [showList, setShowList] = useState(false)
+  const [listFrom, setListFrom] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'))
+  const [listTo, setListTo] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
+  const [listAppointments, setListAppointments] = useState([])
+  const [listLoading, setListLoading] = useState(false)
+  const [listFilter, setListFilter] = useState('all')
 
   async function loadAppointments() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -25,7 +33,26 @@ export default function SchedulePage() {
     setLoading(false)
   }
 
+  async function loadListAppointments() {
+    setListLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase
+      .from('appointments')
+      .select('*, patients(name, phone)')
+      .eq('clinic_id', user.id)
+      .gte('date', listFrom)
+      .lte('date', listTo)
+      .order('date')
+      .order('time')
+    setListAppointments(data || [])
+    setListLoading(false)
+  }
+
   useEffect(() => { loadAppointments() }, [selectedDate])
+
+  useEffect(() => {
+    if (showList) loadListAppointments()
+  }, [showList])
 
   async function updateStatus(id, status) {
     await supabase.from('appointments').update({ status }).eq('id', id)
@@ -42,6 +69,20 @@ export default function SchedulePage() {
     ? appointments
     : appointments.filter(a => a.status === filter)
 
+  // Group list appointments by date
+  const filteredList = listFilter === 'all'
+    ? listAppointments
+    : listAppointments.filter(a => a.status === listFilter)
+
+  const grouped = filteredList.reduce((acc, appt) => {
+    const d = appt.date
+    if (!acc[d]) acc[d] = []
+    acc[d].push(appt)
+    return acc
+  }, {})
+
+  const today = format(new Date(), 'yyyy-MM-dd')
+
   function statusBadge(status) {
     const map = {
       scheduled: <span className="badge-blue">Scheduled</span>,
@@ -50,6 +91,23 @@ export default function SchedulePage() {
       cancelled: <span className="badge-red">Cancelled</span>,
     }
     return map[status] || <span className="badge-gray">{status}</span>
+  }
+
+  function initials(name) {
+    if (!name) return '?'
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  }
+
+  const COLORS = [
+    { bg: '#d1fae5', text: '#065f46' },
+    { bg: '#dbeafe', text: '#1e40af' },
+    { bg: '#fef3c7', text: '#92400e' },
+    { bg: '#fce7f3', text: '#9d174d' },
+    { bg: '#e0e7ff', text: '#3730a3' },
+  ]
+  function avatarColor(name) {
+    const i = (name || '').charCodeAt(0) % COLORS.length
+    return COLORS[i]
   }
 
   return (
@@ -65,7 +123,7 @@ export default function SchedulePage() {
         </button>
       </div>
 
-      {/* Date Navigator */}
+      {/* Date Navigator — unchanged, just added List button */}
       <div className="card mb-4">
         <div className="flex items-center gap-4">
           <button
@@ -98,10 +156,17 @@ export default function SchedulePage() {
           >
             Today
           </button>
+          {/* NEW: List button */}
+          <button
+            onClick={() => setShowList(true)}
+            className="btn-secondary flex items-center gap-1.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+          >
+            <List size={16} /> List
+          </button>
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs — unchanged */}
       <div className="flex gap-2 mb-4">
         {['all', 'scheduled', 'checked-in', 'completed', 'cancelled'].map(f => (
           <button
@@ -118,7 +183,7 @@ export default function SchedulePage() {
         ))}
       </div>
 
-      {/* Appointments Table */}
+      {/* Appointments Table — unchanged */}
       <div className="card">
         {loading ? (
           <div className="flex justify-center py-12"><div className="spinner" /></div>
@@ -174,6 +239,99 @@ export default function SchedulePage() {
           </table>
         )}
       </div>
+
+      {/* List View Overlay */}
+      {showList && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center p-6 overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl my-4">
+
+            {/* Overlay header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
+              <p className="font-bold text-slate-800 text-lg">All Appointments</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-slate-500">From</span>
+                <input type="date" className="input w-36 text-sm" value={listFrom}
+                  onChange={e => setListFrom(e.target.value)} />
+                <span className="text-sm text-slate-500">To</span>
+                <input type="date" className="input w-36 text-sm" value={listTo}
+                  onChange={e => setListTo(e.target.value)} />
+                <button onClick={loadListAppointments} className="btn-primary !py-2 !px-4 text-sm">
+                  Apply
+                </button>
+                <button onClick={() => setShowList(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter tabs */}
+            <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
+                {['all', 'scheduled', 'checked-in', 'completed', 'cancelled'].map(f => (
+                  <button key={f} onClick={() => setListFilter(f)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${
+                      listFilter === f
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                    }`}>
+                    {f}
+                  </button>
+                ))}
+              </div>
+              <span className="text-sm text-slate-400">{filteredList.length} appointment{filteredList.length !== 1 ? 's' : ''}</span>
+            </div>
+
+            {/* List content */}
+            <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto">
+              {listLoading ? (
+                <div className="flex justify-center py-12"><div className="spinner" /></div>
+              ) : Object.keys(grouped).length === 0 ? (
+                <div className="text-center py-16">
+                  <Calendar size={40} className="mx-auto text-slate-300 mb-3" />
+                  <p className="text-slate-500 font-medium">No appointments in this range</p>
+                </div>
+              ) : (
+                Object.keys(grouped).sort().map(date => (
+                  <div key={date}>
+                    {/* Date group header */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`text-xs font-bold whitespace-nowrap ${date === today ? 'text-emerald-600' : 'text-slate-500'}`}>
+                        {date === today ? 'Today, ' : ''}{format(new Date(date), 'EEE, MMM d')}
+                      </span>
+                      <div className="flex-1 h-px bg-slate-100" />
+                    </div>
+
+                    {/* Appointments for this date */}
+                    <div className="rounded-2xl border border-slate-100 overflow-hidden">
+                      {grouped[date].map((appt, i) => {
+                        const color = avatarColor(appt.patients?.name)
+                        return (
+                          <div key={appt.id}
+                            className={`flex items-center gap-3 px-4 py-3 ${i < grouped[date].length - 1 ? 'border-b border-slate-50' : ''}`}>
+                            <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                              style={{ background: color.bg, color: color.text }}>
+                              {initials(appt.patients?.name)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-slate-800 text-sm">{appt.patients?.name || '—'}</p>
+                              <p className="text-xs text-slate-400 mt-0.5">
+                                {appt.procedure || 'General'} · {appt.time ? format(new Date(`2000-01-01T${appt.time}`), 'h:mm a') : '—'}
+                                {appt.patients?.phone && <> · {appt.patients.phone}</>}
+                              </p>
+                            </div>
+                            {statusBadge(appt.status)}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <AddAppointmentModal
