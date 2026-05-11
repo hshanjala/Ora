@@ -48,20 +48,34 @@ function LabelDropdown({ label, options, onChange }) {
   )
 }
 
-function SelectDropdown({ value, options, onChange, placeholder }) {
+// Combo: free text input + dropdown button
+function ComboInput({ value, onChange, options, placeholder }) {
   const { open, setOpen, ref } = useDropdown()
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen(o => !o)}
-        className="input text-sm w-full flex items-center justify-between text-left">
-        <span className={value ? 'text-slate-800' : 'text-slate-400'}>{value || placeholder}</span>
-        <ChevronDown size={14} className={`text-slate-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
-      </button>
+      <div className="flex">
+        <input
+          className="input text-sm rounded-r-none border-r-0 flex-1"
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+        />
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="border border-slate-200 border-l-0 rounded-r-xl px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
+        >
+          <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
       {open && (
         <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
           {options.map(opt => (
-            <button key={opt} type="button" onMouseDown={() => { onChange(opt); setOpen(false) }}
-              className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 ${value === opt ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600'}`}>
+            <button key={opt} type="button"
+              onMouseDown={() => { onChange(opt); setOpen(false) }}
+              className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 ${
+                value === opt ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600'
+              }`}>
               {opt}
             </button>
           ))}
@@ -123,19 +137,19 @@ function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-xs font-semibold text-slate-500 mb-1 block">Frequency</label>
-          <SelectDropdown value={med.frequency} options={FREQ_OPTIONS}
-            onChange={val => onChange(index, 'frequency', val)} placeholder="Select..." />
+          <ComboInput value={med.frequency} options={FREQ_OPTIONS}
+            onChange={val => onChange(index, 'frequency', val)} placeholder="e.g. 1+1+1" />
         </div>
         <div>
           <label className="text-xs font-semibold text-slate-500 mb-1 block">Duration</label>
-          <SelectDropdown value={med.duration} options={DUR_OPTIONS}
-            onChange={val => onChange(index, 'duration', val)} placeholder="Select..." />
+          <ComboInput value={med.duration} options={DUR_OPTIONS}
+            onChange={val => onChange(index, 'duration', val)} placeholder="e.g. 5 days" />
         </div>
       </div>
       <div>
         <label className="text-xs font-semibold text-slate-500 mb-1 block">Special Instructions</label>
-        <SelectDropdown value={med.instructions} options={INSTR_OPTIONS}
-          onChange={val => onChange(index, 'instructions', val)} placeholder="Select..." />
+        <ComboInput value={med.instructions} options={INSTR_OPTIONS}
+          onChange={val => onChange(index, 'instructions', val)} placeholder="e.g. After meal..." />
       </div>
     </div>
   )
@@ -147,8 +161,7 @@ function AddFieldButton({ onAdd, existingLabels }) {
   return (
     <div ref={ref} className="relative flex items-center justify-center h-full border border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-colors"
       onClick={() => setOpen(o => !o)}>
-      <button type="button"
-        className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 py-2">
+      <button type="button" className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 py-2">
         <Plus size={14} /> Add field
       </button>
       {open && available.length > 0 && (
