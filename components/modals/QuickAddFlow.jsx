@@ -57,7 +57,7 @@ function LabelDropdown({ label, options, onChange }) {
   )
 }
 
-function SelectDropdown({ value, options, onChange, placeholder }) {
+function ComboInput({ value, onChange, options, placeholder }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   useEffect(() => {
@@ -69,15 +69,23 @@ function SelectDropdown({ value, options, onChange, placeholder }) {
   }, [])
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen(o => !o)}
-        className="input text-sm w-full flex items-center justify-between text-left">
-        <span className={value ? 'text-slate-800' : 'text-slate-400'}>{value || placeholder}</span>
-        <ChevronDown size={14} className={`text-slate-400 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
-      </button>
+      <div className="flex">
+        <input
+          className="input text-sm rounded-r-none border-r-0 flex-1"
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+        />
+        <button type="button" onClick={() => setOpen(o => !o)}
+          className="border border-slate-200 border-l-0 rounded-r-xl px-2.5 bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors">
+          <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
       {open && (
         <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden">
           {options.map(opt => (
-            <button key={opt} type="button" onMouseDown={() => { onChange(opt); setOpen(false) }}
+            <button key={opt} type="button"
+              onMouseDown={() => { onChange(opt); setOpen(false) }}
               className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-700 border-b border-slate-50 last:border-0 ${
                 value === opt ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-600'
               }`}>
@@ -126,7 +134,6 @@ function MedicineInput({ value, onChange }) {
   const [suggestions, setSuggestions] = useState([])
   const [show, setShow] = useState(false)
   const ref = useRef(null)
-
   useEffect(() => {
     function handleClick(e) {
       if (ref.current && !ref.current.contains(e.target)) setShow(false)
@@ -134,35 +141,19 @@ function MedicineInput({ value, onChange }) {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
-
   function handleChange(e) {
     const val = e.target.value
     onChange(val)
-    if (val.length >= 2) {
-      setSuggestions(searchMedicines(val))
-      setShow(true)
-    } else {
-      setSuggestions([])
-      setShow(false)
-    }
+    if (val.length >= 2) { setSuggestions(searchMedicines(val)); setShow(true) }
+    else { setSuggestions([]); setShow(false) }
   }
-
-  function handleSelect(med) {
-    onChange(med)
-    setShow(false)
-    setSuggestions([])
-  }
-
+  function handleSelect(med) { onChange(med); setShow(false); setSuggestions([]) }
   return (
     <div ref={ref} className="relative">
-      <input
-        className="input text-sm w-full"
-        placeholder="Type medicine name..."
-        value={value}
-        onChange={handleChange}
+      <input className="input text-sm w-full" placeholder="Type medicine name..."
+        value={value} onChange={handleChange}
         onFocus={() => value.length >= 2 && suggestions.length > 0 && setShow(true)}
-        autoComplete="off"
-      />
+        autoComplete="off" />
       {show && suggestions.length > 0 && (
         <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden max-h-48 overflow-y-auto">
           {suggestions.map((med, i) => (
@@ -268,11 +259,8 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
     <div className="p-6 space-y-4">
       {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
       <div className="flex items-start gap-4">
-        <button
-          type="button"
-          onClick={() => photoRef.current?.click()}
-          className="shrink-0 w-20 h-20 rounded-full border-2 border-dashed border-slate-300 hover:border-emerald-400 flex flex-col items-center justify-center gap-1 transition-colors overflow-hidden"
-        >
+        <button type="button" onClick={() => photoRef.current?.click()}
+          className="shrink-0 w-20 h-20 rounded-full border-2 border-dashed border-slate-300 hover:border-emerald-400 flex flex-col items-center justify-center gap-1 transition-colors overflow-hidden">
           {photoPreview ? (
             <img src={photoPreview} alt="Preview" className="w-full h-full object-cover rounded-full" />
           ) : (
@@ -398,36 +386,30 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
 
-      {/* C/C and O/E */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <div className="mb-1"><LabelDropdown label={ccLabel} options={CC_OPTIONS} onChange={setCcLabel} /></div>
           <textarea name="chief_complaint" className="input min-h-[72px] resize-none text-sm"
-            placeholder="Chief complaint..."
-            value={form.chief_complaint} onChange={handleFormChange} />
+            placeholder="Chief complaint..." value={form.chief_complaint} onChange={handleFormChange} />
         </div>
         <div>
           <div className="mb-1"><LabelDropdown label={oeLabel} options={OE_OPTIONS} onChange={setOeLabel} /></div>
           <textarea name="on_examination" className="input min-h-[72px] resize-none text-sm"
-            placeholder="Examination findings..."
-            value={form.on_examination} onChange={handleFormChange} />
+            placeholder="Examination findings..." value={form.on_examination} onChange={handleFormChange} />
         </div>
       </div>
 
-      {/* Adv left + Add field right */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <div className="mb-1"><LabelDropdown label={advLabel} options={ADV_OPTIONS} onChange={setAdvLabel} /></div>
           <textarea name="advice" className="input min-h-[72px] resize-none text-sm"
-            placeholder="Advice given to patient..."
-            value={form.advice} onChange={handleFormChange} />
+            placeholder="Advice given to patient..." value={form.advice} onChange={handleFormChange} />
         </div>
         <div className="mt-6 flex items-center justify-center h-[72px] border border-dashed border-slate-300 rounded-xl hover:border-emerald-400 hover:bg-emerald-50 transition-colors">
           <AddFieldButton onAdd={addExtraField} existingLabels={extraFields.map(f => f.label)} />
         </div>
       </div>
 
-      {/* Extra fields */}
       {extraFields.length > 0 && (
         <div className="space-y-3">
           {extraFields.map(field => (
@@ -442,7 +424,6 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
         </div>
       )}
 
-      {/* Medicines */}
       <div>
         <label className="label">Medicines</label>
         <div className="space-y-3">
@@ -459,19 +440,19 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-500 mb-1">Frequency</p>
-                  <SelectDropdown value={med.frequency} options={FREQ_OPTIONS}
-                    onChange={val => handleMedChange(i, 'frequency', val)} placeholder="Select..." />
+                  <ComboInput value={med.frequency} options={FREQ_OPTIONS}
+                    onChange={val => handleMedChange(i, 'frequency', val)} placeholder="e.g. 1+1+1" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-500 mb-1">Duration</p>
-                  <SelectDropdown value={med.duration} options={DUR_OPTIONS}
-                    onChange={val => handleMedChange(i, 'duration', val)} placeholder="Select..." />
+                  <ComboInput value={med.duration} options={DUR_OPTIONS}
+                    onChange={val => handleMedChange(i, 'duration', val)} placeholder="e.g. 5 days" />
                 </div>
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-500 mb-1">Special Instructions</p>
-                <SelectDropdown value={med.instructions} options={INSTR_OPTIONS}
-                  onChange={val => handleMedChange(i, 'instructions', val)} placeholder="Select..." />
+                <ComboInput value={med.instructions} options={INSTR_OPTIONS}
+                  onChange={val => handleMedChange(i, 'instructions', val)} placeholder="e.g. After meal..." />
               </div>
             </div>
           ))}
@@ -740,7 +721,6 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   const [error, setError]     = useState('')
   const [done, setDone]       = useState(false)
   const [completed, setCompleted] = useState([])
-
   const [photoFile, setPhotoFile]       = useState(null)
   const [photoPreview, setPhotoPreview] = useState(null)
 
@@ -755,7 +735,6 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   const [savedInvoice, setSavedInvoice] = useState(null)
   const [savedRx, setSavedRx]           = useState(null)
   const [clinicName, setClinicName]     = useState('')
-
   const [ccLabel,  setCcLabel]  = useState('C/C')
   const [oeLabel,  setOeLabel]  = useState('O/E')
   const [advLabel, setAdvLabel] = useState('Adv')
@@ -772,28 +751,19 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   }, [])
 
   const [patientForm, setPatientForm] = useState({
-    name: '', phone: '', email: '',
-    age: '', gender: '', address: '', medical_history: ''
+    name: '', phone: '', email: '', age: '', gender: '', address: '', medical_history: ''
   })
-
   const [scheduleForm, setScheduleForm] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    time: '09:00',
-    procedure: '',
-    notes: '',
+    date: format(new Date(), 'yyyy-MM-dd'), time: '09:00', procedure: '', notes: '',
   })
-
   const [rxForm, setRxForm] = useState({
     chief_complaint: '', on_examination: '', advice: ''
   })
   const [medicines, setMedicines] = useState([
     { medicine: '', frequency: '', duration: '', instructions: '' }
   ])
-
   const [invoiceForm, setInvoiceForm] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    notes: '',
-    paid_now: '',
+    date: format(new Date(), 'yyyy-MM-dd'), notes: '', paid_now: '',
   })
   const [invoiceItems, setInvoiceItems] = useState([
     { description: '', quantity: 1, unit_price: '' }
@@ -829,10 +799,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       photo_url,
     }).select().single()
     setLoading(false)
-    if (err) {
-      setError('Failed to save patient. Please try again.')
-      return false
-    }
+    if (err) { setError('Failed to save patient. Please try again.'); return false }
     setPatientId(data.id)
     setCompleted(prev => [...prev, 'Patient Added'])
     return true
@@ -843,13 +810,9 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('appointments').insert({
-      clinic_id: user.id,
-      patient_id: patientId,
-      date: scheduleForm.date,
-      time: scheduleForm.time,
-      procedure: scheduleForm.procedure || null,
-      notes: scheduleForm.notes || null,
-      status: 'scheduled',
+      clinic_id: user.id, patient_id: patientId,
+      date: scheduleForm.date, time: scheduleForm.time,
+      procedure: scheduleForm.procedure || null, notes: scheduleForm.notes || null, status: 'scheduled',
     })
     setLoading(false)
     setCompleted(prev => [...prev, 'Appointment Booked'])
@@ -863,8 +826,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     const { data: { user } } = await supabase.auth.getUser()
     const extraNotes = extraFields.filter(f => f.value).map(f => `${f.label}: ${f.value}`).join('\n')
     const { data: rx } = await supabase.from('prescriptions').insert({
-      clinic_id: user.id,
-      patient_id: patientId,
+      clinic_id: user.id, patient_id: patientId,
       date: format(new Date(), 'yyyy-MM-dd'),
       diagnosis: rxForm.on_examination || null,
       chief_complaint: rxForm.chief_complaint || null,
@@ -874,12 +836,8 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     let medItems = []
     if (rx && hasMeds) {
       medItems = medicines.filter(m => m.medicine.trim()).map(m => ({
-        prescription_id: rx.id,
-        medicine: m.medicine,
-        dosage: null,
-        frequency: m.frequency || null,
-        duration: m.duration || null,
-        instructions: m.instructions || null,
+        prescription_id: rx.id, medicine: m.medicine, dosage: null,
+        frequency: m.frequency || null, duration: m.duration || null, instructions: m.instructions || null,
       }))
       await supabase.from('prescription_items').insert(medItems)
     }
@@ -900,26 +858,16 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     const status = paidNow >= total && total > 0 ? 'paid' : paidNow > 0 ? 'partial' : 'unpaid'
     const invoiceNum = `INV-${Date.now().toString().slice(-6)}`
     const { data: inv } = await supabase.from('invoices').insert({
-      clinic_id: user.id,
-      patient_id: patientId,
-      invoice_number: invoiceNum,
-      date: invoiceForm.date,
-      due_date: null,
-      status,
-      total,
-      paid_amount: paidNow,
-      notes: invoiceForm.notes || null,
+      clinic_id: user.id, patient_id: patientId,
+      invoice_number: invoiceNum, date: invoiceForm.date, due_date: null,
+      status, total, paid_amount: paidNow, notes: invoiceForm.notes || null,
     }).select().single()
     if (inv) {
-      const items = invoiceItems
-        .filter(i => i.description.trim() && i.unit_price)
-        .map(i => ({
-          invoice_id: inv.id,
-          description: i.description,
-          quantity: parseInt(i.quantity),
-          unit_price: parseFloat(i.unit_price),
-          total: parseFloat(i.unit_price) * parseInt(i.quantity),
-        }))
+      const items = invoiceItems.filter(i => i.description.trim() && i.unit_price).map(i => ({
+        invoice_id: inv.id, description: i.description,
+        quantity: parseInt(i.quantity), unit_price: parseFloat(i.unit_price),
+        total: parseFloat(i.unit_price) * parseInt(i.quantity),
+      }))
       await supabase.from('invoice_items').insert(items)
       setLoading(false)
       setCompleted(prev => [...prev, 'Invoice Created'])
@@ -930,71 +878,34 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   }
 
   async function handleNext() {
-    if (step === 1) {
-      const ok = await savePatient()
-      if (!ok) return
-      setStep(2)
-    } else if (step === 2) {
-      await saveSchedule()
-      setStep(3)
-    } else if (step === 3) {
-      await savePrescription()
-      setStep(4)
-    }
+    if (step === 1) { const ok = await savePatient(); if (!ok) return; setStep(2) }
+    else if (step === 2) { await saveSchedule(); setStep(3) }
+    else if (step === 3) { await savePrescription(); setStep(4) }
   }
-
   async function handleFinish() {
     const inv = await saveInvoice()
     if (inv) setSavedInvoice(inv)
     setDone(true)
   }
-
-  function handleSkip() {
-    setStep(prev => prev + 1)
-  }
-
-  function handleBack() {
-    setStep(prev => prev - 1)
-  }
-
-  function handleOverlayClick(e) {
-    if (e.target === e.currentTarget) onClose()
-  }
+  function handleSkip() { setStep(prev => prev + 1) }
+  function handleBack() { setStep(prev => prev - 1) }
+  function handleOverlayClick(e) { if (e.target === e.currentTarget) onClose() }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={handleOverlayClick}
-    >
-      <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden"
-        style={{ animation: 'slideUp 0.25s ease' }}
-      >
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={handleOverlayClick}>
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden" style={{ animation: 'slideUp 0.25s ease' }}>
         {done ? (
           <SuccessScreen
-            patientName={patientForm.name}
-            patientPhone={patientForm.phone}
-            savedInvoice={savedInvoice}
-            savedRx={savedRx}
-            clinicName={clinicName}
+            patientName={patientForm.name} patientPhone={patientForm.phone}
+            savedInvoice={savedInvoice} savedRx={savedRx} clinicName={clinicName}
             onClose={() => { onSuccess?.(); onClose() }}
           />
         ) : (
           <>
             <StepHeader step={step} onClose={onClose} />
             <div className="flex-1 overflow-y-auto">
-              {step === 1 && (
-                <Step1Patient
-                  form={patientForm}
-                  setForm={setPatientForm}
-                  error={error}
-                  photoPreview={photoPreview}
-                  onPhotoChange={handlePhotoChange}
-                />
-              )}
-              {step === 2 && (
-                <Step2Schedule form={scheduleForm} setForm={setScheduleForm} patientName={patientForm.name} />
-              )}
+              {step === 1 && <Step1Patient form={patientForm} setForm={setPatientForm} error={error} photoPreview={photoPreview} onPhotoChange={handlePhotoChange} />}
+              {step === 2 && <Step2Schedule form={scheduleForm} setForm={setScheduleForm} patientName={patientForm.name} />}
               {step === 3 && (
                 <Step3Prescription
                   form={rxForm} setForm={setRxForm}
@@ -1006,23 +917,11 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
                   advLabel={advLabel} setAdvLabel={setAdvLabel}
                 />
               )}
-              {step === 4 && (
-                <Step4Invoice
-                  items={invoiceItems} setItems={setInvoiceItems}
-                  form={invoiceForm} setForm={setInvoiceForm}
-                  patientName={patientForm.name}
-                />
-              )}
+              {step === 4 && <Step4Invoice items={invoiceItems} setItems={setInvoiceItems} form={invoiceForm} setForm={setInvoiceForm} patientName={patientForm.name} />}
             </div>
-            <StepFooter
-              step={step}
-              onBack={handleBack}
-              onNext={handleNext}
-              onSkip={step > 1 ? handleSkip : null}
-              onFinish={handleFinish}
-              loading={loading}
-              nextLabel={step === 1 ? 'Save & Continue' : 'Next'}
-            />
+            <StepFooter step={step} onBack={handleBack} onNext={handleNext}
+              onSkip={step > 1 ? handleSkip : null} onFinish={handleFinish}
+              loading={loading} nextLabel={step === 1 ? 'Save & Continue' : 'Next'} />
           </>
         )}
       </div>
