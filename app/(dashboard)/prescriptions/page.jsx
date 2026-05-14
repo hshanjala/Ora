@@ -5,135 +5,179 @@ import AddPrescriptionModal from '@/components/modals/AddPrescriptionModal'
 import { Plus, Search, Pill, X, Printer, Trash2, Settings2, Check } from 'lucide-react'
 import { format } from 'date-fns'
 
-// ── 4 template print functions ────────────────────────────────────────────────
+// ── Build print HTML ──────────────────────────────────────────────────────────
 function buildPrintHtml(template, tpl, prescription, items) {
-  const clinic = tpl.clinic_name || 'Ora Dental Clinic'
-  const doctor = tpl.doctor_name || ''
-  const desig  = tpl.doctor_designation || ''
-  const reg    = tpl.doctor_reg_no || ''
-  const phone  = tpl.doctor_phone || ''
-  const email  = tpl.doctor_email || ''
-  const addr   = tpl.clinic_address || ''
-  const logo   = tpl.clinic_logo_url || ''
-  const pat    = prescription.patients?.name || '—'
-  const date   = format(new Date(prescription.date), 'MMMM d, yyyy')
-
-  const patientRow = `
-    <div class="patient-row">
-      <span class="pi">Patient: <strong>${pat}</strong></span>
-      <span class="pi">Date: <strong>${date}</strong></span>
-    </div>`
-
-  const clinicalSection = `
-    ${prescription.chief_complaint ? `<div class="section"><div class="fl">C/C — Chief Complaint</div><div class="fv">${prescription.chief_complaint}</div></div>` : ''}
-    ${prescription.diagnosis ? `<div class="section"><div class="fl">O/E — On Examination</div><div class="fv">${prescription.diagnosis}</div></div>` : ''}
-    <div class="rx">℞</div>
-    ${items.map((item, i) => `
-      <div class="med-row">
-        <div class="med-name">${i + 1}. ${item.medicine}</div>
-        <div class="med-detail">${[item.frequency, item.duration, item.instructions].filter(Boolean).join(' · ')}</div>
-      </div>`).join('')}
-    ${prescription.advice ? `<div class="adv-box"><strong>Adv:</strong> ${prescription.advice}</div>` : ''}
-    ${prescription.notes ? `<div class="section" style="margin-top:16px"><div class="fl">Doctor's Notes</div><div class="fv">${prescription.notes}</div></div>` : ''}
-    <div class="sig"><div class="sig-line">Doctor's Signature</div></div>
-    <div class="footer">Powered by Ora · Dental Clinic Management</div>`
+  const clinic  = tpl.clinic_name || 'Ora Dental Clinic'
+  const doctor  = tpl.doctor_name || ''
+  const desig   = tpl.doctor_designation || ''
+  const sub     = tpl.doctor_subtext || ''
+  const reg     = tpl.doctor_reg_no || ''
+  const phone   = tpl.doctor_phone || ''
+  const email   = tpl.doctor_email || ''
+  const addr    = tpl.clinic_address || ''
+  const logo    = tpl.clinic_logo_url || ''
+  const d2name  = tpl.doctor2_name || ''
+  const d2desig = tpl.doctor2_designation || ''
+  const d2sub   = tpl.doctor2_subtext || ''
+  const d2email = tpl.doctor2_email || ''
+  const d2reg   = tpl.doctor2_reg_no || ''
+  const pat     = prescription.patients?.name || '—'
+  const age     = prescription.patients?.age || ''
+  const gender  = prescription.patients?.gender || ''
+  const date    = format(new Date(prescription.date), 'dd/MM/yyyy')
 
   const baseStyle = `
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#1e293b;font-size:14px}
-    .section{margin-bottom:14px}
-    .fl{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-weight:600}
-    .fv{font-size:14px;font-weight:600;color:#1e293b}
-    .patient-row{display:flex;gap:32px;background:#f8fafc;border-radius:8px;padding:10px 14px;margin-bottom:16px}
-    .pi{font-size:13px;color:#475569}.pi strong{color:#1e293b}
-    .rx{font-size:22px;font-weight:800;color:#065f46;margin-bottom:8px}
-    .med-row{padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
-    .med-name{font-weight:700;color:#1e293b;margin-bottom:3px}
-    .med-detail{color:#64748b;font-size:12px}
-    .adv-box{background:#fefce8;border-left:3px solid #eab308;padding:10px 14px;border-radius:0 8px 8px 0;margin-top:16px;font-size:13px}
+    body{font-family:'Segoe UI',Arial,sans-serif;color:#1e293b;font-size:13px}
+    .page{padding:32px 40px;min-height:100vh;position:relative}
+    .patient-row{display:flex;gap:24px;background:#f8fafc;border:1px solid #e2e8f0;padding:8px 14px;margin-bottom:20px;font-size:12px;color:#475569}
+    .patient-row strong{color:#1e293b}
+    .body-cols{display:flex;min-height:420px}
+    .left-col{width:140px;padding-right:16px;border-right:1px solid #cbd5e1;padding-top:8px}
+    .right-col{flex:1;padding-left:20px;padding-top:8px}
+    .cl-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;margin-top:16px}
+    .cl-label:first-child{margin-top:0}
+    .cl-value{font-size:12px;color:#1e293b}
+    .rx{font-size:20px;font-weight:800;color:#065f46;margin-bottom:10px;font-style:italic}
+    .med-row{margin-bottom:10px}
+    .med-name{font-weight:700;font-size:13px;color:#1e293b}
+    .med-detail{font-size:12px;color:#64748b;margin-top:1px}
+    .adv-box{background:#fefce8;border-left:3px solid #eab308;padding:8px 12px;margin-top:14px;font-size:12px}
+    .fl{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;font-weight:600}
+    .fv{font-size:13px;font-weight:600;color:#1e293b;margin-bottom:10px}
     .sig{margin-top:48px;display:flex;justify-content:flex-end}
-    .sig-line{border-top:1px solid #1e293b;width:180px;text-align:center;padding-top:6px;font-size:11px;color:#94a3b8}
-    .footer{text-align:center;color:#94a3b8;font-size:11px;border-top:1px solid #e2e8f0;padding-top:12px;margin-top:32px}`
+    .sig-line{border-top:1px solid #1e293b;width:180px;text-align:center;padding-top:5px;font-size:10px;color:#94a3b8}
+    .footer-bar{border-top:1px solid #e2e8f0;padding:8px 14px;display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-top:32px}`
 
-  let header = ''
+  // Patient row (used in T1, T2, T3)
+  const patRow = `
+    <div class="patient-row">
+      <span>Name: <strong>${pat}</strong></span>
+      ${age ? `<span>Age: <strong>${age}y</strong></span>` : ''}
+      ${gender ? `<span>Gender: <strong>${gender}</strong></span>` : ''}
+      <span>Date: <strong>${date}</strong></span>
+    </div>`
 
-  if (template === 1) {
-    // Doctor left | Clinic right
-    header = `
-      <div style="display:flex;justify-content:space-between;border-bottom:2px solid #e2e8f0;padding-bottom:16px;margin-bottom:20px">
-        <div>
-          <div style="font-size:18px;font-weight:800;color:#1e293b">${doctor}</div>
-          ${desig ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${desig}</div>` : ''}
-          ${reg ? `<div style="font-size:12px;color:#64748b">Reg. No: ${reg}</div>` : ''}
-          ${phone ? `<div style="font-size:12px;color:#64748b">Phone: ${phone}</div>` : ''}
-          ${email ? `<div style="font-size:12px;color:#64748b">Email: ${email}</div>` : ''}
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:18px;font-weight:800;color:#065f46">${clinic}</div>
-          ${addr ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${addr}</div>` : ''}
-        </div>
-      </div>`
-  } else if (template === 2) {
-    // Doctor left | Clinic + Logo right
-    header = `
-      <div style="display:flex;justify-content:space-between;border-bottom:2px solid #e2e8f0;padding-bottom:16px;margin-bottom:20px">
-        <div>
-          <div style="font-size:18px;font-weight:800;color:#1e293b">${doctor}</div>
-          ${desig ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${desig}</div>` : ''}
-          ${reg ? `<div style="font-size:12px;color:#64748b">Reg. No: ${reg}</div>` : ''}
-          ${phone ? `<div style="font-size:12px;color:#64748b">Phone: ${phone}</div>` : ''}
-          ${email ? `<div style="font-size:12px;color:#64748b">Email: ${email}</div>` : ''}
-        </div>
-        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-          <div>
-            <div style="font-size:18px;font-weight:800;color:#065f46">${clinic}</div>
-            ${addr ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${addr}</div>` : ''}
-          </div>
-          ${logo ? `<img src="${logo}" style="width:56px;height:56px;object-fit:contain;border-radius:8px" />` : '<div style="width:56px;height:56px;border:1px dashed #cbd5e1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8">Logo</div>'}
-        </div>
-      </div>`
-  } else if (template === 3) {
-    // Clinic name centered top, doctor left + patient right
-    header = `
-      <div style="text-align:center;margin-bottom:12px">
-        <div style="font-size:20px;font-weight:800;color:#065f46">${clinic}</div>
-        ${addr ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${addr}</div>` : ''}
+  // Two-column body (T1 and T2)
+  const twoColBody = `
+    <div class="body-cols">
+      <div class="left-col">
+        ${prescription.chief_complaint ? `<div class="cl-label">C/C</div><div class="cl-value">${prescription.chief_complaint}</div>` : ''}
+        ${prescription.diagnosis ? `<div class="cl-label" style="margin-top:20px">O/E</div><div class="cl-value">${prescription.diagnosis}</div>` : ''}
+        ${prescription.advice ? `<div class="cl-label" style="margin-top:20px">Adv</div><div class="cl-value">${prescription.advice}</div>` : ''}
       </div>
-      <div style="display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;border-bottom:2px solid #e2e8f0;padding:12px 0;margin-bottom:20px">
-        <div>
-          <div style="font-size:16px;font-weight:800;color:#1e293b">${doctor}</div>
-          ${desig ? `<div style="font-size:12px;color:#64748b;margin-top:2px">${desig}</div>` : ''}
-          ${reg ? `<div style="font-size:12px;color:#64748b">Reg. No: ${reg}</div>` : ''}
-          ${email ? `<div style="font-size:12px;color:#64748b">Email: ${email}</div>` : ''}
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:13px;color:#475569">Patient: <strong>${pat}</strong></div>
-          <div style="font-size:13px;color:#475569">Date: <strong>${date}</strong></div>
-        </div>
-      </div>`
-  } else {
-    // Template 4 — minimal single line
-    header = `
-      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #065f46;padding-bottom:12px;margin-bottom:20px">
-        <div>
-          <span style="font-size:18px;font-weight:800;color:#1e293b">${doctor}</span>
-          ${desig ? `<span style="font-size:13px;color:#64748b;margin-left:8px">${desig}</span>` : ''}
-          ${reg ? `<span style="font-size:12px;color:#94a3b8;margin-left:8px">Reg. ${reg}</span>` : ''}
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:16px;font-weight:800;color:#065f46">${clinic}</div>
-          ${phone ? `<div style="font-size:12px;color:#64748b">${phone}</div>` : ''}
-        </div>
+      <div class="right-col">
+        <div class="rx">R<sub>x</sub></div>
+        ${items.map((item, i) => `
+          <div class="med-row">
+            <div class="med-name">${i + 1}. ${item.medicine}</div>
+            <div class="med-detail">${[item.frequency, item.duration, item.instructions].filter(Boolean).join(' , ')}</div>
+          </div>`).join('')}
+      </div>
+    </div>`
+
+  // Single column body (T3)
+  const singleColBody = `
+    <div style="padding-top:4px">
+      ${prescription.chief_complaint ? `<div class="fl">C/C — Chief Complaint</div><div class="fv">${prescription.chief_complaint}</div>` : ''}
+      ${prescription.diagnosis ? `<div class="fl">O/E — On Examination</div><div class="fv">${prescription.diagnosis}</div>` : ''}
+      <div class="rx" style="margin-top:8px">R<sub>x</sub></div>
+      ${items.map((item, i) => `
+        <div class="med-row">
+          <div class="med-name">${i + 1}. ${item.medicine}</div>
+          <div class="med-detail">${[item.frequency, item.duration, item.instructions].filter(Boolean).join(' , ')}</div>
+        </div>`).join('')}
+      ${prescription.advice ? `<div class="adv-box"><strong>Adv:</strong> ${prescription.advice}</div>` : ''}
+      ${prescription.notes ? `<div style="margin-top:14px"><div class="fl">Doctor's Notes</div><div class="fv">${prescription.notes}</div></div>` : ''}
+      <div class="sig"><div class="sig-line">Doctor's Signature</div></div>
+    </div>`
+
+  // Doctor info block helper
+  function drBlock(name, dg, sb, em, rg, align = 'left') {
+    const ta = align === 'right' ? 'text-align:right' : ''
+    return `
+      <div style="${ta}">
+        <div style="font-size:16px;font-weight:800;color:#1e293b">${name}</div>
+        ${dg ? `<div style="font-size:12px;color:#475569;margin-top:1px">${dg}</div>` : ''}
+        ${sb ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${sb}</div>` : ''}
+        ${em ? `<div style="font-size:11px;color:#64748b">${em}</div>` : ''}
+        ${rg ? `<div style="font-size:11px;color:#94a3b8">Reg No: ${rg}</div>` : ''}
       </div>`
   }
 
-  // Template 3 already has patient row in header
-  const patRow = template === 3 ? '' : patientRow
+  let header = ''
 
-  return `<!DOCTYPE html><html><head><title>Prescription - ${pat}</title>
-<style>${baseStyle}</style></head><body>
-${header}${patRow}${clinicalSection}
-</body></html>`
+  // ── TEMPLATE 1 ──────────────────────────────────────────────────────────────
+  // Logo+Address LEFT | Doctor info RIGHT
+  if (template === 1) {
+    header = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #e2e8f0;padding-bottom:16px;margin-bottom:16px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${logo ? `<img src="${logo}" style="height:56px;object-fit:contain;object-position:left" />` : `<div style="font-size:18px;font-weight:800;color:#065f46">${clinic}</div>`}
+          ${addr ? `<div style="font-size:11px;color:#64748b">${addr}</div>` : ''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:17px;font-weight:800;color:#1e293b">${doctor}</div>
+          ${desig ? `<div style="font-size:12px;color:#475569;margin-top:1px">${desig}</div>` : ''}
+          ${sub ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${sub}</div>` : ''}
+          ${phone ? `<div style="font-size:11px;color:#64748b">${phone}</div>` : ''}
+          ${email ? `<div style="font-size:11px;color:#64748b">${email}</div>` : ''}
+          ${reg ? `<div style="font-size:11px;color:#94a3b8">Reg No: ${reg}</div>` : ''}
+        </div>
+      </div>`
+    return `<!DOCTYPE html><html><head><title>Prescription - ${pat}</title>
+<style>${baseStyle}</style></head><body><div class="page">
+${header}${patRow}${twoColBody}
+</div></body></html>`
+  }
+
+  // ── TEMPLATE 2 ──────────────────────────────────────────────────────────────
+  // Doctor1 LEFT | Logo CENTER | Doctor2 RIGHT | Footer: Address + Phone
+  if (template === 2) {
+    header = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #e2e8f0;padding-bottom:16px;margin-bottom:16px">
+        ${drBlock(doctor, desig, sub, email, reg, 'left')}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 16px">
+          ${logo ? `<img src="${logo}" style="width:72px;height:72px;object-fit:contain" />` : `<div style="width:72px;height:72px;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8">Logo</div>`}
+        </div>
+        ${drBlock(d2name, d2desig, d2sub, d2email, d2reg, 'right')}
+      </div>`
+    const footer = `
+      <div class="footer-bar">
+        <span>${addr}</span>
+        <span>${phone}</span>
+      </div>`
+    return `<!DOCTYPE html><html><head><title>Prescription - ${pat}</title>
+<style>${baseStyle}</style></head><body><div class="page">
+${header}${patRow}${twoColBody}${footer}
+</div></body></html>`
+  }
+
+  // ── TEMPLATE 3 ──────────────────────────────────────────────────────────────
+  // Doctor LEFT | Clinic Name+Address+Phone RIGHT | Single col body
+  if (template === 3) {
+    header = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #e2e8f0;padding-bottom:16px;margin-bottom:16px">
+        <div>
+          <div style="font-size:17px;font-weight:800;color:#1e293b">${doctor}</div>
+          ${desig ? `<div style="font-size:12px;color:#475569;margin-top:1px">${desig}</div>` : ''}
+          ${sub ? `<div style="font-size:11px;color:#64748b;margin-top:1px">${sub}</div>` : ''}
+          ${email ? `<div style="font-size:11px;color:#64748b">${email}</div>` : ''}
+          ${reg ? `<div style="font-size:11px;color:#94a3b8">Reg No: ${reg}</div>` : ''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:800;color:#065f46">${clinic}</div>
+          ${addr ? `<div style="font-size:11px;color:#64748b;margin-top:3px">${addr}</div>` : ''}
+          ${phone ? `<div style="font-size:11px;color:#64748b">${phone}</div>` : ''}
+        </div>
+      </div>`
+    return `<!DOCTYPE html><html><head><title>Prescription - ${pat}</title>
+<style>${baseStyle}</style></head><body><div class="page">
+${header}${patRow}${singleColBody}
+</div></body></html>`
+  }
+
+  return ''
 }
 
 // ── Template Setup Modal ──────────────────────────────────────────────────────
@@ -143,8 +187,10 @@ function TemplateSetupModal({ onClose, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [tpl, setTpl] = useState({
     prescription_template: 1,
-    doctor_name: '', doctor_designation: '', doctor_reg_no: '',
-    doctor_phone: '', doctor_email: '',
+    doctor_name: '', doctor_designation: '', doctor_subtext: '',
+    doctor_reg_no: '', doctor_phone: '', doctor_email: '',
+    doctor2_name: '', doctor2_designation: '', doctor2_subtext: '',
+    doctor2_email: '', doctor2_reg_no: '',
     clinic_name: '', clinic_address: '', clinic_logo_url: '',
   })
   const [logoFile, setLogoFile] = useState(null)
@@ -161,9 +207,15 @@ function TemplateSetupModal({ onClose, onSaved }) {
           prescription_template: data.prescription_template || 1,
           doctor_name: data.doctor_name || '',
           doctor_designation: data.doctor_designation || '',
+          doctor_subtext: data.doctor_subtext || '',
           doctor_reg_no: data.doctor_reg_no || '',
           doctor_phone: data.doctor_phone || '',
           doctor_email: data.doctor_email || '',
+          doctor2_name: data.doctor2_name || '',
+          doctor2_designation: data.doctor2_designation || '',
+          doctor2_subtext: data.doctor2_subtext || '',
+          doctor2_email: data.doctor2_email || '',
+          doctor2_reg_no: data.doctor2_reg_no || '',
           clinic_name: data.clinic_name || '',
           clinic_address: data.clinic_address || '',
           clinic_logo_url: data.clinic_logo_url || '',
@@ -190,7 +242,6 @@ function TemplateSetupModal({ onClose, onSaved }) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     let logo_url = tpl.clinic_logo_url
-
     if (logoFile) {
       const ext = logoFile.name.split('.').pop()
       const path = `${user.id}/logo.${ext}`
@@ -200,33 +251,36 @@ function TemplateSetupModal({ onClose, onSaved }) {
         logo_url = publicUrl
       }
     }
-
     await supabase.from('clinic_settings').update({
       prescription_template: tpl.prescription_template,
       doctor_name: tpl.doctor_name || null,
       doctor_designation: tpl.doctor_designation || null,
+      doctor_subtext: tpl.doctor_subtext || null,
       doctor_reg_no: tpl.doctor_reg_no || null,
       doctor_phone: tpl.doctor_phone || null,
       doctor_email: tpl.doctor_email || null,
+      doctor2_name: tpl.doctor2_name || null,
+      doctor2_designation: tpl.doctor2_designation || null,
+      doctor2_subtext: tpl.doctor2_subtext || null,
+      doctor2_email: tpl.doctor2_email || null,
+      doctor2_reg_no: tpl.doctor2_reg_no || null,
       clinic_address: tpl.clinic_address || null,
       clinic_logo_url: logo_url || null,
     }).eq('clinic_id', user.id)
-
     setSaving(false)
     onSaved({ ...tpl, clinic_logo_url: logo_url })
     onClose()
   }
 
   const TEMPLATES = [
-    { id: 1, label: 'T1', desc: 'Doctor ↔ Clinic' },
-    { id: 2, label: 'T2', desc: 'With Logo' },
-    { id: 3, label: 'T3', desc: 'Clinic Top' },
-    { id: 4, label: 'T4', desc: 'Minimal' },
+    { id: 1, label: 'T1', desc: 'Logo + Doctor' },
+    { id: 2, label: 'T2', desc: '2 Doctors' },
+    { id: 3, label: 'T3', desc: 'Clinic Right' },
   ]
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box max-w-2xl" onClick={e => e.stopPropagation()}>
+      <div className="modal-box max-w-3xl" onClick={e => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="font-bold text-slate-800 text-lg">Prescription Template</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
@@ -240,45 +294,52 @@ function TemplateSetupModal({ onClose, onSaved }) {
             {/* Template picker */}
             <div>
               <label className="label">Template Style</label>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {TEMPLATES.map(t => (
-                  <button key={t.id} type="button" onClick={() => setTpl(prev => ({ ...prev, prescription_template: t.id }))}
-                    className={`relative border-2 rounded-xl p-3 text-center transition-all ${
+                  <button key={t.id} type="button"
+                    onClick={() => setTpl(prev => ({ ...prev, prescription_template: t.id }))}
+                    className={`relative border-2 rounded-xl p-4 text-center transition-all ${
                       tpl.prescription_template === t.id
                         ? 'border-emerald-500 bg-emerald-50'
                         : 'border-slate-200 hover:border-slate-300'
                     }`}>
                     {tpl.prescription_template === t.id && (
-                      <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                      <div className="absolute top-2 right-2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
                         <Check size={11} className="text-white" />
                       </div>
                     )}
-                    <div className="text-lg font-black text-slate-700 mb-1">{t.label}</div>
+                    <div className="text-xl font-black text-slate-700 mb-1">{t.label}</div>
                     <div className="text-xs text-slate-500">{t.desc}</div>
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* Doctor 1 + Clinic info — always shown */}
             <div className="grid grid-cols-2 gap-6">
-              {/* Doctor info */}
               <div className="space-y-3">
-                <p className="text-sm font-bold text-slate-700 border-b border-slate-100 pb-2">Doctor Info</p>
+                <p className="text-sm font-bold text-slate-700 border-b border-slate-100 pb-2">
+                  {tpl.prescription_template === 2 ? 'Doctor 1 Info' : 'Doctor Info'}
+                </p>
                 <div>
                   <label className="label">Full Name</label>
                   <input name="doctor_name" className="input" placeholder="Dr. Hanjala Hossen" value={tpl.doctor_name} onChange={handleChange} />
                 </div>
                 <div>
                   <label className="label">Designation</label>
-                  <input name="doctor_designation" className="input" placeholder="BDS, FCPS" value={tpl.doctor_designation} onChange={handleChange} />
+                  <input name="doctor_designation" className="input" placeholder="Dental Surgeon" value={tpl.doctor_designation} onChange={handleChange} />
+                </div>
+                <div>
+                  <label className="label">Sub Text</label>
+                  <input name="doctor_subtext" className="input" placeholder="BDS(SSAMML,Dhaka), FCPS..." value={tpl.doctor_subtext} onChange={handleChange} />
                 </div>
                 <div>
                   <label className="label">Reg. No</label>
-                  <input name="doctor_reg_no" className="input" placeholder="12345" value={tpl.doctor_reg_no} onChange={handleChange} />
+                  <input name="doctor_reg_no" className="input" placeholder="343333" value={tpl.doctor_reg_no} onChange={handleChange} />
                 </div>
                 <div>
                   <label className="label">Phone</label>
-                  <input name="doctor_phone" className="input" placeholder="01XXXXXXXXX" value={tpl.doctor_phone} onChange={handleChange} />
+                  <input name="doctor_phone" className="input" placeholder="+8801629775303" value={tpl.doctor_phone} onChange={handleChange} />
                 </div>
                 <div>
                   <label className="label">Email</label>
@@ -286,7 +347,6 @@ function TemplateSetupModal({ onClose, onSaved }) {
                 </div>
               </div>
 
-              {/* Clinic info */}
               <div className="space-y-3">
                 <p className="text-sm font-bold text-slate-700 border-b border-slate-100 pb-2">Clinic Info</p>
                 <div>
@@ -295,7 +355,7 @@ function TemplateSetupModal({ onClose, onSaved }) {
                 </div>
                 <div>
                   <label className="label">Address</label>
-                  <input name="clinic_address" className="input" placeholder="Dhaka, Bangladesh" value={tpl.clinic_address} onChange={handleChange} />
+                  <input name="clinic_address" className="input" placeholder="Kabir Khan Market, Dhaka" value={tpl.clinic_address} onChange={handleChange} />
                 </div>
                 <div>
                   <label className="label">Clinic Logo</label>
@@ -313,6 +373,35 @@ function TemplateSetupModal({ onClose, onSaved }) {
                 </div>
               </div>
             </div>
+
+            {/* Doctor 2 — only shown for Template 2 */}
+            {tpl.prescription_template === 2 && (
+              <div className="border border-dashed border-emerald-300 rounded-xl p-4 space-y-3">
+                <p className="text-sm font-bold text-emerald-700 pb-2 border-b border-emerald-100">Doctor 2 Info <span className="text-xs font-normal text-slate-400">(Template 2 only)</span></p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">Full Name</label>
+                    <input name="doctor2_name" className="input" placeholder="Dr. Second Doctor" value={tpl.doctor2_name} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="label">Designation</label>
+                    <input name="doctor2_designation" className="input" placeholder="Dental Surgeon" value={tpl.doctor2_designation} onChange={handleChange} />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="label">Sub Text</label>
+                    <input name="doctor2_subtext" className="input" placeholder="BDS(SSAMML,Dhaka), FCPS..." value={tpl.doctor2_subtext} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="label">Email</label>
+                    <input name="doctor2_email" className="input" placeholder="dr2@email.com" value={tpl.doctor2_email} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="label">Reg. No</label>
+                    <input name="doctor2_reg_no" className="input" placeholder="343334" value={tpl.doctor2_reg_no} onChange={handleChange} />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={onClose} className="btn-secondary">Cancel</button>
@@ -387,7 +476,6 @@ function PrescriptionDetailModal({ prescription, onClose, tplSettings }) {
               )}
             </div>
           )}
-
           <div>
             <p className="text-sm font-bold text-slate-700 mb-3">℞ Prescribed Medicines</p>
             {items.length === 0 ? (
@@ -407,14 +495,12 @@ function PrescriptionDetailModal({ prescription, onClose, tplSettings }) {
               </div>
             )}
           </div>
-
           {prescription.advice && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-r-xl p-3">
               <p className="text-xs font-bold text-yellow-700 mb-1">Adv — Advice</p>
               <p className="text-sm text-slate-700">{prescription.advice}</p>
             </div>
           )}
-
           {prescription.notes && (
             <div className="bg-amber-50 rounded-xl p-3">
               <p className="text-xs font-semibold text-amber-600 mb-1">Doctor&apos;s Notes</p>
@@ -442,7 +528,7 @@ export default function PrescriptionsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const { data } = await supabase
       .from('prescriptions')
-      .select('*, patients(name), prescription_items(id)')
+      .select('*, patients(name, age, gender), prescription_items(id)')
       .eq('clinic_id', user.id)
       .order('created_at', { ascending: false })
     setPrescriptions(data || [])
