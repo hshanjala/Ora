@@ -13,7 +13,6 @@ export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [filter, setFilter] = useState('all')
 
-  // List view state
   const [showList, setShowList] = useState(false)
   const [listFrom, setListFrom] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'))
   const [listTo, setListTo] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
@@ -56,6 +55,17 @@ export default function SchedulePage() {
 
   async function updateStatus(id, status) {
     await supabase.from('appointments').update({ status }).eq('id', id)
+
+    // When appointment is completed, activate the patient in patients list
+    if (status === 'completed') {
+      const appt = appointments.find(a => a.id === id)
+      if (appt?.patient_id) {
+        await supabase.from('patients')
+          .update({ is_active: true })
+          .eq('id', appt.patient_id)
+      }
+    }
+
     loadAppointments()
   }
 
@@ -69,7 +79,6 @@ export default function SchedulePage() {
     ? appointments
     : appointments.filter(a => a.status === filter)
 
-  // Group list appointments by date
   const filteredList = listFilter === 'all'
     ? listAppointments
     : listAppointments.filter(a => a.status === listFilter)
@@ -112,7 +121,6 @@ export default function SchedulePage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-slate-800">Schedule</h1>
@@ -123,7 +131,6 @@ export default function SchedulePage() {
         </button>
       </div>
 
-      {/* Date Navigator — unchanged, just added List button */}
       <div className="card mb-4">
         <div className="flex items-center gap-4">
           <button
@@ -156,7 +163,6 @@ export default function SchedulePage() {
           >
             Today
           </button>
-          {/* NEW: List button */}
           <button
             onClick={() => setShowList(true)}
             className="btn-secondary flex items-center gap-1.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
@@ -166,7 +172,6 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Filter Tabs — unchanged */}
       <div className="flex gap-2 mb-4">
         {['all', 'scheduled', 'checked-in', 'completed', 'cancelled'].map(f => (
           <button
@@ -183,7 +188,6 @@ export default function SchedulePage() {
         ))}
       </div>
 
-      {/* Appointments Table — unchanged */}
       <div className="card">
         {loading ? (
           <div className="flex justify-center py-12"><div className="spinner" /></div>
@@ -240,12 +244,9 @@ export default function SchedulePage() {
         )}
       </div>
 
-      {/* List View Overlay */}
       {showList && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center p-6 overflow-y-auto">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl my-4">
-
-            {/* Overlay header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
               <p className="font-bold text-slate-800 text-lg">All Appointments</p>
               <div className="flex items-center gap-2 flex-wrap">
@@ -255,9 +256,7 @@ export default function SchedulePage() {
                 <span className="text-sm text-slate-500">To</span>
                 <input type="date" className="input w-36 text-sm" value={listTo}
                   onChange={e => setListTo(e.target.value)} />
-                <button onClick={loadListAppointments} className="btn-primary !py-2 !px-4 text-sm">
-                  Apply
-                </button>
+                <button onClick={loadListAppointments} className="btn-primary !py-2 !px-4 text-sm">Apply</button>
                 <button onClick={() => setShowList(false)}
                   className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
                   <X size={20} />
@@ -265,7 +264,6 @@ export default function SchedulePage() {
               </div>
             </div>
 
-            {/* Filter tabs */}
             <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex gap-2 flex-wrap">
                 {['all', 'scheduled', 'checked-in', 'completed', 'cancelled'].map(f => (
@@ -282,7 +280,6 @@ export default function SchedulePage() {
               <span className="text-sm text-slate-400">{filteredList.length} appointment{filteredList.length !== 1 ? 's' : ''}</span>
             </div>
 
-            {/* List content */}
             <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto">
               {listLoading ? (
                 <div className="flex justify-center py-12"><div className="spinner" /></div>
@@ -294,15 +291,12 @@ export default function SchedulePage() {
               ) : (
                 Object.keys(grouped).sort().map(date => (
                   <div key={date}>
-                    {/* Date group header */}
                     <div className="flex items-center gap-3 mb-3">
                       <span className={`text-xs font-bold whitespace-nowrap ${date === today ? 'text-emerald-600' : 'text-slate-500'}`}>
                         {date === today ? 'Today, ' : ''}{format(new Date(date), 'EEE, MMM d')}
                       </span>
                       <div className="flex-1 h-px bg-slate-100" />
                     </div>
-
-                    {/* Appointments for this date */}
                     <div className="rounded-2xl border border-slate-100 overflow-hidden">
                       {grouped[date].map((appt, i) => {
                         const color = avatarColor(appt.patients?.name)
