@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { X, Copy, CheckCircle } from 'lucide-react'
+import { format } from 'date-fns'
 
 function PaymentModal({ onClose }) {
   const [copied, setCopied] = useState(null)
@@ -15,7 +16,6 @@ function PaymentModal({ onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box max-w-sm" onClick={e => e.stopPropagation()}>
         <div className="p-6">
-          {/* Header */}
           <div className="flex items-start justify-between mb-5">
             <div>
               <h2 className="text-lg font-bold text-slate-800">Renew Subscription</h2>
@@ -26,7 +26,6 @@ function PaymentModal({ onClose }) {
             </button>
           </div>
 
-          {/* Steps */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
             <p className="text-sm font-semibold text-amber-800 mb-2">📋 How to pay</p>
             <ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside">
@@ -37,7 +36,6 @@ function PaymentModal({ onClose }) {
             </ol>
           </div>
 
-          {/* bKash */}
           <div className="border border-slate-200 rounded-xl p-4 mb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -59,7 +57,6 @@ function PaymentModal({ onClose }) {
             </div>
           </div>
 
-          {/* Nagad */}
           <div className="border border-slate-200 rounded-xl p-4 mb-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -99,55 +96,97 @@ export default function SubscriptionBanner({ settings }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  const isOnTrial = settings.subscription_status === 'trial' || !settings.subscription_status
+  const isActive  = settings.subscription_status === 'active'
+  const endDateStr = isOnTrial ? settings.trial_end : settings.subscription_end
+
   let daysLeft = null
-  let isOnTrial = settings.subscription_status === 'trial'
-  let expiredDate = isOnTrial ? settings.trial_end : settings.subscription_end
+  let endDateFormatted = ''
 
-  if (expiredDate) {
-    const end = new Date(expiredDate)
-    const diff = end - today
-    daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24))
+  if (endDateStr) {
+    const end = new Date(endDateStr + 'T00:00:00')
+    daysLeft = Math.ceil((end - today) / (1000 * 60 * 60 * 24))
+    endDateFormatted = format(end, 'MMM d, yyyy')
   }
-
-  // Don't show banner if subscription is fine (>7 days left)
-  if (daysLeft !== null && daysLeft > 7) return null
 
   const isExpired = daysLeft !== null && daysLeft <= 0
-  const isUrgent = daysLeft !== null && daysLeft <= 3
+  const isUrgent  = daysLeft !== null && daysLeft <= 7 && daysLeft > 0
+  const isHealthy = isActive || (!isExpired && !isUrgent)
 
-  let bgColor = 'bg-amber-50 border-amber-200'
-  let textColor = 'text-amber-800'
+  // ── Active paid subscription — green banner, no button ────────────────────
+  if (isActive && daysLeft !== null && daysLeft > 7) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-2.5 border bg-emerald-50 border-emerald-200 rounded-xl mb-4">
+        <div className="relative flex items-center justify-center w-3 h-3 shrink-0">
+          <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-emerald-500" />
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Active</span>
+          <span className="w-px h-4 bg-emerald-200" />
+          <span className="text-sm text-emerald-700">
+            Subscription active till <strong>{endDateFormatted}</strong>
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Trial or expiring soon — amber/orange/red banner ─────────────────────
+  let bgColor  = 'bg-amber-50 border-amber-200'
+  let dotColor = 'bg-amber-500'
+  let pingColor = 'bg-amber-400'
+  let labelColor = 'text-amber-800'
+  let msgColor = 'text-amber-700'
   let btnColor = 'bg-amber-500 hover:bg-amber-600'
-  let emoji = '⏳'
 
   if (isExpired) {
-    bgColor = 'bg-red-50 border-red-200'
-    textColor = 'text-red-800'
-    btnColor = 'bg-red-500 hover:bg-red-600'
-    emoji = '🚨'
+    bgColor   = 'bg-red-50 border-red-200'
+    dotColor  = 'bg-red-500'
+    pingColor = 'bg-red-400'
+    labelColor = 'text-red-800'
+    msgColor  = 'text-red-700'
+    btnColor  = 'bg-red-500 hover:bg-red-600'
   } else if (isUrgent) {
-    bgColor = 'bg-orange-50 border-orange-200'
-    textColor = 'text-orange-800'
-    btnColor = 'bg-orange-500 hover:bg-orange-600'
-    emoji = '⚠️'
+    bgColor   = 'bg-orange-50 border-orange-200'
+    dotColor  = 'bg-orange-500'
+    pingColor = 'bg-orange-400'
+    labelColor = 'text-orange-800'
+    msgColor  = 'text-orange-700'
+    btnColor  = 'bg-orange-500 hover:bg-orange-600'
   }
+
+  const label = isOnTrial ? 'Free Trial' : 'Subscription'
 
   let message = ''
   if (isExpired) {
-    message = `Your ${isOnTrial ? 'trial' : 'subscription'} has expired. Renew now to continue using Ora.`
+    message = `Your ${isOnTrial ? 'trial' : 'subscription'} ended on ${endDateFormatted} · Renew to keep access`
+  } else if (endDateStr) {
+    message = `Ends ${endDateFormatted} · ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining · ৳299/month to renew`
   } else {
-    message = `${emoji} ${isOnTrial ? 'Trial' : 'Subscription'} ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}. Renew for ৳299/month.`
+    message = 'Renew for ৳299/month to continue'
   }
 
   return (
     <>
       <div className={`flex items-center justify-between px-4 py-2.5 border ${bgColor} rounded-xl mb-4`}>
-        <p className={`text-sm font-medium ${textColor}`}>{message}</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Pulsing dot */}
+          <div className="relative flex items-center justify-center w-3 h-3 shrink-0">
+            <span className={`absolute inline-flex w-3 h-3 rounded-full ${pingColor} opacity-60 animate-ping`} />
+            <span className={`relative inline-flex w-2.5 h-2.5 rounded-full ${dotColor}`} />
+          </div>
+          {/* Label */}
+          <span className={`text-xs font-bold ${labelColor} uppercase tracking-wider`}>{label}</span>
+          {/* Divider */}
+          <span className="w-px h-4 bg-current opacity-20" />
+          {/* Message */}
+          <span className={`text-sm ${msgColor}`}>{message}</span>
+        </div>
         <button
           onClick={() => setShowModal(true)}
           className={`${btnColor} text-white text-xs font-bold px-4 py-1.5 rounded-lg ml-4 shrink-0 transition-colors`}
         >
-          Pay Now →
+          Renew Now →
         </button>
       </div>
 
