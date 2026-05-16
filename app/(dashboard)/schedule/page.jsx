@@ -56,9 +56,14 @@ export default function SchedulePage() {
   async function updateStatus(id, status) {
     await supabase.from('appointments').update({ status }).eq('id', id)
 
-    // When appointment is completed, activate the patient in patients list
+    // When completed, fetch patient_id directly from DB and activate patient
     if (status === 'completed') {
-      const appt = appointments.find(a => a.id === id)
+      const { data: appt } = await supabase
+        .from('appointments')
+        .select('patient_id')
+        .eq('id', id)
+        .single()
+
       if (appt?.patient_id) {
         await supabase.from('patients')
           .update({ is_active: true })
