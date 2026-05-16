@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AddPatientModal from '@/components/modals/AddPatientModal'
 import PatientPanel from '@/components/PatientPanel'
-import { Plus, Search, User, Phone, Mail, Trash2, Users } from 'lucide-react'
+import AddPrescriptionModal from '@/components/modals/AddPrescriptionModal'
+import CreateInvoiceModal from '@/components/modals/CreateInvoiceModal'
+import { Plus, Search, User, Phone, Mail, Trash2, Users, Pill, FileText } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function PatientsPage() {
@@ -13,6 +15,8 @@ export default function PatientsPage() {
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
+  const [rxPatient, setRxPatient] = useState(null)
+  const [invoicePatient, setInvoicePatient] = useState(null)
 
   async function loadPatients() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -130,13 +134,29 @@ export default function PatientsPage() {
                     {format(new Date(patient.created_at), 'MMM d, yyyy')}
                   </td>
                   <td className="table-td" onClick={e => e.stopPropagation()}>
-                    <button
-                      onClick={e => deletePatient(e, patient.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                      title="Delete"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={e => { e.stopPropagation(); setRxPatient(patient) }}
+                        className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        title="New Prescription"
+                      >
+                        <Pill size={15} />
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); setInvoicePatient(patient) }}
+                        className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
+                        title="New Invoice"
+                      >
+                        <FileText size={15} />
+                      </button>
+                      <button
+                        onClick={e => deletePatient(e, patient.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -156,6 +176,24 @@ export default function PatientsPage() {
         <PatientPanel
           patient={selectedPatient}
           onClose={() => setSelectedPatient(null)}
+        />
+      )}
+
+      {rxPatient && (
+        <AddPrescriptionModal
+          patientId={rxPatient.id}
+          patientName={rxPatient.name}
+          onClose={() => setRxPatient(null)}
+          onSuccess={() => setRxPatient(null)}
+        />
+      )}
+
+      {invoicePatient && (
+        <CreateInvoiceModal
+          patientId={invoicePatient.id}
+          patientName={invoicePatient.name}
+          onClose={() => setInvoicePatient(null)}
+          onSuccess={() => setInvoicePatient(null)}
         />
       )}
     </div>
