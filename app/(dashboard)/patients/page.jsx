@@ -24,6 +24,7 @@ export default function PatientsPage() {
       .from('patients')
       .select('*')
       .eq('clinic_id', user.id)
+      .neq('is_active', false)        // ← only show active patients
       .order('created_at', { ascending: false })
     setPatients(data || [])
     setLoading(false)
@@ -171,14 +172,12 @@ export default function PatientsPage() {
           onSuccess={loadPatients}
         />
       )}
-
       {selectedPatient && (
         <PatientPanel
           patient={selectedPatient}
           onClose={() => setSelectedPatient(null)}
         />
       )}
-
       {rxPatient && (
         <AddPrescriptionModal
           patientId={rxPatient.id}
@@ -187,7 +186,6 @@ export default function PatientsPage() {
           onSuccess={() => setRxPatient(null)}
         />
       )}
-
       {invoicePatient && (
         <CreateInvoiceModal
           patientId={invoicePatient.id}
