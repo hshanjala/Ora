@@ -36,7 +36,6 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate })
     loadPatients()
   }, [])
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -88,11 +87,12 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate })
 
     let patientId = selectedPatientId
 
-    // If no existing patient selected, create a new one on the fly
+    // If no existing patient selected, create a new one — is_active: false
+    // so they don't appear in Patients list until appointment is completed
     if (!patientId && patientQuery.trim()) {
       const { data: newPatient } = await supabase
         .from('patients')
-        .insert({ clinic_id: user.id, name: patientQuery.trim() })
+        .insert({ clinic_id: user.id, name: patientQuery.trim(), is_active: false })
         .select()
         .single()
       patientId = newPatient?.id || null
@@ -139,7 +139,6 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate })
             <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>
           )}
 
-          {/* Patient combobox */}
           <div className="relative">
             <label className="label">Patient *</label>
             <input
@@ -152,8 +151,6 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate })
               onFocus={handlePatientFocus}
               autoComplete="off"
             />
-
-            {/* Suggestions dropdown */}
             {showSuggestions && (
               <div
                 ref={dropdownRef}
@@ -202,25 +199,11 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate })
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Date *</label>
-              <input
-                name="date"
-                type="date"
-                className="input"
-                value={form.date}
-                onChange={handleChange}
-                required
-              />
+              <input name="date" type="date" className="input" value={form.date} onChange={handleChange} required />
             </div>
             <div>
               <label className="label">Time *</label>
-              <input
-                name="time"
-                type="time"
-                className="input"
-                value={form.time}
-                onChange={handleChange}
-                required
-              />
+              <input name="time" type="time" className="input" value={form.time} onChange={handleChange} required />
             </div>
           </div>
 
@@ -244,19 +227,12 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate })
 
           <div>
             <label className="label">Notes</label>
-            <textarea
-              name="notes"
-              className="input min-h-[70px] resize-none"
-              placeholder="Any additional notes..."
-              value={form.notes}
-              onChange={handleChange}
-            />
+            <textarea name="notes" className="input min-h-[70px] resize-none"
+              placeholder="Any additional notes..." value={form.notes} onChange={handleChange} />
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">
-              Cancel
-            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">Cancel</button>
             <button type="submit" disabled={loading} className="btn-primary flex-1 justify-center">
               {loading && <Loader2 size={16} className="animate-spin" />}
               {loading ? 'Adding...' : 'Add Appointment'}
