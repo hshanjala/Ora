@@ -76,86 +76,6 @@ function PaymentModal({ onClose }) {
   )
 }
 
-// ── Subscription Indicator ────────────────────────────────────────────────────
-function SubscriptionIndicator({ settings }) {
-  const [showPayment, setShowPayment] = useState(false)
-  if (!settings) return null
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const isOnTrial = settings.subscription_status === 'trial' || !settings.subscription_status
-  const endDateStr = isOnTrial ? settings.trial_end : settings.subscription_end
-
-  let daysLeft = null
-  let endDateFormatted = ''
-
-  if (endDateStr) {
-    const end = new Date(endDateStr + 'T00:00:00')
-    daysLeft = Math.ceil((end - today) / (1000 * 60 * 60 * 24))
-    endDateFormatted = format(end, 'MMM d, yyyy')
-  }
-
-  const isExpired = daysLeft !== null && daysLeft <= 0
-  const isUrgent  = daysLeft !== null && daysLeft <= 7 && daysLeft > 0
-  const isHealthy = !isExpired && !isUrgent
-  const clickable = isExpired || isUrgent
-
-  const label = isOnTrial ? 'Free Trial' : 'Subscription'
-
-  let statusText = ''
-  let subText = ''
-
-  if (!endDateStr) {
-    statusText = 'Trial active'
-    subText = ''
-  } else if (isExpired) {
-    statusText = isOnTrial ? 'Trial expired' : 'Plan expired'
-    subText = 'Tap to renew →'
-  } else if (isUrgent) {
-    statusText = `Ends ${endDateFormatted}`
-    subText = 'Tap to renew →'
-  } else {
-    statusText = `Active till ${endDateFormatted}`
-    subText = `${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining`
-  }
-
-  return (
-    <>
-      <button
-        onClick={clickable ? () => setShowPayment(true) : undefined}
-        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border transition-all duration-150 ${
-          isHealthy
-            ? 'bg-white border-slate-200 cursor-default'
-            : 'bg-white border-red-200 hover:bg-red-50 cursor-pointer'
-        }`}
-      >
-        {/* Pulsing dot for urgent/expired */}
-        <div className="relative shrink-0 flex items-center justify-center w-3 h-3">
-          {!isHealthy && (
-            <span className="absolute inline-flex w-3 h-3 rounded-full bg-red-400 opacity-60 animate-ping" />
-          )}
-          <span className={`relative inline-flex w-2.5 h-2.5 rounded-full ${isHealthy ? 'bg-emerald-500' : 'bg-red-500'}`} />
-        </div>
-
-        <div className="text-left">
-          <p className="text-xs font-semibold text-slate-400 leading-none mb-0.5">{label}</p>
-          <p className={`text-sm font-bold leading-tight ${isHealthy ? 'text-emerald-600' : 'text-red-600'}`}>
-            {statusText}
-          </p>
-          {subText && (
-            <p className={`text-xs leading-none mt-0.5 ${isHealthy ? 'text-slate-400' : 'text-red-400'}`}>
-              {subText}
-            </p>
-          )}
-        </div>
-      </button>
-
-      {showPayment && <PaymentModal onClose={() => setShowPayment(false)} />}
-    </>
-  )
-}
-
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, color, textColor }) {
   return (
@@ -283,56 +203,43 @@ export default function DashboardPage() {
             {format(new Date(), 'EEEE, MMMM d, yyyy')} · Here&apos;s your clinic overview
           </p>
         </div>
-        <div className="hidden sm:block">
-          <SubscriptionIndicator settings={settings} />
-        </div>
       </div>
 
       {/* Quick Actions */}
       <div className="mb-6">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</p>
         <div className="flex flex-wrap gap-3">
-
-          <button
-            onClick={() => setShowQuickAdd(true)}
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer"
-          >
+          <button onClick={() => setShowQuickAdd(true)}
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer">
             <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0">
               <UserPlus size={17} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-slate-700">Add Patient</span>
           </button>
 
-          <button
-            onClick={() => setShowSchedule(true)}
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer"
-          >
+          <button onClick={() => setShowSchedule(true)}
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer">
             <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
               <CalendarPlus size={17} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-slate-700">Add Schedule</span>
           </button>
 
-          <button
-            onClick={() => setShowInvoice(true)}
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer"
-          >
+          <button onClick={() => setShowInvoice(true)}
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer">
             <div className="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center shrink-0">
               <FileText size={17} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-slate-700">Create Invoice</span>
           </button>
 
-          <button
-            onClick={() => setShowExpense(true)}
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer"
-          >
+          <button onClick={() => setShowExpense(true)}
+            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer">
             <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
               <TrendingDown size={17} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-slate-700">Add Expenses</span>
           </button>
-
         </div>
       </div>
 
@@ -353,7 +260,6 @@ export default function DashboardPage() {
             <h2 className="font-bold text-slate-800">Today&apos;s Schedule</h2>
             <Link href="/schedule" className="text-xs text-emerald-600 font-semibold hover:underline">View all →</Link>
           </div>
-
           {todaySchedule.length === 0 ? (
             <div className="text-center py-10 text-slate-400">
               <Calendar size={32} className="mx-auto mb-2 opacity-40" />
@@ -437,35 +343,31 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Overlays ── */}
+      {/* Overlays */}
       {showQuickAdd && (
         <QuickAddFlow
           onClose={() => setShowQuickAdd(false)}
           onSuccess={() => { setShowQuickAdd(false); load() }}
         />
       )}
-
       {showSchedule && (
         <AddAppointmentModal
           onClose={() => setShowSchedule(false)}
           onSuccess={() => { setShowSchedule(false); load() }}
         />
       )}
-
       {showInvoice && (
         <CreateInvoiceModal
           onClose={() => setShowInvoice(false)}
           onSuccess={() => { setShowInvoice(false); load() }}
         />
       )}
-
       {showExpense && (
         <AddExpenseModal
           onClose={() => setShowExpense(false)}
           onSuccess={() => { setShowExpense(false); load() }}
         />
       )}
-
     </div>
   )
 }
