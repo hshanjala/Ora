@@ -1,0 +1,280 @@
+'use client'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { format, addDays } from 'date-fns'
+import { Lock, RefreshCw, CheckCircle, Clock, XCircle, LogOut } from 'lucide-react'
+
+const ADMIN_PASSWORD = 'AdminH1'
+
+export default function AdminPage() {
+  const supabase = createClient()
+  const [authed, setAuthed] = useState(false)
+  const [pwInput, setPwInput] = useState('')
+  const [pwError, setPwError] = useState('')
+  const [clinics, setClinics] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [extending, setExtending] = useState(null)
+  const [toast, setToast] = useState(null)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('ora_admin_auth')
+    if (saved === 'true') setAuthed(true)
+  }, [])
+
+  function handleLogin(e) {
+    e.preventDefault()
+    if (pwInput === ADMIN_PASSWORD) {
+      localStorage.setItem('ora_admin_auth', 'true')
+      setAuthed(true)
+      setPwError('')
+    } else {
+      setPwError('Wrong password. Try again.')
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('ora_admin_auth')
+    setAuthed(false)
+    setPwInput('')
+  }
+
+  async function loadClinics() {
+    setLoading(true)
+    const { data } = await supabase
+      .from('clinic_settings')
+      .select('*')
+      .order('created_at', { ascending: false })
+    setClinics(data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (authed) loadClinics()
+  }, [authed])
+
+  async function extendSubscription(clinic) {
+    setExtending(clinic.clinic_id)
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    // If currently active and not expired, extend from current end date
+    // Otherwise extend from today
+    let baseDate = today
+    const currentEnd = clinic.subscription_end
+      ? new Date(clinic.subscription_end + 'T00:00:00')
+      : null
+    const currentTrial = clinic.trial_end
+      ? new Date(clinic.trial_end + 'T00:00:00')
+      : null
+
+    if (currentEnd && currentEnd > today) {
+      baseDate = currentEnd
+    } else if (currentTrial && currentTrial > today && clinic.subscription_status === 'trial') {
+      baseDate = today
+    }
+
+    const newEnd = format(addDays(baseDate, 30), 'yyyy-MM-dd')
+
+    const { error } = await supabase
+      .from('clinic_settings')
+      .update({
+        subscription_status: 'active',
+        subscription_end: newEnd,
+      })
+      .eq('clinic_id', clinic.clinic_id)
+
+    if (!error) {
+      showToast(`✅ ${clinic.clinic_name || 'Clinic'} extended to ${format(new Date(newEnd + 'T00:00:00'), 'MMM d, yyyy')}`)
+      loadClinics()
+    } else {
+      showToast('❌ Failed to extend. Try again.')
+    }
+
+    setExtending(null)
+  }
+
+  function showToast(msg) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 4000)
+  }
+
+  function getStatus(clinic) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const isOnTrial = clinic.subscription_status === 'trial' || !clinic.subscription_status
+    const endStr = isOnTrial ? clinic.trial_end : clinic.subscription_end
+    if (!endStr) return { label: 'Trial', color: 'text-amber-600 bg-amber-50', daysLeft: null }
+
+    const end = new Date(endStr + 'T00:00:00')
+    const daysLeft = Math.ceil((end - today) / (1000 * 60 * 60 * 24))
+
+    if (daysLeft <= 0) return { label: 'Expired', color: 'text-red-600 bg-red-50', daysLeft }
+    if (isOnTrial) return { label: `Trial · ${daysLeft}d left`, color: 'text-amber-600 bg-amber-50', daysLeft }
+    if (daysLeft <= 7) return { label: `Expiring · ${daysLeft}d left`, color: 'text-orange-600 bg-orange-50', daysLeft }
+    return { label: `Active · ${daysLeft}d left`, color: 'text-emerald-600 bg-emerald-50', daysLeft }
+  }
+
+  function formatDate(str) {
+    if (!str) return '—'
+    try { return format(new Date(str + 'T00:00:00'), 'MMM d, yyyy') } catch { return str }
+  }
+
+  // ── Login screen ────────────────────────────────────────────────────────────
+  if (!authed) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm p-8">
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+              <Lock size={24} className="text-white" />
+            </div>
+            <h1 className="text-xl font-black text-slate-800">Ora Admin</h1>
+            <p className="text-sm text-slate-500 mt-1">Enter password to continue</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              type="password"
+              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Admin password"
+              value={pwInput}
+              onChange={e => setPwInput(e.target.value)}
+              autoFocus
+            />
+            {pwError && <p className="text-red-600 text-sm">{pwError}</p>}
+            <button type="submit"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors">
+              Login
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Admin panel ─────────────────────────────────────────────────────────────
+  const expired  = clinics.filter(c => getStatus(c).daysLeft !== null && getStatus(c).daysLeft <= 0)
+  const expiring = clinics.filter(c => getStatus(c).daysLeft !== null && getStatus(c).daysLeft > 0 && getStatus(c).daysLeft <= 7)
+  const active   = clinics.filter(c => getStatus(c).daysLeft === null || getStatus(c).daysLeft > 7)
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 bg-slate-800 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl">
+          {toast}
+        </div>
+      )}
+
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-black text-slate-800">Ora Admin Panel</h1>
+            <p className="text-slate-500 text-sm mt-0.5">{clinics.length} clinics registered</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={loadClinics} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 bg-white border border-slate-200 px-4 py-2 rounded-xl transition-colors">
+              <RefreshCw size={15} /> Refresh
+            </button>
+            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 bg-white border border-red-200 px-4 py-2 rounded-xl transition-colors">
+              <LogOut size={15} /> Logout
+            </button>
+          </div>
+        </div>
+
+        {/* Summary cards */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <XCircle size={16} className="text-red-500" />
+              <span className="text-sm font-bold text-red-700">Expired</span>
+            </div>
+            <p className="text-3xl font-black text-red-600">{expired.length}</p>
+          </div>
+          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock size={16} className="text-orange-500" />
+              <span className="text-sm font-bold text-orange-700">Expiring Soon</span>
+            </div>
+            <p className="text-3xl font-black text-orange-600">{expiring.length}</p>
+          </div>
+          <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <CheckCircle size={16} className="text-emerald-500" />
+              <span className="text-sm font-bold text-emerald-700">Active</span>
+            </div>
+            <p className="text-3xl font-black text-emerald-600">{active.length}</p>
+          </div>
+        </div>
+
+        {/* Clinics table */}
+        <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : clinics.length === 0 ? (
+            <div className="text-center py-16 text-slate-400">No clinics found</div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">Clinic</th>
+                  <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">Doctor</th>
+                  <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">Phone</th>
+                  <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">Status</th>
+                  <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">Expires</th>
+                  <th className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider px-5 py-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clinics.map((clinic, i) => {
+                  const status = getStatus(clinic)
+                  const endStr = clinic.subscription_status === 'trial' || !clinic.subscription_status
+                    ? clinic.trial_end
+                    : clinic.subscription_end
+                  return (
+                    <tr key={clinic.clinic_id}
+                      className={`border-b border-slate-50 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                      <td className="px-5 py-4">
+                        <p className="font-bold text-slate-800 text-sm">{clinic.clinic_name || '—'}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-sm text-slate-600">{clinic.doctor_name || '—'}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-sm text-slate-500">{clinic.doctor_phone || '—'}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${status.color}`}>
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-sm text-slate-500">{formatDate(endStr)}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <button
+                          onClick={() => extendSubscription(clinic)}
+                          disabled={extending === clinic.clinic_id}
+                          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors"
+                        >
+                          {extending === clinic.clinic_id
+                            ? <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Extending...</>
+                            : <>+ 30 Days</>
+                          }
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
