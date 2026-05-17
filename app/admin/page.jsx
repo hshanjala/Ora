@@ -1,13 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { format, addDays } from 'date-fns'
 import { Lock, RefreshCw, CheckCircle, Clock, XCircle, LogOut } from 'lucide-react'
 
 const ADMIN_PASSWORD = 'AdminH1'
 
 export default function AdminPage() {
-  const supabase = createClient()
   const [authed, setAuthed] = useState(false)
   const [pwInput, setPwInput] = useState('')
   const [pwError, setPwError] = useState('')
@@ -40,11 +38,16 @@ export default function AdminPage() {
 
   async function loadClinics() {
     setLoading(true)
-    const { data } = await supabase
-      .from('clinic_settings')
-      .select('*')
-      .order('created_at', { ascending: false })
-    setClinics(data || [])
+    try {
+      const res = await fetch('/api/admin/clinics', {
+        headers: { 'x-admin-key': ADMIN_PASSWORD }
+      })
+      const data = await res.json()
+      setClinics(Array.isArray(data) ? data : [])
+    } catch (e) {
+      console.error('Failed to load clinics', e)
+      setClinics([])
+    }
     setLoading(false)
   }
 
@@ -62,30 +65,30 @@ export default function AdminPage() {
     const currentEnd = clinic.subscription_end
       ? new Date(clinic.subscription_end + 'T00:00:00')
       : null
-    const currentTrial = clinic.trial_end
-      ? new Date(clinic.trial_end + 'T00:00:00')
-      : null
 
     if (currentEnd && currentEnd > today) {
       baseDate = currentEnd
-    } else if (currentTrial && currentTrial > today && clinic.subscription_status === 'trial') {
-      baseDate = today
     }
 
     const newEnd = format(addDays(baseDate, 30), 'yyyy-MM-dd')
 
-    const { error } = await supabase
-      .from('clinic_settings')
-      .update({
-        subscription_status: 'active',
-        subscription_end: newEnd,
+    try {
+      const res = await fetch('/api/admin/extend', {
+        method: 'POST',
+        headers: {
+          'x-admin-key': ADMIN_PASSWORD,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ clinic_id: clinic.clinic_id, new_end: newEnd })
       })
-      .eq('clinic_id', clinic.clinic_id)
 
-    if (!error) {
-      showToast(`✅ ${clinic.clinic_name || 'Clinic'} extended to ${format(new Date(newEnd + 'T00:00:00'), 'MMM d, yyyy')}`)
-      loadClinics()
-    } else {
+      if (res.ok) {
+        showToast(`✅ ${clinic.clinic_name || 'Clinic'} extended to ${format(new Date(newEnd + 'T00:00:00'), 'MMM d, yyyy')}`)
+        loadClinics()
+      } else {
+        showToast('❌ Failed to extend. Try again.')
+      }
+    } catch (e) {
       showToast('❌ Failed to extend. Try again.')
     }
 
@@ -169,10 +172,12 @@ export default function AdminPage() {
             <p className="text-slate-500 text-sm mt-0.5">{clinics.length} clinics registered</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={loadClinics} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 bg-white border border-slate-200 px-4 py-2 rounded-xl transition-colors">
+            <button onClick={loadClinics}
+              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 bg-white border border-slate-200 px-4 py-2 rounded-xl transition-colors">
               <RefreshCw size={15} /> Refresh
             </button>
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 bg-white border border-red-200 px-4 py-2 rounded-xl transition-colors">
+            <button onClick={handleLogout}
+              className="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 bg-white border border-red-200 px-4 py-2 rounded-xl transition-colors">
               <LogOut size={15} /> Logout
             </button>
           </div>
