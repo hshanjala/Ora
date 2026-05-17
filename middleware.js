@@ -25,18 +25,21 @@ export async function middleware(request) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-
   const { pathname } = request.nextUrl
 
-  // If not logged in and not on auth pages, redirect to login
+  // Allow admin panel and admin API routes through without auth check
+  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+    return supabaseResponse
+  }
+
+  const { data: { user } } = await supabase.auth.getUser()
+
   if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/register')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // If logged in and on auth pages, redirect to dashboard
   if (user && (pathname.startsWith('/login') || pathname.startsWith('/register'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
