@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
@@ -7,25 +6,30 @@ export async function GET(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
+  try {
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/clinic_settings?select=*`
+    
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
       }
+    })
+
+    const text = await res.text()
+    
+    if (!res.ok) {
+      console.error('Supabase REST error:', res.status, text)
+      return NextResponse.json({ error: text, status: res.status }, { status: 500 })
     }
-  )
 
-  const { data, error } = await supabase
-    .from('clinic_settings')
-    .select('*')
+    const data = JSON.parse(text)
+    return NextResponse.json(data || [])
 
-  if (error) {
-    console.error('Supabase error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (e) {
+    console.error('Fetch error:', e)
+    return NextResponse.json({ error: e.message }, { status: 500 })
   }
-
-  return NextResponse.json(data || [])
 }
