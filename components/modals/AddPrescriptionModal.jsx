@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react'
 import { X, Loader2, Plus, Trash2, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
-import { searchMedicines } from '@/lib/medicines'
 
 const CC_OPTIONS    = ['C/C', 'P/C', 'Hx', 'Complaint', 'Chief Complaint']
 const OE_OPTIONS    = ['O/E', 'Dx', 'Findings', 'Ix', 'On Examination']
@@ -99,7 +98,12 @@ function MedicineInput({ value, onChange }) {
   function handleChange(e) {
     const val = e.target.value
     onChange(val)
-    if (val.length >= 2) { setSuggestions(searchMedicines(val)); setShow(true) }
+    if (val.length >= 2) {
+      fetch(`/api/medicines?q=${encodeURIComponent(val)}`)
+        .then(r => r.json())
+        .then(results => { setSuggestions(results); setShow(true) })
+        .catch(() => {})
+    }
     else { setSuggestions([]); setShow(false) }
   }
   function handleSelect(med) { onChange(med); setShow(false); setSuggestions([]) }

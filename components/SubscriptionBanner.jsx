@@ -96,8 +96,22 @@ export default function SubscriptionBanner({ settings }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  const isSuspended = settings.subscription_status === 'suspended'
   const isOnTrial = settings.subscription_status === 'trial' || !settings.subscription_status
   const isActive  = settings.subscription_status === 'active'
+
+  if (isSuspended) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-2.5 border bg-red-50 border-red-200 rounded-xl mb-4">
+        <div className="relative flex items-center justify-center w-3 h-3 shrink-0">
+          <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-red-500" />
+        </div>
+        <span className="text-xs font-bold text-red-800 uppercase tracking-wider">Suspended</span>
+        <span className="w-px h-4 bg-red-200" />
+        <span className="text-sm text-red-700">Your account has been suspended. Contact support to restore access.</span>
+      </div>
+    )
+  }
   const endDateStr = isOnTrial ? settings.trial_end : settings.subscription_end
 
   let daysLeft = null

@@ -27,7 +27,12 @@ export async function middleware(request) {
 
   const { pathname } = request.nextUrl
 
-  // Allow admin panel and admin API routes through without auth check
+  // Admin login/logout endpoints pass through — they handle their own auth
+  if (pathname === '/api/admin/login' || pathname === '/api/admin/logout') {
+    return supabaseResponse
+  }
+
+  // All other /admin and /api/admin routes pass through — they verify the httpOnly cookie internally
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
     return supabaseResponse
   }

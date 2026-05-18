@@ -6,7 +6,6 @@ import {
   X, ChevronRight, ChevronLeft, Check,
   User, Calendar, Pill, FileText, Plus, Trash2, Loader2, SkipForward, Camera, Printer, Phone, ChevronDown
 } from 'lucide-react'
-import { searchMedicines } from '@/lib/medicines'
 
 const STEPS = [
   { id: 1, label: 'Patient',      icon: User },
@@ -144,7 +143,12 @@ function MedicineInput({ value, onChange }) {
   function handleChange(e) {
     const val = e.target.value
     onChange(val)
-    if (val.length >= 2) { setSuggestions(searchMedicines(val)); setShow(true) }
+    if (val.length >= 2) {
+      fetch(`/api/medicines?q=${encodeURIComponent(val)}`)
+        .then(r => r.json())
+        .then(results => { setSuggestions(results); setShow(true) })
+        .catch(() => {})
+    }
     else { setSuggestions([]); setShow(false) }
   }
   function handleSelect(med) { onChange(med); setShow(false); setSuggestions([]) }
