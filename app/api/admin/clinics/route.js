@@ -1,25 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
-  const adminKey = request.headers.get('x-admin-key')
-  if (adminKey !== 'AdminH1') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
-
-  const { data, error } = await supabase
-    .from('clinic_settings')
-    .select('*')
-
-  if (error) {
-    console.error('Supabase error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  return NextResponse.json(data || [])
+  return NextResponse.json({
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    keyExists: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    keyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
+    keyStart: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20),
+  })
 }
