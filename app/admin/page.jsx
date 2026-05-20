@@ -58,7 +58,12 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/clinics')
       if (res.status === 401) { setAuthed(false); return }
       const data = await res.json()
-      setClinics(Array.isArray(data) ? data : [])
+      if (!res.ok) {
+        showToast(`❌ Error: ${data.error || 'Failed to load clinics'}`)
+        setClinics([])
+      } else {
+        setClinics(Array.isArray(data) ? data : [])
+      }
     } catch {
       showToast('❌ Failed to load clinics')
     }
