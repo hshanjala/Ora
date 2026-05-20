@@ -12,6 +12,17 @@ export async function GET(request) {
     return NextResponse.json({ error: 'Server misconfiguration: missing service role key' }, { status: 500 })
   }
 
+  // Detect if the anon key was accidentally used instead of the service_role key
+  try {
+    const payload = JSON.parse(Buffer.from(process.env.SUPABASE_SERVICE_ROLE_KEY.split('.')[1], 'base64').toString())
+    if (payload.role !== 'service_role') {
+      console.error('[admin/clinics] Wrong key: SUPABASE_SERVICE_ROLE_KEY has role =', payload.role, '(should be service_role)')
+      return NextResponse.json({ error: `Wrong key: SUPABASE_SERVICE_ROLE_KEY is a "${payload.role}" key, not a "service_role" key. Go to Supabase → Project Settings → Data API and copy the service_role key.` }, { status: 500 })
+    }
+  } catch {
+    // non-JWT key format, let Supabase reject it naturally
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
