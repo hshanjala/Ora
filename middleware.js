@@ -51,6 +51,41 @@ export async function middleware(request) {
     return NextResponse.redirect(url)
   }
 
+  // Enforce subscription/suspension on every dashboard request
+  if (user && !pathname.startsWith('/blocked') && !pathname.startsWith('/api/')) {
+    const { data: settings } = await supabase
+      .from('clinic_settings')
+      .select('subscription_status, trial_end, subscription_end')
+      .eq('clinic_id', user.id)
+      .single()
+
+    if (settings) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      let blockReason = null
+
+      if (settings.subscription_status === 'suspended') {
+        blockReason = 'suspended'
+      } else {
+        const isOnTrial = settings.subscription_status === 'trial' || !settings.subscription_status
+        const isActive  = settings.subscription_status === 'active'
+        const endStr = isOnTrial ? settings.trial_end : isActive ? settings.subscription_end : null
+        if (endStr) {
+          const end = new Date(endStr + 'T00:00:00')
+          if (end < today) blockReason = 'expired'
+        }
+      }
+
+      if (blockReason) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/blocked'
+        url.searchParams.set('reason', blockReason)
+        return NextResponse.redirect(url)
+      }
+    }
+  }
+
   return supabaseResponse
 }
 
