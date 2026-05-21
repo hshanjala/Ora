@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Copy, CheckCircle, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -57,13 +57,12 @@ function PaymentInfo() {
   )
 }
 
-export default function BlockedPage() {
+function BlockedContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const supabase = createClient()
   const reason = searchParams.get('reason') // 'suspended' | 'expired'
 
-  // If somehow an active user lands here, send them back
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) router.replace('/login')
@@ -80,24 +79,20 @@ export default function BlockedPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-xl w-full max-w-md p-8">
-        {/* Icon */}
         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 ${isSuspended ? 'bg-slate-100' : 'bg-red-50'}`}>
           <span className="text-3xl">{isSuspended ? '🔒' : '⏰'}</span>
         </div>
 
-        {/* Heading */}
         <h1 className="text-xl font-black text-slate-800 text-center">
           {isSuspended ? 'Account Suspended' : 'Subscription Expired'}
         </h1>
 
-        {/* Message */}
         <p className="text-sm text-slate-500 text-center mt-2">
           {isSuspended
             ? 'Your account has been suspended by the administrator. Please contact support to restore access.'
             : 'Your free trial or subscription has ended. Renew for ৳299/month to continue using Ora.'}
         </p>
 
-        {/* Payment info for expired, contact info for suspended */}
         {isSuspended ? (
           <div className="mt-6 bg-slate-50 rounded-xl p-4 text-center">
             <p className="text-sm text-slate-600">Contact support via WhatsApp</p>
@@ -107,7 +102,6 @@ export default function BlockedPage() {
           <PaymentInfo />
         )}
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
           className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-700 border border-slate-200 py-2.5 rounded-xl transition-colors"
@@ -117,5 +111,17 @@ export default function BlockedPage() {
         </button>
       </div>
     </div>
+  )
+}
+
+export default function BlockedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+      </div>
+    }>
+      <BlockedContent />
+    </Suspense>
   )
 }
