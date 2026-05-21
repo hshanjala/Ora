@@ -2,31 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
-import SubscriptionBanner from '@/components/SubscriptionBanner'
 import { createClient } from '@/lib/supabase/client'
-
-function getBlockReason(settings) {
-  if (!settings) return null
-  if (settings.subscription_status === 'suspended') return 'suspended'
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const isOnTrial = settings.subscription_status === 'trial' || !settings.subscription_status
-  const isActive  = settings.subscription_status === 'active'
-
-  if (isOnTrial && settings.trial_end) {
-    const end = new Date(settings.trial_end + 'T00:00:00')
-    if (end < today) return 'expired'
-  }
-
-  if (isActive && settings.subscription_end) {
-    const end = new Date(settings.subscription_end + 'T00:00:00')
-    if (end < today) return 'expired'
-  }
-
-  return null
-}
 
 export default function DashboardLayout({ children }) {
   const router = useRouter()
@@ -47,12 +23,6 @@ export default function DashboardLayout({ children }) {
         .select('*')
         .eq('clinic_id', user.id)
         .single()
-
-      const reason = getBlockReason(data)
-      if (reason) {
-        router.replace(`/blocked?reason=${reason}`)
-        return
-      }
 
       setSettings(data)
       setLoading(false)
