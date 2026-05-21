@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Copy, CheckCircle, LogOut } from 'lucide-react'
+import { Copy, CheckCircle, LogOut, RefreshCw } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 function PaymentInfo() {
@@ -103,8 +103,16 @@ function BlockedContent() {
         )}
 
         <button
+          onClick={() => router.replace('/')}
+          className="mt-6 w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 py-2.5 rounded-xl transition-colors"
+        >
+          <RefreshCw size={15} />
+          Try again
+        </button>
+
+        <button
           onClick={handleLogout}
-          className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-700 border border-slate-200 py-2.5 rounded-xl transition-colors"
+          className="mt-3 w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-700 border border-slate-200 py-2.5 rounded-xl transition-colors"
         >
           <LogOut size={15} />
           Log out
