@@ -102,7 +102,7 @@ export default function SubscriptionBanner({ settings }) {
 
   if (isSuspended) {
     return (
-      <div className="flex items-center gap-3 px-4 py-2.5 border bg-red-50 border-red-200 rounded-xl mb-4">
+      <div className="inline-flex items-center gap-3 px-4 py-2.5 border bg-red-50 border-red-200 rounded-xl mb-4">
         <div className="relative flex items-center justify-center w-3 h-3 shrink-0">
           <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-red-500" />
         </div>
@@ -130,7 +130,7 @@ export default function SubscriptionBanner({ settings }) {
   // ── Active paid subscription — green banner, no button ────────────────────
   if (isActive && daysLeft !== null && daysLeft > 7) {
     return (
-      <div className="flex items-center gap-3 px-4 py-2.5 border bg-emerald-50 border-emerald-200 rounded-xl mb-4">
+      <div className="inline-flex items-center gap-3 px-4 py-2.5 border bg-emerald-50 border-emerald-200 rounded-xl mb-4">
         <div className="relative flex items-center justify-center w-3 h-3 shrink-0">
           <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-emerald-500" />
         </div>
@@ -182,7 +182,7 @@ export default function SubscriptionBanner({ settings }) {
 
   return (
     <>
-      <div className={`flex items-center justify-between px-4 py-2.5 border ${bgColor} rounded-xl mb-4`}>
+      <div className={`inline-flex items-center justify-between px-4 py-2.5 border ${bgColor} rounded-xl mb-4`}>
         <div className="flex items-center gap-3 flex-wrap">
           {/* Pulsing dot */}
           <div className="relative flex items-center justify-center w-3 h-3 shrink-0">
