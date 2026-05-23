@@ -53,22 +53,13 @@ export default function SchedulePage() {
     if (showList) loadListAppointments()
   }, [showList])
 
-  async function updateStatus(id, status) {
+  async function updateStatus(id, status, patientId) {
     await supabase.from('appointments').update({ status }).eq('id', id)
 
-    // When completed, fetch patient_id directly from DB and activate patient
-    if (status === 'completed') {
-      const { data: appt } = await supabase
-        .from('appointments')
-        .select('patient_id')
-        .eq('id', id)
-        .single()
-
-      if (appt?.patient_id) {
-        await supabase.from('patients')
-          .update({ is_active: true })
-          .eq('id', appt.patient_id)
-      }
+    if (status === 'completed' && patientId) {
+      await supabase.from('patients')
+        .update({ is_active: true })
+        .eq('id', patientId)
     }
 
     loadAppointments()
@@ -232,12 +223,12 @@ export default function SchedulePage() {
                     <div className="flex items-center gap-1">
                       {appt.status === 'scheduled' && (
                         <>
-                          <button onClick={() => updateStatus(appt.id, 'checked-in')} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg" title="Check In"><CheckCircle size={16} /></button>
-                          <button onClick={() => updateStatus(appt.id, 'completed')} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg" title="Complete"><Clock size={16} /></button>
+                          <button onClick={() => updateStatus(appt.id, 'checked-in', appt.patient_id)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg" title="Check In"><CheckCircle size={16} /></button>
+                          <button onClick={() => updateStatus(appt.id, 'completed', appt.patient_id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg" title="Complete"><Clock size={16} /></button>
                         </>
                       )}
                       {appt.status === 'checked-in' && (
-                        <button onClick={() => updateStatus(appt.id, 'completed')} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg" title="Mark Done"><CheckCircle size={16} /></button>
+                        <button onClick={() => updateStatus(appt.id, 'completed', appt.patient_id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg" title="Mark Done"><CheckCircle size={16} /></button>
                       )}
                       <button onClick={() => deleteAppointment(appt.id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg" title="Delete"><XCircle size={16} /></button>
                     </div>

@@ -19,7 +19,11 @@ export async function POST(request) {
 
   const { error } = await supabase
     .from('clinic_settings')
-    .update({ subscription_status: action === 'suspend' ? 'suspended' : 'active' })
+    .update(
+      action === 'suspend'
+        ? { subscription_status: 'suspended' }
+        : { subscription_status: 'active', subscription_end: null }
+    )
     .eq('clinic_id', clinic_id)
 
   if (error) {
