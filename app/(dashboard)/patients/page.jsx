@@ -5,7 +5,7 @@ import AddPatientModal from '@/components/modals/AddPatientModal'
 import PatientPanel from '@/components/PatientPanel'
 import AddPrescriptionModal from '@/components/modals/AddPrescriptionModal'
 import CreateInvoiceModal from '@/components/modals/CreateInvoiceModal'
-import { Plus, Search, User, Phone, Mail, Trash2, Users, Pill, FileText } from 'lucide-react'
+import { Plus, Search, User, Phone, Mail, Users, Pill, FileText } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function PatientsPage() {
@@ -32,13 +32,6 @@ export default function PatientsPage() {
 
   useEffect(() => { loadPatients() }, [])
 
-  async function deletePatient(e, id) {
-    e.stopPropagation()
-    if (!confirm('Delete this patient and all their data? This cannot be undone.')) return
-    await supabase.from('patients').delete().eq('id', id)
-    if (selectedPatient?.id === id) setSelectedPatient(null)
-    loadPatients()
-  }
 
   const filtered = patients.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -149,13 +142,6 @@ export default function PatientsPage() {
                         title="New Invoice"
                       >
                         <FileText size={15} />
-                      </button>
-                      <button
-                        onClick={e => deletePatient(e, patient.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 size={15} />
                       </button>
                     </div>
                   </td>
