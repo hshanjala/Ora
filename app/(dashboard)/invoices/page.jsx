@@ -232,10 +232,10 @@ export default function InvoicesPage() {
   const totalDues   = invoices.reduce((s, i) => s + Math.max(0, (i.total || 0) - (i.paid_amount || 0)), 0)
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Invoices & Billing</h1>
+          <h1 className="text-xl md:text-2xl font-black text-slate-800">Invoices & Billing</h1>
           <p className="text-slate-500 text-sm mt-0.5">{invoices.length} invoice{invoices.length !== 1 ? 's' : ''} total</p>
         </div>
         <button onClick={() => setShowCreateModal(true)} className="btn-primary">
@@ -243,7 +243,7 @@ export default function InvoicesPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         <div className="bg-emerald-50 rounded-2xl p-4">
           <p className="text-sm text-emerald-700 font-semibold">Total Collected</p>
           <p className="text-2xl font-black text-emerald-800 mt-1">৳{totalIncome.toLocaleString()}</p>
@@ -258,13 +258,13 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      <div className="flex gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input className="input pl-10" placeholder="Search patient or invoice number..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {['all', 'unpaid', 'partial', 'paid'].map(s => (
             <button key={s} onClick={() => setFilterStatus(s)}
               className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${filterStatus === s ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}>
@@ -290,42 +290,47 @@ export default function InvoicesPage() {
             )}
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="table-th">Invoice #</th>
-                <th className="table-th">Patient</th>
-                <th className="table-th">Date</th>
-                <th className="table-th">Total</th>
-                <th className="table-th">Paid</th>
-                <th className="table-th">Due</th>
-                <th className="table-th">Status</th>
-                <th className="table-th"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(inv => {
-                const due = Math.max(0, (inv.total || 0) - (inv.paid_amount || 0))
-                return (
-                  <tr key={inv.id} className="table-tr cursor-pointer" onClick={() => setSelectedInvoice(inv)}>
-                    <td className="table-td font-mono font-semibold text-slate-600">{inv.invoice_number}</td>
-                    <td className="table-td font-semibold">{inv.patients?.name || '—'}</td>
-                    <td className="table-td text-slate-500">{format(new Date(inv.date), 'MMM d, yyyy')}</td>
-                    <td className="table-td font-bold">৳{inv.total?.toLocaleString()}</td>
-                    <td className="table-td text-emerald-600 font-semibold">৳{(inv.paid_amount || 0).toLocaleString()}</td>
-                    <td className="table-td font-semibold text-red-500">৳{due.toLocaleString()}</td>
-                    <td className="table-td">{statusBadge(inv.status)}</td>
-                    <td className="table-td" onClick={e => e.stopPropagation()}>
-                      <button onClick={e => quickPrint(e, inv)}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg" title="Print">
-                        <Printer size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px]">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="table-th">Invoice #</th>
+                  <th className="table-th">Patient</th>
+                  <th className="table-th hidden md:table-cell">Date</th>
+                  <th className="table-th hidden sm:table-cell">Total</th>
+                  <th className="table-th hidden sm:table-cell">Paid</th>
+                  <th className="table-th hidden sm:table-cell">Due</th>
+                  <th className="table-th">Status</th>
+                  <th className="table-th"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(inv => {
+                  const due = Math.max(0, (inv.total || 0) - (inv.paid_amount || 0))
+                  return (
+                    <tr key={inv.id} className="table-tr cursor-pointer" onClick={() => setSelectedInvoice(inv)}>
+                      <td className="table-td font-mono font-semibold text-slate-600 whitespace-nowrap">{inv.invoice_number}</td>
+                      <td className="table-td font-semibold">
+                        <div>{inv.patients?.name || '—'}</div>
+                        <div className="text-xs text-slate-400 sm:hidden">৳{inv.total?.toLocaleString()}</div>
+                      </td>
+                      <td className="table-td text-slate-500 hidden md:table-cell whitespace-nowrap">{format(new Date(inv.date), 'MMM d, yyyy')}</td>
+                      <td className="table-td font-bold hidden sm:table-cell">৳{inv.total?.toLocaleString()}</td>
+                      <td className="table-td text-emerald-600 font-semibold hidden sm:table-cell">৳{(inv.paid_amount || 0).toLocaleString()}</td>
+                      <td className="table-td font-semibold text-red-500 hidden sm:table-cell">৳{due.toLocaleString()}</td>
+                      <td className="table-td">{statusBadge(inv.status)}</td>
+                      <td className="table-td" onClick={e => e.stopPropagation()}>
+                        <button onClick={e => quickPrint(e, inv)}
+                          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg" title="Print">
+                          <Printer size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -116,64 +116,70 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Schedule</h1>
+          <h1 className="text-xl md:text-2xl font-black text-slate-800">Schedule</h1>
           <p className="text-slate-500 text-sm mt-0.5">Manage all appointments</p>
         </div>
         <button onClick={() => setShowModal(true)} className="btn-primary">
-          <Plus size={18} /> Add Appointment
+          <Plus size={18} /> <span className="hidden sm:inline">Add Appointment</span>
         </button>
       </div>
 
       <div className="card mb-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setSelectedDate(format(subDays(new Date(selectedDate), 1), 'yyyy-MM-dd'))}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <div className="flex-1 text-center">
-            <p className="font-bold text-slate-800 text-lg">
-              {format(new Date(selectedDate), 'EEEE, MMMM d, yyyy')}
-            </p>
-            <p className="text-sm text-slate-500">{appointments.length} appointment{appointments.length !== 1 ? 's' : ''}</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          {/* Date nav row */}
+          <div className="flex items-center gap-2 flex-1">
+            <button
+              onClick={() => setSelectedDate(format(subDays(new Date(selectedDate), 1), 'yyyy-MM-dd'))}
+              className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div className="flex-1 text-center">
+              <p className="font-bold text-slate-800 text-sm md:text-lg">
+                {format(new Date(selectedDate), 'EEE, MMM d, yyyy')}
+              </p>
+              <p className="text-xs text-slate-500">{appointments.length} appointment{appointments.length !== 1 ? 's' : ''}</p>
+            </div>
+            <button
+              onClick={() => setSelectedDate(format(addDays(new Date(selectedDate), 1), 'yyyy-MM-dd'))}
+              className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
-          <button
-            onClick={() => setSelectedDate(format(addDays(new Date(selectedDate), 1), 'yyyy-MM-dd'))}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
-          >
-            <ChevronRight size={20} />
-          </button>
-          <input
-            type="date"
-            className="input w-40"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-          />
-          <button
-            onClick={() => setSelectedDate(format(new Date(), 'yyyy-MM-dd'))}
-            className="btn-secondary"
-          >
-            Today
-          </button>
-          <button
-            onClick={() => setShowList(true)}
-            className="btn-secondary flex items-center gap-1.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
-          >
-            <List size={16} /> List
-          </button>
+          {/* Controls row */}
+          <div className="flex items-center gap-2 justify-between sm:justify-end">
+            <input
+              type="date"
+              className="input w-36 sm:w-40 text-sm"
+              value={selectedDate}
+              onChange={e => setSelectedDate(e.target.value)}
+            />
+            <button
+              onClick={() => setSelectedDate(format(new Date(), 'yyyy-MM-dd'))}
+              className="btn-secondary !px-3 !py-2 text-xs"
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setShowList(true)}
+              className="btn-secondary !px-3 !py-2 text-xs flex items-center gap-1.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+            >
+              <List size={15} /> List
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         {['all', 'scheduled', 'checked-in', 'completed', 'cancelled'].map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors capitalize ${
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors capitalize ${
               filter === f
                 ? 'bg-emerald-600 text-white'
                 : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
@@ -196,47 +202,52 @@ export default function SchedulePage() {
             </button>
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="table-th">Time</th>
-                <th className="table-th">Patient</th>
-                <th className="table-th">Phone</th>
-                <th className="table-th">Procedure</th>
-                <th className="table-th">Status</th>
-                <th className="table-th">Notes</th>
-                <th className="table-th">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(appt => (
-                <tr key={appt.id} className="table-tr">
-                  <td className="table-td font-bold text-slate-600 whitespace-nowrap">
-                    {appt.time ? format(new Date(`2000-01-01T${appt.time}`), 'h:mm a') : '—'}
-                  </td>
-                  <td className="table-td font-semibold">{appt.patients?.name || '—'}</td>
-                  <td className="table-td text-slate-500">{appt.patients?.phone || '—'}</td>
-                  <td className="table-td">{appt.procedure || '—'}</td>
-                  <td className="table-td">{statusBadge(appt.status)}</td>
-                  <td className="table-td text-slate-500 max-w-[150px] truncate">{appt.notes || '—'}</td>
-                  <td className="table-td">
-                    <div className="flex items-center gap-1">
-                      {appt.status === 'scheduled' && (
-                        <>
-                          <button onClick={() => updateStatus(appt.id, 'checked-in', appt.patient_id)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg" title="Check In"><CheckCircle size={16} /></button>
-                          <button onClick={() => updateStatus(appt.id, 'completed', appt.patient_id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg" title="Complete"><Clock size={16} /></button>
-                        </>
-                      )}
-                      {appt.status === 'checked-in' && (
-                        <button onClick={() => updateStatus(appt.id, 'completed', appt.patient_id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg" title="Mark Done"><CheckCircle size={16} /></button>
-                      )}
-                      <button onClick={() => deleteAppointment(appt.id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg" title="Delete"><XCircle size={16} /></button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px]">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="table-th">Time</th>
+                  <th className="table-th">Patient</th>
+                  <th className="table-th hidden sm:table-cell">Phone</th>
+                  <th className="table-th hidden md:table-cell">Procedure</th>
+                  <th className="table-th">Status</th>
+                  <th className="table-th hidden lg:table-cell">Notes</th>
+                  <th className="table-th">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map(appt => (
+                  <tr key={appt.id} className="table-tr">
+                    <td className="table-td font-bold text-slate-600 whitespace-nowrap">
+                      {appt.time ? format(new Date(`2000-01-01T${appt.time}`), 'h:mm a') : '—'}
+                    </td>
+                    <td className="table-td">
+                      <div className="font-semibold">{appt.patients?.name || '—'}</div>
+                      <div className="text-xs text-slate-400 md:hidden">{appt.procedure || ''}</div>
+                    </td>
+                    <td className="table-td text-slate-500 hidden sm:table-cell">{appt.patients?.phone || '—'}</td>
+                    <td className="table-td hidden md:table-cell">{appt.procedure || '—'}</td>
+                    <td className="table-td">{statusBadge(appt.status)}</td>
+                    <td className="table-td text-slate-500 max-w-[150px] truncate hidden lg:table-cell">{appt.notes || '—'}</td>
+                    <td className="table-td">
+                      <div className="flex items-center gap-1">
+                        {appt.status === 'scheduled' && (
+                          <>
+                            <button onClick={() => updateStatus(appt.id, 'checked-in', appt.patient_id)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg" title="Check In"><CheckCircle size={16} /></button>
+                            <button onClick={() => updateStatus(appt.id, 'completed', appt.patient_id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg" title="Complete"><Clock size={16} /></button>
+                          </>
+                        )}
+                        {appt.status === 'checked-in' && (
+                          <button onClick={() => updateStatus(appt.id, 'completed', appt.patient_id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg" title="Mark Done"><CheckCircle size={16} /></button>
+                        )}
+                        <button onClick={() => deleteAppointment(appt.id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg" title="Delete"><XCircle size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

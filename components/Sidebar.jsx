@@ -1,10 +1,11 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, CalendarDays, Users, FileText,
-  TrendingDown, Pill, Settings, LogOut, AlertCircle
+  TrendingDown, Pill, Settings, LogOut, AlertCircle, Menu, X
 } from 'lucide-react'
 
 const navItems = [
@@ -18,7 +19,7 @@ const navItems = [
   { label: 'Report a Problem', href: 'mailto:support@ora.app', icon: AlertCircle, external: true },
 ]
 
-export default function Sidebar({ clinicName }) {
+function SidebarContent({ clinicName, onClose }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -29,10 +30,14 @@ export default function Sidebar({ clinicName }) {
     router.refresh()
   }
 
+  function handleNav() {
+    onClose?.()
+  }
+
   return (
-    <aside className="w-60 min-h-screen bg-emerald-800 flex flex-col shrink-0">
+    <div className="w-60 min-h-screen bg-emerald-800 flex flex-col">
       {/* Logo */}
-      <div className="px-6 py-6 border-b border-white/10">
+      <div className="px-6 py-6 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow">
             <span className="text-lg font-black text-emerald-700">O</span>
@@ -44,6 +49,11 @@ export default function Sidebar({ clinicName }) {
             )}
           </div>
         </div>
+        {onClose && (
+          <button onClick={onClose} className="text-emerald-300 hover:text-white md:hidden">
+            <X size={20} />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -52,7 +62,7 @@ export default function Sidebar({ clinicName }) {
           const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
           if (external) {
             return (
-              <a key={label} href={href} className="sidebar-link" target="_blank" rel="noopener noreferrer">
+              <a key={label} href={href} className="sidebar-link" target="_blank" rel="noopener noreferrer" onClick={handleNav}>
                 <Icon size={18} />
                 <span>{label}</span>
               </a>
@@ -63,6 +73,7 @@ export default function Sidebar({ clinicName }) {
               key={label}
               href={href}
               className={`sidebar-link ${isActive ? 'active' : ''}`}
+              onClick={handleNav}
             >
               <Icon size={18} />
               <span>{label}</span>
@@ -81,6 +92,45 @@ export default function Sidebar({ clinicName }) {
           <span>Sign Out</span>
         </button>
       </div>
-    </aside>
+    </div>
+  )
+}
+
+export default function Sidebar({ clinicName }) {
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex shrink-0">
+        <SidebarContent clinicName={clinicName} />
+      </aside>
+
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-emerald-800 flex items-center justify-between px-4 py-3 shadow-lg">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center">
+            <span className="text-base font-black text-emerald-700">O</span>
+          </div>
+          <div>
+            <span className="font-black text-white text-lg leading-none">Ora</span>
+            {clinicName && <p className="text-emerald-300 text-xs truncate max-w-[140px]">{clinicName}</p>}
+          </div>
+        </div>
+        <button onClick={() => setMobileOpen(true)} className="text-white p-1">
+          <Menu size={24} />
+        </button>
+      </div>
+
+      {/* Mobile drawer overlay */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="relative z-10">
+            <SidebarContent clinicName={clinicName} onClose={() => setMobileOpen(false)} />
+          </div>
+        </div>
+      )}
+    </>
   )
 }

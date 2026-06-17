@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar clinicName={settings?.clinic_name} />
-      <main className="flex-1 overflow-x-hidden">
+      <main className="flex-1 overflow-x-hidden pt-14 md:pt-0">
         {children}
       </main>
     </div>

@@ -142,7 +142,7 @@ function TemplateSetupModal({ onClose, onSaved }) {
             </div>
 
             {/* Doctor 1 + Clinic info — always shown */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <p className="text-sm font-bold text-slate-700 border-b border-slate-100 pb-2">
                   {tpl.prescription_template === 2 ? 'Doctor 1 Info' : 'Doctor Info'}
@@ -204,7 +204,7 @@ function TemplateSetupModal({ onClose, onSaved }) {
             {tpl.prescription_template === 2 && (
               <div className="border border-dashed border-emerald-300 rounded-xl p-4 space-y-3">
                 <p className="text-sm font-bold text-emerald-700 pb-2 border-b border-emerald-100">Doctor 2 Info <span className="text-xs font-normal text-slate-400">(Template 2 only)</span></p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">Full Name</label>
                     <input name="doctor2_name" className="input" placeholder="Dr. Second Doctor" value={tpl.doctor2_name} onChange={handleChange} />
@@ -287,7 +287,7 @@ function PrescriptionDetailModal({ prescription, onClose, tplSettings }) {
 
         <div className="p-6 space-y-4 overflow-y-auto max-h-[75vh]">
           {(prescription.chief_complaint || prescription.diagnosis) && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {prescription.chief_complaint && (
                 <div className="bg-blue-50 rounded-xl p-3">
                   <p className="text-xs font-bold text-blue-600 mb-1">C/C — Chief Complaint</p>
@@ -386,18 +386,18 @@ export default function PrescriptionsPage() {
   )
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Prescriptions</h1>
+          <h1 className="text-xl md:text-2xl font-black text-slate-800">Prescriptions</h1>
           <p className="text-slate-500 text-sm mt-0.5">{prescriptions.length} prescription{prescriptions.length !== 1 ? 's' : ''} total</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowTemplate(true)} className="btn-secondary flex items-center gap-1.5">
-            <Settings2 size={16} /> Template
+            <Settings2 size={16} /> <span className="hidden sm:inline">Template</span>
           </button>
           <button onClick={() => setShowModal(true)} className="btn-primary">
-            <Plus size={18} /> New Prescription
+            <Plus size={18} /> <span className="hidden sm:inline">New Prescription</span>
           </button>
         </div>
       </div>
@@ -422,41 +422,43 @@ export default function PrescriptionsPage() {
             )}
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="table-th">Date</th>
-                <th className="table-th">Patient</th>
-                <th className="table-th">C/C</th>
-                <th className="table-th">O/E</th>
-                <th className="table-th">Medicines</th>
-                <th className="table-th">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(rx => (
-                <tr key={rx.id} className="table-tr cursor-pointer" onClick={() => setSelected(rx)}>
-                  <td className="table-td text-slate-500 whitespace-nowrap">{format(new Date(rx.date), 'MMM d, yyyy')}</td>
-                  <td className="table-td font-semibold">{rx.patients?.name || '—'}</td>
-                  <td className="table-td text-slate-500 max-w-[140px] truncate">{rx.chief_complaint || <span className="text-slate-300">—</span>}</td>
-                  <td className="table-td text-slate-500 max-w-[140px] truncate">{rx.diagnosis || <span className="text-slate-300">—</span>}</td>
-                  <td className="table-td">
-                    <span className="badge-blue">{rx.prescription_items?.length || 0} medicine{rx.prescription_items?.length !== 1 ? 's' : ''}</span>
-                  </td>
-                  <td className="table-td" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => setSelected(rx)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="View & Print">
-                        <Printer size={15} />
-                      </button>
-                      <button onClick={() => deletePrescription(rx.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px]">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="table-th">Date</th>
+                  <th className="table-th">Patient</th>
+                  <th className="table-th hidden md:table-cell">C/C</th>
+                  <th className="table-th hidden md:table-cell">O/E</th>
+                  <th className="table-th">Medicines</th>
+                  <th className="table-th">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map(rx => (
+                  <tr key={rx.id} className="table-tr cursor-pointer" onClick={() => setSelected(rx)}>
+                    <td className="table-td text-slate-500 whitespace-nowrap">{format(new Date(rx.date), 'MMM d, yyyy')}</td>
+                    <td className="table-td font-semibold">{rx.patients?.name || '—'}</td>
+                    <td className="table-td text-slate-500 max-w-[140px] truncate hidden md:table-cell">{rx.chief_complaint || <span className="text-slate-300">—</span>}</td>
+                    <td className="table-td text-slate-500 max-w-[140px] truncate hidden md:table-cell">{rx.diagnosis || <span className="text-slate-300">—</span>}</td>
+                    <td className="table-td">
+                      <span className="badge-blue">{rx.prescription_items?.length || 0} medicine{rx.prescription_items?.length !== 1 ? 's' : ''}</span>
+                    </td>
+                    <td className="table-td" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => setSelected(rx)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="View & Print">
+                          <Printer size={15} />
+                        </button>
+                        <button onClick={() => deletePrescription(rx.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title="Delete">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

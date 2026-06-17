@@ -261,7 +261,7 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 sm:p-6 space-y-4">
       {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
       <div className="flex items-start gap-4">
         <button type="button" onClick={() => photoRef.current?.click()}
@@ -281,7 +281,7 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
           <input name="name" className="input" placeholder="Patient's full name" value={form.name} onChange={handleChange} required />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="label">Phone</label>
           <input name="phone" className="input" placeholder="01XXXXXXXXX" value={form.phone} onChange={handleChange} />
@@ -326,14 +326,14 @@ function Step2Schedule({ form, setForm, patientName }) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
         <div className="w-7 h-7 bg-emerald-200 rounded-full flex items-center justify-center">
           <User size={14} className="text-emerald-700" />
         </div>
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="label">Date *</label>
           <input name="date" type="date" className="input" value={form.date} onChange={handleChange} />
@@ -383,7 +383,7 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
         <div className="w-7 h-7 bg-emerald-200 rounded-full flex items-center justify-center">
           <User size={14} className="text-emerald-700" />
@@ -391,7 +391,7 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
         <span className="text-sm font-semibold text-emerald-800">{patientName}</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <div className="mb-1"><LabelDropdown label={ccLabel} options={CC_OPTIONS} onChange={setCcLabel} /></div>
           <textarea name="chief_complaint" className="input min-h-[72px] resize-none text-sm"
@@ -404,7 +404,7 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <div className="mb-1"><LabelDropdown label={advLabel} options={ADV_OPTIONS} onChange={setAdvLabel} /></div>
           <textarea name="advice" className="input min-h-[72px] resize-none text-sm"
@@ -442,7 +442,7 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
                 </button>
               </div>
               <MedicineInput value={med.medicine} onChange={val => handleMedChange(i, 'medicine', val)} />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-500 mb-1">Frequency</p>
                   <ComboInput value={med.frequency} options={FREQ_OPTIONS}
@@ -490,7 +490,7 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
   const due = Math.max(0, total - paidNow)
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5">
         <div className="w-7 h-7 bg-emerald-200 rounded-full flex items-center justify-center">
           <User size={14} className="text-emerald-700" />
@@ -504,23 +504,26 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
       <div>
         <label className="label">Services / Items</label>
         <div className="space-y-2">
-          <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-slate-500 px-1">
-            <span className="col-span-5">Description</span>
-            <span className="col-span-2">Qty</span>
-            <span className="col-span-3">Price (৳)</span>
-            <span className="col-span-2 text-right">Total</span>
-          </div>
           {items.map((item, i) => (
-            <div key={i} className="grid grid-cols-12 gap-2 items-center">
-              <input className="input col-span-5 text-sm" placeholder="e.g. Root Canal" value={item.description} onChange={e => handleItemChange(i, 'description', e.target.value)} />
-              <input className="input col-span-2 text-sm" type="number" min="1" value={item.quantity} onChange={e => handleItemChange(i, 'quantity', e.target.value)} />
-              <input className="input col-span-3 text-sm" type="number" min="0" step="0.01" placeholder="0.00" value={item.unit_price} onChange={e => handleItemChange(i, 'unit_price', e.target.value)} />
-              <div className="col-span-1 text-right text-xs font-bold text-slate-700">
-                ৳{(parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)).toLocaleString()}
+            <div key={i} className="border border-slate-200 rounded-xl p-3 space-y-2">
+              <input className="input text-sm" placeholder="e.g. Root Canal, Tooth Extraction" value={item.description} onChange={e => handleItemChange(i, 'description', e.target.value)} />
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <span className="text-xs text-slate-500 font-medium">Qty</span>
+                  <input className="input text-sm mt-0.5" type="number" min="1" value={item.quantity} onChange={e => handleItemChange(i, 'quantity', e.target.value)} />
+                </div>
+                <div className="flex-1">
+                  <span className="text-xs text-slate-500 font-medium">Price (৳)</span>
+                  <input className="input text-sm mt-0.5" type="number" min="0" step="0.01" placeholder="0.00" value={item.unit_price} onChange={e => handleItemChange(i, 'unit_price', e.target.value)} />
+                </div>
+                <div className="w-16 text-center">
+                  <span className="text-xs text-slate-500 font-medium">Total</span>
+                  <div className="text-sm font-bold text-slate-700 py-2.5">৳{(parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)).toLocaleString()}</div>
+                </div>
+                <button type="button" onClick={() => removeItem(i)} className="mb-0.5 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-30" disabled={items.length === 1}>
+                  <Trash2 size={14} />
+                </button>
               </div>
-              <button type="button" onClick={() => removeItem(i)} className="col-span-1 text-red-400 hover:text-red-600 flex justify-center disabled:opacity-30" disabled={items.length === 1}>
-                <Trash2 size={14} />
-              </button>
             </div>
           ))}
         </div>
@@ -866,7 +869,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={handleOverlayClick}>
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden" style={{ animation: 'slideUp 0.25s ease' }}>
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-full sm:max-w-lg max-h-[92vh] flex flex-col overflow-hidden" style={{ animation: 'slideUp 0.25s ease' }}>
         {done ? (
           <SuccessScreen
             patientName={patientForm.name} patientPhone={patientForm.phone}

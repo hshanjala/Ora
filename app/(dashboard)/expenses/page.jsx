@@ -68,10 +68,10 @@ export default function ExpensesPage() {
   const categories = [...new Set(expenses.map(e => e.category))]
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Expenses</h1>
+          <h1 className="text-xl md:text-2xl font-black text-slate-800">Expenses</h1>
           <p className="text-slate-500 text-sm mt-0.5">Track all clinic expenses</p>
         </div>
         <button onClick={() => setShowModal(true)} className="btn-primary">
@@ -115,12 +115,12 @@ export default function ExpensesPage() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input className="input pl-10" placeholder="Search expenses..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select className="input w-40" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+        <select className="input w-full sm:w-40" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
           <option value="all">All Categories</option>
           {categories.map(c => <option key={c}>{c}</option>)}
         </select>
@@ -141,46 +141,50 @@ export default function ExpensesPage() {
             )}
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="table-th">Date</th>
-                <th className="table-th">Category</th>
-                <th className="table-th">Description</th>
-                <th className="table-th text-right">Amount</th>
-                <th className="table-th"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(expense => (
-                <tr key={expense.id} className="table-tr">
-                  <td className="table-td text-slate-500">{format(new Date(expense.date), 'MMM d, yyyy')}</td>
-                  <td className="table-td">
-                    <span className={`badge ${CATEGORY_COLORS[expense.category] || 'bg-slate-100 text-slate-600'}`}>
-                      {expense.category}
-                    </span>
-                  </td>
-                  <td className="table-td text-slate-600">{expense.description || '—'}</td>
-                  <td className="table-td text-right font-bold text-slate-800">৳{expense.amount?.toLocaleString()}</td>
-                  <td className="table-td">
-                    <button
-                      onClick={() => deleteExpense(expense.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px]">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="table-th">Date</th>
+                  <th className="table-th">Category</th>
+                  <th className="table-th hidden sm:table-cell">Description</th>
+                  <th className="table-th text-right">Amount</th>
+                  <th className="table-th"></th>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t-2 border-slate-200">
-                <td colSpan={3} className="table-td font-bold text-right text-slate-600">Total</td>
-                <td className="table-td text-right font-black text-slate-800 text-base">৳{totalAmount.toLocaleString()}</td>
-                <td />
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map(expense => (
+                  <tr key={expense.id} className="table-tr">
+                    <td className="table-td text-slate-500 whitespace-nowrap">{format(new Date(expense.date), 'MMM d, yyyy')}</td>
+                    <td className="table-td">
+                      <span className={`badge ${CATEGORY_COLORS[expense.category] || 'bg-slate-100 text-slate-600'}`}>
+                        {expense.category}
+                      </span>
+                      <div className="text-xs text-slate-400 sm:hidden mt-0.5">{expense.description || ''}</div>
+                    </td>
+                    <td className="table-td text-slate-600 hidden sm:table-cell">{expense.description || '—'}</td>
+                    <td className="table-td text-right font-bold text-slate-800 whitespace-nowrap">৳{expense.amount?.toLocaleString()}</td>
+                    <td className="table-td">
+                      <button
+                        onClick={() => deleteExpense(expense.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-slate-200">
+                  <td colSpan={2} className="table-td font-bold text-right text-slate-600 sm:hidden">Total</td>
+                  <td colSpan={3} className="table-td font-bold text-right text-slate-600 hidden sm:table-cell">Total</td>
+                  <td className="table-td text-right font-black text-slate-800 text-base whitespace-nowrap">৳{totalAmount.toLocaleString()}</td>
+                  <td />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         )}
       </div>
 

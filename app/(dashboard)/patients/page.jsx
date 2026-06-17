@@ -40,16 +40,16 @@ export default function PatientsPage() {
   )
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Patients</h1>
+          <h1 className="text-xl md:text-2xl font-black text-slate-800">Patients</h1>
           <p className="text-slate-500 text-sm mt-0.5">
             {patients.length} patient{patients.length !== 1 ? 's' : ''} registered
           </p>
         </div>
         <button onClick={() => setShowAddModal(true)} className="btn-primary">
-          <Plus size={18} /> Add Patient
+          <Plus size={18} /> <span className="hidden sm:inline">Add Patient</span>
         </button>
       </div>
 
@@ -79,76 +79,83 @@ export default function PatientsPage() {
             )}
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="table-th">Patient</th>
-                <th className="table-th">Phone</th>
-                <th className="table-th">Email</th>
-                <th className="table-th">Gender</th>
-                <th className="table-th">Age</th>
-                <th className="table-th">Joined</th>
-                <th className="table-th">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(patient => (
-                <tr
-                  key={patient.id}
-                  className="table-tr cursor-pointer"
-                  onClick={() => setSelectedPatient(patient)}
-                >
-                  <td className="table-td">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-                        <User size={16} className="text-emerald-600" />
-                      </div>
-                      <span className="font-semibold text-slate-800 hover:text-emerald-700 transition-colors">
-                        {patient.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="table-td">
-                    <div className="flex items-center gap-1.5 text-slate-500">
-                      {patient.phone ? <><Phone size={13} />{patient.phone}</> : '—'}
-                    </div>
-                  </td>
-                  <td className="table-td">
-                    <div className="flex items-center gap-1.5 text-slate-500">
-                      {patient.email
-                        ? <><Mail size={13} /><span className="truncate max-w-[140px]">{patient.email}</span></>
-                        : '—'}
-                    </div>
-                  </td>
-                  <td className="table-td text-slate-500">{patient.gender || '—'}</td>
-                  <td className="table-td text-slate-500">
-                    {patient.age ? `${patient.age} yrs` : '—'}
-                  </td>
-                  <td className="table-td text-slate-400 text-xs">
-                    {format(new Date(patient.created_at), 'MMM d, yyyy')}
-                  </td>
-                  <td className="table-td" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={e => { e.stopPropagation(); setRxPatient(patient) }}
-                        className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                        title="New Prescription"
-                      >
-                        <Pill size={15} />
-                      </button>
-                      <button
-                        onClick={e => { e.stopPropagation(); setInvoicePatient(patient) }}
-                        className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
-                        title="New Invoice"
-                      >
-                        <FileText size={15} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="table-th">Patient</th>
+                  <th className="table-th">Phone</th>
+                  <th className="table-th hidden md:table-cell">Email</th>
+                  <th className="table-th hidden sm:table-cell">Gender</th>
+                  <th className="table-th hidden sm:table-cell">Age</th>
+                  <th className="table-th hidden md:table-cell">Joined</th>
+                  <th className="table-th">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map(patient => (
+                  <tr
+                    key={patient.id}
+                    className="table-tr cursor-pointer"
+                    onClick={() => setSelectedPatient(patient)}
+                  >
+                    <td className="table-td">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+                          <User size={16} className="text-emerald-600" />
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-800 hover:text-emerald-700 transition-colors block">
+                            {patient.name}
+                          </span>
+                          <span className="text-xs text-slate-400 sm:hidden">
+                            {patient.gender || ''}{patient.gender && patient.age ? ' · ' : ''}{patient.age ? `${patient.age} yrs` : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="table-td">
+                      <div className="flex items-center gap-1.5 text-slate-500">
+                        {patient.phone ? <><Phone size={13} />{patient.phone}</> : '—'}
+                      </div>
+                    </td>
+                    <td className="table-td hidden md:table-cell">
+                      <div className="flex items-center gap-1.5 text-slate-500">
+                        {patient.email
+                          ? <><Mail size={13} /><span className="truncate max-w-[140px]">{patient.email}</span></>
+                          : '—'}
+                      </div>
+                    </td>
+                    <td className="table-td text-slate-500 hidden sm:table-cell">{patient.gender || '—'}</td>
+                    <td className="table-td text-slate-500 hidden sm:table-cell">
+                      {patient.age ? `${patient.age} yrs` : '—'}
+                    </td>
+                    <td className="table-td text-slate-400 text-xs hidden md:table-cell">
+                      {format(new Date(patient.created_at), 'MMM d, yyyy')}
+                    </td>
+                    <td className="table-td" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={e => { e.stopPropagation(); setRxPatient(patient) }}
+                          className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="New Prescription"
+                        >
+                          <Pill size={15} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); setInvoicePatient(patient) }}
+                          className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
+                          title="New Invoice"
+                        >
+                          <FileText size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
