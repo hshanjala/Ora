@@ -137,7 +137,7 @@ export default function DashboardPage() {
 
     const { data: unpaid } = await supabase
       .from('invoices').select('total, paid_amount')
-      .eq('clinic_id', user.id).neq('status', 'paid')
+      .eq('clinic_id', user.id).neq('status', 'paid').gte('date', monthStart)
     const dues = unpaid?.reduce((s, i) => s + ((i.total || 0) - (i.paid_amount || 0)), 0) || 0
 
     setStats({ bookings: bookings || 0, income, expenses, dues })
@@ -247,7 +247,7 @@ export default function DashboardPage() {
         <StatCard label="Bookings Today"   value={stats.bookings}                        icon={Calendar}    color="bg-teal-50"   textColor="text-teal-700" />
         <StatCard label="Monthly Income"   value={`৳${stats.income.toLocaleString()}`}    icon={TrendingUp}  color="bg-blue-50"   textColor="text-blue-700" />
         <StatCard label="Monthly Expenses" value={`৳${stats.expenses.toLocaleString()}`}  icon={DollarSign}  color="bg-orange-50" textColor="text-orange-700" />
-        <StatCard label="Total Dues"       value={`৳${stats.dues.toLocaleString()}`}      icon={AlertCircle} color="bg-red-50"    textColor="text-red-600" />
+        <StatCard label="Total Dues (Month)" value={`৳${stats.dues.toLocaleString()}`}      icon={AlertCircle} color="bg-red-50"    textColor="text-red-600" />
       </div>
 
       {/* Bottom grid */}

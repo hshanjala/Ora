@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import CreateInvoiceModal from '@/components/modals/CreateInvoiceModal'
 import { Plus, Search, FileText, Loader2, X, Printer, CheckCircle } from 'lucide-react'
-import { format } from 'date-fns'
+import { format, startOfWeek, startOfMonth, startOfYear } from 'date-fns'
 
 function printInvoice(invoice, items, clinicName) {
   const remaining = Math.max(0, (invoice.total || 0) - (invoice.paid_amount || 0))
@@ -186,6 +186,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [timePeriod, setTimePeriod] = useState('month')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [clinicName, setClinicName] = useState('')
@@ -211,12 +212,18 @@ export default function InvoicesPage() {
     printInvoice(inv, items || [], clinicName)
   }
 
+  const periodStart = timePeriod === 'week'  ? format(startOfWeek(new Date(), { weekStartsOn: 0 }), 'yyyy-MM-dd')
+    : timePeriod === 'month' ? format(startOfMonth(new Date()), 'yyyy-MM-dd')
+    : timePeriod === 'year'  ? format(startOfYear(new Date()), 'yyyy-MM-dd')
+    : null
+
   const filtered = invoices.filter(inv => {
     const matchSearch =
       (inv.patients?.name || '').toLowerCase().includes(search.toLowerCase()) ||
       (inv.invoice_number || '').includes(search)
     const matchStatus = filterStatus === 'all' || inv.status === filterStatus
-    return matchSearch && matchStatus
+    const matchPeriod = !periodStart || inv.date >= periodStart
+    return matchSearch && matchStatus && matchPeriod
   })
 
   function statusBadge(status) {
@@ -228,8 +235,8 @@ export default function InvoicesPage() {
     return map[status] || <span className="badge-gray">{status}</span>
   }
 
-  const totalIncome = invoices.reduce((s, i) => s + (i.paid_amount || 0), 0)
-  const totalDues   = invoices.reduce((s, i) => s + Math.max(0, (i.total || 0) - (i.paid_amount || 0)), 0)
+  const totalIncome = filtered.reduce((s, i) => s + (i.paid_amount || 0), 0)
+  const totalDues   = filtered.reduce((s, i) => s + Math.max(0, (i.total || 0) - (i.paid_amount || 0)), 0)
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
@@ -243,18 +250,36 @@ export default function InvoicesPage() {
         </button>
       </div>
 
+      {/* Time period filter */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1">Period:</span>
+        {[
+          { key: 'week',  label: 'This Week' },
+          { key: 'month', label: 'This Month' },
+          { key: 'year',  label: 'This Year' },
+          { key: 'all',   label: 'All Time' },
+        ].map(({ key, label }) => (
+          <button key={key} onClick={() => setTimePeriod(key)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+              timePeriod === key ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+            }`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         <div className="bg-emerald-50 rounded-2xl p-4">
-          <p className="text-sm text-emerald-700 font-semibold">Total Collected</p>
+          <p className="text-sm text-emerald-700 font-semibold">Collected</p>
           <p className="text-2xl font-black text-emerald-800 mt-1">৳{totalIncome.toLocaleString()}</p>
         </div>
         <div className="bg-red-50 rounded-2xl p-4">
-          <p className="text-sm text-red-700 font-semibold">Total Dues</p>
+          <p className="text-sm text-red-700 font-semibold">Dues</p>
           <p className="text-2xl font-black text-red-700 mt-1">৳{totalDues.toLocaleString()}</p>
         </div>
         <div className="bg-slate-50 rounded-2xl p-4">
-          <p className="text-sm text-slate-600 font-semibold">Total Invoices</p>
-          <p className="text-2xl font-black text-slate-800 mt-1">{invoices.length}</p>
+          <p className="text-sm text-slate-600 font-semibold">Invoices</p>
+          <p className="text-2xl font-black text-slate-800 mt-1">{filtered.length}</p>
         </div>
       </div>
 

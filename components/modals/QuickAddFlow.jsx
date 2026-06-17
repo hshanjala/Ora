@@ -621,12 +621,17 @@ td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
     setTimeout(() => win.print(), 400)
   }
 
+  function waPhone(raw) {
+    const digits = raw.replace(/\D/g, '')
+    const local = digits.replace(/^880/, '').replace(/^0/, '')
+    return `880${local}`
+  }
+
   function shareInvoiceWhatsApp() {
     if (!savedInvoice || !patientPhone) return
     const due = Math.max(0, (savedInvoice.total || 0) - (savedInvoice.paid_amount || 0))
     const msg = `Hello ${patientName}, your invoice ${savedInvoice.invoice_number} from ${tplSettings?.clinic_name || 'Ora Dental Clinic'}:\nTotal: ৳${savedInvoice.total?.toLocaleString()}\nPaid: ৳${(savedInvoice.paid_amount || 0).toLocaleString()}${due > 0 ? `\nDue: ৳${due.toLocaleString()}` : '\nStatus: Fully Paid'}\nThank you!`
-    const phone = patientPhone.replace(/\D/g, '')
-    window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`, '_blank')
+    window.open(`https://wa.me/${waPhone(patientPhone)}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
   function shareRxWhatsApp() {
@@ -634,8 +639,7 @@ td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
     const items = savedRx.prescription_items || []
     const medList = items.map((m, i) => `${i + 1}. ${m.medicine}${m.frequency ? ` - ${m.frequency}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join('\n')
     const msg = `Hello ${patientName}, your prescription from ${tplSettings?.clinic_name || 'Ora Dental Clinic'}:${savedRx.chief_complaint ? `\nC/C: ${savedRx.chief_complaint}` : ''}${savedRx.diagnosis ? `\nO/E: ${savedRx.diagnosis}` : ''}\n\nMedicines:\n${medList}${savedRx.advice ? `\n\nAdv: ${savedRx.advice}` : ''}\n\nGet well soon!`
-    const phone = patientPhone.replace(/\D/g, '')
-    window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`, '_blank')
+    window.open(`https://wa.me/${waPhone(patientPhone)}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
   const hasInvoice = !!savedInvoice

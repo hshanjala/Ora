@@ -16,8 +16,8 @@ export default function SettingsPage() {
   const [form, setForm] = useState({
     clinic_name: '',
     doctor_name: '',
-    phone: '',
-    address: '',
+    doctor_phone: '',
+    clinic_address: '',
   })
 
   useEffect(() => {
@@ -35,8 +35,8 @@ export default function SettingsPage() {
         setForm({
           clinic_name: data.clinic_name || '',
           doctor_name: data.doctor_name || '',
-          phone: data.phone || '',
-          address: data.address || '',
+          doctor_phone: data.doctor_phone || '',
+          clinic_address: data.clinic_address || '',
         })
       }
       setLoading(false)
@@ -57,8 +57,8 @@ export default function SettingsPage() {
       .update({
         clinic_name: form.clinic_name,
         doctor_name: form.doctor_name,
-        phone: form.phone,
-        address: form.address,
+        doctor_phone: form.doctor_phone,
+        clinic_address: form.clinic_address,
       })
       .eq('clinic_id', user.id)
 
@@ -105,11 +105,11 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="label">Phone Number</label>
-            <input name="phone" className="input" placeholder="01XXXXXXXXX" value={form.phone} onChange={handleChange} />
+            <input name="doctor_phone" className="input" placeholder="01XXXXXXXXX" value={form.doctor_phone} onChange={handleChange} />
           </div>
           <div>
             <label className="label">Clinic Address</label>
-            <textarea name="address" className="input min-h-[80px] resize-none" placeholder="Full clinic address" value={form.address} onChange={handleChange} />
+            <textarea name="clinic_address" className="input min-h-[80px] resize-none" placeholder="Full clinic address" value={form.clinic_address} onChange={handleChange} />
           </div>
 
           <button type="submit" disabled={saving} className="btn-primary">
