@@ -213,7 +213,7 @@ export default function DashboardPage() {
             <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0">
               <UserPlus size={17} className="text-white" />
             </div>
-            <span className="text-sm font-semibold text-slate-700">Add Patient</span>
+            <span className="text-sm font-semibold text-slate-700">Quick Add</span>
           </button>
 
           <button onClick={() => setShowSchedule(true)}
@@ -247,7 +247,7 @@ export default function DashboardPage() {
         <StatCard label="Bookings Today"   value={stats.bookings}                        icon={Calendar}    color="bg-teal-50"   textColor="text-teal-700" />
         <StatCard label="Monthly Income"   value={`৳${stats.income.toLocaleString()}`}    icon={TrendingUp}  color="bg-blue-50"   textColor="text-blue-700" />
         <StatCard label="Monthly Expenses" value={`৳${stats.expenses.toLocaleString()}`}  icon={DollarSign}  color="bg-orange-50" textColor="text-orange-700" />
-        <StatCard label="Total Dues (Month)" value={`৳${stats.dues.toLocaleString()}`}      icon={AlertCircle} color="bg-red-50"    textColor="text-red-600" />
+        <StatCard label="Monthly Dues"        value={`৳${stats.dues.toLocaleString()}`}      icon={AlertCircle} color="bg-red-50"    textColor="text-red-600" />
       </div>
 
       {/* Bottom grid */}
