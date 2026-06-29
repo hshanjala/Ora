@@ -12,6 +12,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
   const [patientQuery, setPatientQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedPatientId, setSelectedPatientId] = useState(null)
+  const [discountType, setDiscountType] = useState('flat') // 'flat' | 'percent'
   const inputRef = useRef(null)
   const dropdownRef = useRef(null)
 
@@ -19,6 +20,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
     date: format(new Date(), 'yyyy-MM-dd'),
     notes: '',
     paid_now: '',
+    discount: '',
   })
   const [items, setItems] = useState([
     { description: '', quantity: 1, unit_price: '' }
@@ -75,9 +77,14 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
     setItems(prev => prev.filter((_, i) => i !== index))
   }
 
-  const total = items.reduce((sum, item) =>
+  const subtotal = items.reduce((sum, item) =>
     sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)), 0)
 
+  const discountAmount = discountType === 'percent'
+    ? subtotal * (parseFloat(form.discount || 0) / 100)
+    : parseFloat(form.discount || 0)
+
+  const total = Math.max(0, subtotal - discountAmount)
   const paidNow = parseFloat(form.paid_now || 0)
   const due = Math.max(0, total - paidNow)
   const status = paidNow >= total && total > 0 ? 'paid' : paidNow > 0 ? 'partial' : 'unpaid'
@@ -116,6 +123,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
         due_date: null,
         status,
         total,
+        discount: discountAmount,
         paid_amount: paidNow,
         notes: form.notes || null,
       }).select().single()
@@ -217,7 +225,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
                     ৳{(parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)).toLocaleString()}
                   </div>
                   <button type="button" onClick={() => removeItem(i)} disabled={items.length === 1}
-                    className="col-span-1 text-red-400 hover:text-red-600 flex justify-center">
+                    className="col-span-1 text-red-400 hover:text-red-600 flex justify-center disabled:opacity-30">
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -228,12 +236,54 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
             </button>
           </div>
 
-          {/* Total + Paid + Due */}
+          {/* Totals box */}
           <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+            {/* Subtotal */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <span className="font-semibold text-slate-500 text-sm">Subtotal</span>
+              <span className="font-bold text-slate-700">৳{subtotal.toLocaleString()}</span>
+            </div>
+
+            {/* Discount */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 gap-3">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-amber-600 text-sm">Discount</span>
+                <button
+                  type="button"
+                  onClick={() => setDiscountType(t => t === 'flat' ? 'percent' : 'flat')}
+                  className="px-2 py-0.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors border border-amber-200"
+                >
+                  {discountType === 'flat' ? '৳ Flat' : '% Off'}
+                </button>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 text-sm">{discountType === 'flat' ? '৳' : ''}</span>
+                <input
+                  name="discount"
+                  type="number" min="0" step="0.01"
+                  max={discountType === 'percent' ? 100 : subtotal}
+                  placeholder="0"
+                  value={form.discount}
+                  onChange={handleFormChange}
+                  className="w-28 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+                <span className="text-slate-500 text-sm">{discountType === 'percent' ? '%' : ''}</span>
+              </div>
+            </div>
+            {discountAmount > 0 && (
+              <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-amber-50">
+                <span className="text-xs text-amber-700 font-semibold">Discount applied</span>
+                <span className="text-sm font-bold text-amber-700">−৳{discountAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
+
+            {/* Total */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
               <span className="font-semibold text-slate-600 text-sm">Total Amount</span>
               <span className="text-xl font-black text-slate-800">৳{total.toLocaleString()}</span>
             </div>
+
+            {/* Paid now */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
               <label className="font-semibold text-emerald-700 text-sm">Paid Now</label>
               <div className="flex items-center gap-2">
@@ -249,6 +299,8 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
                 />
               </div>
             </div>
+
+            {/* Due */}
             <div className="flex items-center justify-between px-4 py-3">
               <span className="font-semibold text-red-600 text-sm">Due</span>
               <span className={`text-xl font-black ${due > 0 ? 'text-red-600' : 'text-emerald-600'}`}>

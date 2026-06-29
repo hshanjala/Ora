@@ -7,6 +7,8 @@ import { format, startOfWeek, startOfMonth, startOfYear } from 'date-fns'
 
 function printInvoice(invoice, items, clinicName) {
   const remaining = Math.max(0, (invoice.total || 0) - (invoice.paid_amount || 0))
+  const subtotalVal = items.reduce((s, i) => s + Number(i.total || 0), 0)
+  const discountVal = Number(invoice.discount || 0)
   const win = window.open('', '_blank')
   win.document.write(`<!DOCTYPE html><html><head><title>Invoice ${invoice.invoice_number}</title>
 <style>
@@ -47,6 +49,7 @@ td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
   <tbody>${items.map(item => `<tr><td>${item.description}</td><td class="tr">${item.quantity}</td><td class="tr">&#2547;${Number(item.unit_price).toLocaleString()}</td><td class="tr">&#2547;${Number(item.total).toLocaleString()}</td></tr>`).join('')}</tbody>
 </table>
 <div class="totals">
+  ${discountVal > 0 ? `<div class="trow"><span>Subtotal</span><span>&#2547;${subtotalVal.toLocaleString()}</span></div><div class="trow" style="color:#b45309"><span>Discount</span><span>&#8722;&#2547;${discountVal.toLocaleString(undefined, {maximumFractionDigits:2})}</span></div>` : ''}
   <div class="trow grand"><span>Total</span><span>&#2547;${Number(invoice.total).toLocaleString()}</span></div>
   <div class="trow paid-row"><span>Paid</span><span>&#2547;${Number(invoice.paid_amount || 0).toLocaleString()}</span></div>
   ${remaining > 0 ? `<div class="trow due-row"><span>Due</span><span>&#2547;${remaining.toLocaleString()}</span></div>` : ''}
@@ -85,6 +88,8 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
   }
 
   const remaining = Math.max(0, (invoice.total || 0) - (invoice.paid_amount || 0))
+  const discount = invoice.discount || 0
+  const subtotal = (invoice.total || 0) + discount
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -136,6 +141,18 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
           </div>
 
           <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 mb-5">
+            {discount > 0 && (
+              <>
+                <div className="flex justify-between items-center px-4 py-3 border-b border-slate-200">
+                  <span className="font-semibold text-slate-500 text-sm">Subtotal</span>
+                  <span className="font-semibold text-slate-700">৳{subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center px-4 py-2 border-b border-slate-200 bg-amber-50">
+                  <span className="font-semibold text-amber-700 text-sm">Discount</span>
+                  <span className="font-bold text-amber-700">−৳{discount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between items-center px-4 py-3 border-b border-slate-200">
               <span className="font-semibold text-slate-600 text-sm">Total</span>
               <span className="font-black text-slate-800 text-lg">৳{invoice.total?.toLocaleString()}</span>

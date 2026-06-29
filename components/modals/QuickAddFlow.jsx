@@ -484,8 +484,13 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
     if (items.length === 1) return
     setItems(prev => prev.filter((_, idx) => idx !== i))
   }
-  const total = items.reduce((sum, item) =>
+  const subtotal = items.reduce((sum, item) =>
     sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)), 0)
+  const discountType = form.discountType || 'flat'
+  const discountAmount = discountType === 'percent'
+    ? subtotal * (parseFloat(form.discount || 0) / 100)
+    : parseFloat(form.discount || 0)
+  const total = Math.max(0, subtotal - discountAmount)
   const paidNow = parseFloat(form.paid_now || 0)
   const due = Math.max(0, total - paidNow)
 
@@ -532,6 +537,34 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
         </button>
       </div>
       <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <span className="font-semibold text-slate-500 text-sm">Subtotal</span>
+          <span className="font-bold text-slate-700">৳{subtotal.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-amber-600 text-sm">Discount</span>
+            <button type="button"
+              onClick={() => setForm(prev => ({ ...prev, discountType: prev.discountType === 'flat' ? 'percent' : 'flat' }))}
+              className="px-2 py-0.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors border border-amber-200">
+              {discountType === 'flat' ? '৳ Flat' : '% Off'}
+            </button>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500 text-sm">{discountType === 'flat' ? '৳' : ''}</span>
+            <input name="discount" type="number" min="0" step="0.01"
+              max={discountType === 'percent' ? 100 : subtotal}
+              placeholder="0" value={form.discount} onChange={handleFormChange}
+              className="w-24 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+            <span className="text-slate-500 text-sm">{discountType === 'percent' ? '%' : ''}</span>
+          </div>
+        </div>
+        {discountAmount > 0 && (
+          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-amber-50">
+            <span className="text-xs text-amber-700 font-semibold">Discount applied</span>
+            <span className="text-sm font-bold text-amber-700">−৳{discountAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
           <span className="font-semibold text-slate-600 text-sm">Total Amount</span>
           <span className="text-xl font-black text-slate-800">৳{total.toLocaleString()}</span>
@@ -743,7 +776,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     { medicine: '', frequency: '', duration: '', instructions: '' }
   ])
   const [invoiceForm, setInvoiceForm] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'), notes: '', paid_now: '',
+    date: format(new Date(), 'yyyy-MM-dd'), notes: '', paid_now: '', discount: '', discountType: 'flat',
   })
   const [invoiceItems, setInvoiceItems] = useState([
     { description: '', quantity: 1, unit_price: '' }
@@ -832,15 +865,19 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     if (!hasItems) return null
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const total = invoiceItems.reduce((sum, item) =>
+    const subtotal = invoiceItems.reduce((sum, item) =>
       sum + (parseFloat(item.unit_price || 0) * parseInt(item.quantity || 1)), 0)
+    const discountAmount = invoiceForm.discountType === 'percent'
+      ? subtotal * (parseFloat(invoiceForm.discount || 0) / 100)
+      : parseFloat(invoiceForm.discount || 0)
+    const total = Math.max(0, subtotal - discountAmount)
     const paidNow = parseFloat(invoiceForm.paid_now || 0)
     const status = paidNow >= total && total > 0 ? 'paid' : paidNow > 0 ? 'partial' : 'unpaid'
     const invoiceNum = `INV-${Date.now().toString().slice(-6)}`
     const { data: inv } = await supabase.from('invoices').insert({
       clinic_id: user.id, patient_id: patientId,
       invoice_number: invoiceNum, date: invoiceForm.date, due_date: null,
-      status, total, paid_amount: paidNow, notes: invoiceForm.notes || null,
+      status, total, discount: discountAmount, paid_amount: paidNow, notes: invoiceForm.notes || null,
     }).select().single()
     if (inv) {
       const items = invoiceItems.filter(i => i.description.trim() && i.unit_price).map(i => ({
