@@ -182,7 +182,7 @@ function AddFieldButton({ onAdd, existingLabels }) {
   )
 }
 
-export default function AddPrescriptionModal({ onClose, onSuccess }) {
+export default function AddPrescriptionModal({ onClose, onSuccess, patientId, patientName }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [patients, setPatients] = useState([])
@@ -194,7 +194,7 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
   const [extraFields, setExtraFields] = useState([])
 
   const [form, setForm] = useState({
-    patient_id: '',
+    patient_id: patientId || '',
     date: format(new Date(), 'yyyy-MM-dd'),
     chief_complaint: '',
     on_examination: '',
@@ -205,6 +205,7 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
   ])
 
   useEffect(() => {
+    if (patientId) return
     async function loadPatients() {
       const { data: { user } } = await supabase.auth.getUser()
       const { data } = await supabase.from('patients').select('id, name')
@@ -281,10 +282,16 @@ export default function AddPrescriptionModal({ onClose, onSuccess }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Patient *</label>
-              <select name="patient_id" className="input" value={form.patient_id} onChange={handleFormChange} required>
-                <option value="">Select patient...</option>
-                {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+              {patientId && patientName ? (
+                <div className="input flex items-center gap-2 bg-emerald-50 border-emerald-200 text-emerald-800 font-semibold">
+                  {patientName}
+                </div>
+              ) : (
+                <select name="patient_id" className="input" value={form.patient_id} onChange={handleFormChange} required>
+                  <option value="">Select patient...</option>
+                  {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              )}
             </div>
             <div>
               <label className="label">Date</label>

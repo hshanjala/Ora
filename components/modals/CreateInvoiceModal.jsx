@@ -4,14 +4,14 @@ import { X, Loader2, Plus, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 
-export default function CreateInvoiceModal({ onClose, onSuccess }) {
+export default function CreateInvoiceModal({ onClose, onSuccess, patientId, patientName }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [patients, setPatients] = useState([])
   const [error, setError] = useState('')
-  const [patientQuery, setPatientQuery] = useState('')
+  const [patientQuery, setPatientQuery] = useState(patientName || '')
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [selectedPatientId, setSelectedPatientId] = useState(null)
+  const [selectedPatientId, setSelectedPatientId] = useState(patientId || null)
   const [discountType, setDiscountType] = useState('flat') // 'flat' | 'percent'
   const inputRef = useRef(null)
   const dropdownRef = useRef(null)
@@ -159,41 +159,49 @@ export default function CreateInvoiceModal({ onClose, onSuccess }) {
             {/* Patient combobox */}
             <div className="relative col-span-2 sm:col-span-1">
               <label className="label">Patient *</label>
-              <input
-                ref={inputRef}
-                type="text" className="input"
-                placeholder="Type patient name..."
-                value={patientQuery}
-                onChange={handlePatientInput}
-                onFocus={() => setShowSuggestions(true)}
-                autoComplete="off"
-              />
-              {showSuggestions && (
-                <div ref={dropdownRef} className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto">
-                  {filteredPatients.length > 0 ? (
-                    <>
-                      {filteredPatients.map(p => (
-                        <button key={p.id} type="button" onClick={() => handleSelectPatient(p)}
-                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 hover:text-emerald-700 transition-colors first:rounded-t-xl last:rounded-b-xl font-medium">
-                          {p.name}
-                        </button>
-                      ))}
-                      {patientQuery.trim() && !filteredPatients.some(p => p.name.toLowerCase() === patientQuery.toLowerCase()) && (
+              {patientId && patientName ? (
+                <div className="input flex items-center gap-2 bg-emerald-50 border-emerald-200 text-emerald-800 font-semibold">
+                  {patientName}
+                </div>
+              ) : (
+                <>
+                  <input
+                    ref={inputRef}
+                    type="text" className="input"
+                    placeholder="Type patient name..."
+                    value={patientQuery}
+                    onChange={handlePatientInput}
+                    onFocus={() => setShowSuggestions(true)}
+                    autoComplete="off"
+                  />
+                  {showSuggestions && (
+                    <div ref={dropdownRef} className="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto">
+                      {filteredPatients.length > 0 ? (
+                        <>
+                          {filteredPatients.map(p => (
+                            <button key={p.id} type="button" onClick={() => handleSelectPatient(p)}
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 hover:text-emerald-700 transition-colors first:rounded-t-xl last:rounded-b-xl font-medium">
+                              {p.name}
+                            </button>
+                          ))}
+                          {patientQuery.trim() && !filteredPatients.some(p => p.name.toLowerCase() === patientQuery.toLowerCase()) && (
+                            <button type="button" onClick={() => setShowSuggestions(false)}
+                              className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 border-t border-slate-100 transition-colors last:rounded-b-xl font-semibold">
+                              + Add &quot;{patientQuery}&quot; as new patient
+                            </button>
+                          )}
+                        </>
+                      ) : patientQuery.trim() ? (
                         <button type="button" onClick={() => setShowSuggestions(false)}
-                          className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 border-t border-slate-100 transition-colors last:rounded-b-xl font-semibold">
+                          className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors rounded-xl font-semibold">
                           + Add &quot;{patientQuery}&quot; as new patient
                         </button>
+                      ) : (
+                        <p className="px-4 py-3 text-sm text-slate-400">Start typing to search patients...</p>
                       )}
-                    </>
-                  ) : patientQuery.trim() ? (
-                    <button type="button" onClick={() => setShowSuggestions(false)}
-                      className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors rounded-xl font-semibold">
-                      + Add &quot;{patientQuery}&quot; as new patient
-                    </button>
-                  ) : (
-                    <p className="px-4 py-3 text-sm text-slate-400">Start typing to search patients...</p>
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
 
