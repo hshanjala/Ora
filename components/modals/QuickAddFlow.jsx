@@ -308,6 +308,10 @@ function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
           <input name="address" className="input" placeholder="Full address" value={form.address} onChange={handleChange} />
         </div>
         <div className="col-span-2">
+          <label className="label">Referred by</label>
+          <input name="referred_by" className="input" placeholder="Doctor or clinic name" value={form.referred_by} onChange={handleChange} />
+        </div>
+        <div className="col-span-2">
           <label className="label">Medical History / Allergies</label>
           <textarea name="medical_history" className="input min-h-[70px] resize-none" placeholder="Allergies, chronic conditions, previous treatments..." value={form.medical_history} onChange={handleChange} />
         </div>
@@ -764,7 +768,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   }, [])
 
   const [patientForm, setPatientForm] = useState({
-    name: '', phone: '', email: '', age: '', gender: '', address: '', medical_history: ''
+    name: '', phone: '', email: '', age: '', gender: '', address: '', medical_history: '', referred_by: ''
   })
   const [scheduleForm, setScheduleForm] = useState({
     date: format(new Date(), 'yyyy-MM-dd'), time: '09:00', procedure: '', notes: '',
@@ -809,6 +813,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       gender: patientForm.gender || null,
       address: patientForm.address || null,
       medical_history: patientForm.medical_history || null,
+      referred_by: patientForm.referred_by || null,
       photo_url,
     }).select().single()
     setLoading(false)

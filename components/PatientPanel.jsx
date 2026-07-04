@@ -96,6 +96,7 @@ function VisitRow({ visit, clinicId }) {
   const [images, setImages] = useState([])
   const [imagesLoaded, setImagesLoaded] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const fileRef = useRef(null)
 
   async function loadImages() {
@@ -119,15 +120,24 @@ function VisitRow({ visit, clinicId }) {
     const file = e.target.files?.[0]
     if (!file) return
     setUploadingImage(true)
+    setUploadError('')
     const ext = file.name.split('.').pop()
     const path = `${clinicId}/${visit.patientId}/${visit.date}-${Date.now()}.${ext}`
-    const { error: upErr } = await supabase.storage.from('patient-images').upload(path, file)
-    if (!upErr) {
-      const { data: { publicUrl } } = supabase.storage.from('patient-images').getPublicUrl(path)
-      await supabase.from('patient_images').insert({
-        clinic_id: clinicId, patient_id: visit.patientId,
-        visit_date: visit.date, url: publicUrl, label: file.name, path,
-      })
+    const { error: upErr } = await supabase.storage.from('patient-images').upload(path, file, { upsert: true })
+    if (upErr) {
+      setUploadError('Upload failed. Please try again.')
+      setUploadingImage(false)
+      e.target.value = ''
+      return
+    }
+    const { data: { publicUrl } } = supabase.storage.from('patient-images').getPublicUrl(path)
+    const { error: dbErr } = await supabase.from('patient_images').insert({
+      clinic_id: clinicId, patient_id: visit.patientId,
+      visit_date: visit.date, url: publicUrl, label: file.name, path,
+    })
+    if (dbErr) {
+      setUploadError('Image saved but record failed. Refresh and try again.')
+    } else {
       setImages(prev => [...prev, { url: publicUrl, label: file.name }])
     }
     setUploadingImage(false)
@@ -263,6 +273,9 @@ function VisitRow({ visit, clinicId }) {
             <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', margin: '0 0 7px' }}>
               X-rays & Oral Images
             </p>
+            {uploadError && (
+              <p style={{ fontSize: 11, color: '#b91c1c', marginBottom: 6 }}>{uploadError}</p>
+            )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {images.map((img, i) => (
                 <a key={i} href={img.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: 56, height: 56 }}>
@@ -270,7 +283,7 @@ function VisitRow({ visit, clinicId }) {
                 </a>
               ))}
               <button
-                onClick={() => fileRef.current?.click()}
+                onClick={() => { setUploadError(''); fileRef.current?.click() }}
                 disabled={uploadingImage}
                 style={{
                   width: 56, height: 56, background: '#fff',
@@ -306,6 +319,7 @@ function EditModal({ patient, onClose, onSaved }) {
     gender: patient.gender || '',
     address: patient.address || '',
     medical_history: patient.medical_history || '',
+    referred_by: patient.referred_by || '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -324,6 +338,7 @@ function EditModal({ patient, onClose, onSaved }) {
       gender: form.gender || null,
       address: form.address || null,
       medical_history: form.medical_history || null,
+      referred_by: form.referred_by || null,
     }).eq('id', patient.id)
     setSaving(false)
     onSaved(form)
@@ -367,6 +382,10 @@ function EditModal({ patient, onClose, onSaved }) {
             <div className="col-span-2">
               <label className="label">Address</label>
               <input name="address" className="input" value={form.address} onChange={handleChange} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Referred by</label>
+              <input name="referred_by" className="input" placeholder="Doctor or clinic name" value={form.referred_by} onChange={handleChange} />
             </div>
             <div className="col-span-2">
               <label className="label">Medical History / Allergies</label>
@@ -499,7 +518,7 @@ export default function PatientPanel({ patient: initialPatient, onClose }) {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', marginBottom: 12 }}>
-            {[['Phone', patient.phone], ['Email', patient.email], ['Address', patient.address], ['Blood Group', null]].map(([label, val]) => (
+            {[['Phone', patient.phone], ['Email', patient.email], ['Address', patient.address], ['Reff. by', patient.referred_by]].map(([label, val]) => (
               <div key={label}>
                 <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>{label}</p>
                 <p style={{ fontSize: 13, fontWeight: val ? 600 : 400, color: val ? '#1e293b' : '#cbd5e1', margin: 0 }}>{val || '—'}</p>

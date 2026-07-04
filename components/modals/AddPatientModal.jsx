@@ -10,7 +10,7 @@ export default function AddPatientModal({ onClose, onSuccess }) {
   const [form, setForm] = useState({
     name: '', phone: '', email: '',
     age: '', gender: '',
-    address: '', medical_history: ''
+    address: '', medical_history: '', referred_by: ''
   })
 
   function handleChange(e) {
@@ -33,6 +33,7 @@ export default function AddPatientModal({ onClose, onSuccess }) {
       gender: form.gender || null,
       address: form.address || null,
       medical_history: form.medical_history || null,
+      referred_by: form.referred_by || null,
     })
 
     if (error) {
@@ -85,6 +86,10 @@ export default function AddPatientModal({ onClose, onSuccess }) {
             <div className="col-span-2">
               <label className="label">Address</label>
               <input name="address" className="input" placeholder="Full address" value={form.address} onChange={handleChange} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Referred by</label>
+              <input name="referred_by" className="input" placeholder="Doctor or clinic name" value={form.referred_by} onChange={handleChange} />
             </div>
             <div className="col-span-2">
               <label className="label">Medical History / Notes</label>
