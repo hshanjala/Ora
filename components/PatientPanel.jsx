@@ -101,13 +101,16 @@ function VisitRow({ visit, clinicId }) {
 
   async function loadImages() {
     if (imagesLoaded) return
-    const { data } = await supabase
-      .from('patient_images')
-      .select('*')
-      .eq('patient_id', visit.patientId)
-      .eq('visit_date', visit.date)
-      .order('created_at')
-    setImages(data || [])
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setImagesLoaded(true); return }
+    const folder = `${user.id}/${visit.patientId}/${visit.date}`
+    const { data: files } = await supabase.storage.from('patient-images').list(folder)
+    if (files && files.length > 0) {
+      setImages(files.map(f => ({
+        url: supabase.storage.from('patient-images').getPublicUrl(`${folder}/${f.name}`).data.publicUrl,
+        label: f.name,
+      })))
+    }
     setImagesLoaded(true)
   }
 
@@ -130,24 +133,17 @@ function VisitRow({ visit, clinicId }) {
       return
     }
     const ext = file.name.split('.').pop()
-    const path = `${uid}/${visit.patientId}/${visit.date}-${Date.now()}.${ext}`
-    const { error: upErr } = await supabase.storage.from('patient-images').upload(path, file, { upsert: true })
+    const folder = `${uid}/${visit.patientId}/${visit.date}`
+    const filePath = `${folder}/${Date.now()}.${ext}`
+    const { error: upErr } = await supabase.storage.from('patient-images').upload(filePath, file, { upsert: true })
     if (upErr) {
-      setUploadError('Upload failed. Please try again.')
+      setUploadError(`Upload failed (${upErr.message}). Please try again.`)
       setUploadingImage(false)
       e.target.value = ''
       return
     }
-    const { data: { publicUrl } } = supabase.storage.from('patient-images').getPublicUrl(path)
-    const { error: dbErr } = await supabase.from('patient_images').insert({
-      clinic_id: uid, patient_id: visit.patientId,
-      visit_date: visit.date, url: publicUrl, label: file.name, path,
-    })
-    if (dbErr) {
-      setUploadError(`Save failed (${dbErr.code || dbErr.message}). Contact support.`)
-    } else {
-      setImages(prev => [...prev, { url: publicUrl, label: file.name }])
-    }
+    const { data: { publicUrl } } = supabase.storage.from('patient-images').getPublicUrl(filePath)
+    setImages(prev => [...prev, { url: publicUrl, label: file.name }])
     setUploadingImage(false)
     e.target.value = ''
   }
