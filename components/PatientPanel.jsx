@@ -121,8 +121,16 @@ function VisitRow({ visit, clinicId }) {
     if (!file) return
     setUploadingImage(true)
     setUploadError('')
+    const { data: { user } } = await supabase.auth.getUser()
+    const uid = user?.id
+    if (!uid) {
+      setUploadError('Not authenticated. Please refresh and try again.')
+      setUploadingImage(false)
+      e.target.value = ''
+      return
+    }
     const ext = file.name.split('.').pop()
-    const path = `${clinicId}/${visit.patientId}/${visit.date}-${Date.now()}.${ext}`
+    const path = `${uid}/${visit.patientId}/${visit.date}-${Date.now()}.${ext}`
     const { error: upErr } = await supabase.storage.from('patient-images').upload(path, file, { upsert: true })
     if (upErr) {
       setUploadError('Upload failed. Please try again.')
@@ -132,11 +140,11 @@ function VisitRow({ visit, clinicId }) {
     }
     const { data: { publicUrl } } = supabase.storage.from('patient-images').getPublicUrl(path)
     const { error: dbErr } = await supabase.from('patient_images').insert({
-      clinic_id: clinicId, patient_id: visit.patientId,
+      clinic_id: uid, patient_id: visit.patientId,
       visit_date: visit.date, url: publicUrl, label: file.name, path,
     })
     if (dbErr) {
-      setUploadError('Image saved but record failed. Refresh and try again.')
+      setUploadError(`Save failed (${dbErr.code || dbErr.message}). Contact support.`)
     } else {
       setImages(prev => [...prev, { url: publicUrl, label: file.name }])
     }
