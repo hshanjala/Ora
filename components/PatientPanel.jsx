@@ -220,6 +220,11 @@ function VisitRow({ visit, clinicId }) {
                     • {med.medicine}{med.dosage ? ` ${med.dosage}` : ''}{med.frequency ? ` — ${med.frequency}` : ''}{med.duration ? ` · ${med.duration}` : ''}
                   </p>
                 ))}
+                {visit.rx.follow_up_date && (
+                  <p style={{ fontSize: 12, color: '#059669', marginTop: 6, marginBottom: 0, fontWeight: 600 }}>
+                    Follow-up: {format(new Date(visit.rx.follow_up_date + 'T00:00:00'), 'dd MMM yyyy')}
+                  </p>
+                )}
                 {visit.rx.notes && (
                   <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6, marginBottom: 0, fontStyle: 'italic' }}>
                     Note: {visit.rx.notes}

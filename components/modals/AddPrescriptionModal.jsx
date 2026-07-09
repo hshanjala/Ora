@@ -196,6 +196,7 @@ export default function AddPrescriptionModal({ onClose, onSuccess, patientId, pa
   const [form, setForm] = useState({
     patient_id: patientId || '',
     date: format(new Date(), 'yyyy-MM-dd'),
+    follow_up_date: '',
     chief_complaint: '',
     on_examination: '',
     advice: '',
@@ -249,6 +250,7 @@ export default function AddPrescriptionModal({ onClose, onSuccess, patientId, pa
       clinic_id: user.id,
       patient_id: form.patient_id,
       date: form.date,
+      follow_up_date: form.follow_up_date || null,
       diagnosis: form.on_examination || null,
       chief_complaint: form.chief_complaint || null,
       advice: form.advice || null,
@@ -297,6 +299,11 @@ export default function AddPrescriptionModal({ onClose, onSuccess, patientId, pa
               <label className="label">Date</label>
               <input name="date" type="date" className="input" value={form.date} onChange={handleFormChange} />
             </div>
+            <div>
+              <label className="label">Follow-up Date</label>
+              <input name="follow_up_date" type="date" className="input" value={form.follow_up_date} onChange={handleFormChange} />
+            </div>
+            <div></div>
           </div>
 
           {/* C/C and O/E */}

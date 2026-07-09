@@ -366,6 +366,7 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
   function handleFormChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
+
   function handleMedChange(i, field, value) {
     setMedicines(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m))
   }
@@ -432,6 +433,11 @@ function Step3Prescription({ form, setForm, medicines, setMedicines, patientName
           ))}
         </div>
       )}
+
+      <div>
+        <label className="label">Follow-up Date</label>
+        <input name="follow_up_date" type="date" className="input" value={form.follow_up_date} onChange={handleFormChange} />
+      </div>
 
       <div>
         <label className="label">Medicines</label>
@@ -774,7 +780,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     date: format(new Date(), 'yyyy-MM-dd'), time: '09:00', procedure: '', notes: '',
   })
   const [rxForm, setRxForm] = useState({
-    chief_complaint: '', on_examination: '', advice: ''
+    chief_complaint: '', on_examination: '', advice: '', follow_up_date: ''
   })
   const [medicines, setMedicines] = useState([
     { medicine: '', frequency: '', duration: '', instructions: '' }
@@ -846,6 +852,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     const { data: rx } = await supabase.from('prescriptions').insert({
       clinic_id: user.id, patient_id: patientId,
       date: format(new Date(), 'yyyy-MM-dd'),
+      follow_up_date: rxForm.follow_up_date || null,
       diagnosis: rxForm.on_examination || null,
       chief_complaint: rxForm.chief_complaint || null,
       advice: rxForm.advice || null,
