@@ -5,7 +5,7 @@ import CreateInvoiceModal from '@/components/modals/CreateInvoiceModal'
 import { Plus, Search, FileText, Loader2, X, Printer, CheckCircle, Clock } from 'lucide-react'
 import { format, startOfWeek, startOfMonth, startOfYear } from 'date-fns'
 
-function printInvoice(invoice, items, clinicName) {
+function printInvoice(invoice, items, clinicName, payments = []) {
   const remaining = Math.max(0, (invoice.total || 0) - (invoice.paid_amount || 0))
   const subtotalVal = items.reduce((s, i) => s + Number(i.total || 0), 0)
   const discountVal = Number(invoice.discount || 0)
@@ -56,6 +56,29 @@ td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
 </div>
 <span class="sbadge ${invoice.status === 'paid' ? 'spaid' : invoice.status === 'partial' ? 'spartial' : 'sunpaid'}">${(invoice.status || '').toUpperCase()}</span>
 ${invoice.notes ? `<div class="notes"><strong>Notes:</strong> ${invoice.notes}</div>` : ''}
+${payments.length > 0 ? `
+<div style="margin-bottom:24px">
+  <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Payment History</div>
+  <table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="background:#f0fdf4">
+        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">#</th>
+        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">Date</th>
+        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">Note</th>
+        <th style="padding:8px 12px;text-align:right;font-size:11px;color:#065f46;font-weight:600">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${payments.map((p, i) => `
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 12px;font-size:12px;color:#94a3b8">${i + 1}</td>
+          <td style="padding:8px 12px;font-size:12px;color:#1e293b;font-weight:600">${format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}</td>
+          <td style="padding:8px 12px;font-size:12px;color:#64748b">${p.note || '—'}</td>
+          <td style="padding:8px 12px;font-size:12px;color:#065f46;font-weight:700;text-align:right">&#2547;${Number(p.amount).toLocaleString()}</td>
+        </tr>`).join('')}
+    </tbody>
+  </table>
+</div>` : ''}
 <div class="footer">Thank you for choosing ${clinicName || 'Ora Dental Clinic'} &middot; Powered by Ora</div>
 </body></html>`)
   win.document.close()
@@ -127,7 +150,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => printInvoice(inv, items, clinicName)}
+                onClick={() => printInvoice(inv, items, clinicName, payments)}
                 className="flex items-center gap-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold transition-colors"
               >
                 <Printer size={14} /> Print
@@ -283,8 +306,11 @@ export default function InvoicesPage() {
 
   async function quickPrint(e, inv) {
     e.stopPropagation()
-    const { data: items } = await supabase.from('invoice_items').select('*').eq('invoice_id', inv.id)
-    printInvoice(inv, items || [], clinicName)
+    const [{ data: items }, { data: payments }] = await Promise.all([
+      supabase.from('invoice_items').select('*').eq('invoice_id', inv.id),
+      supabase.from('invoice_payments').select('*').eq('invoice_id', inv.id).order('date', { ascending: true }),
+    ])
+    printInvoice(inv, items || [], clinicName, payments || [])
   }
 
   const periodStart = timePeriod === 'week'  ? format(startOfWeek(new Date(), { weekStartsOn: 0 }), 'yyyy-MM-dd')
