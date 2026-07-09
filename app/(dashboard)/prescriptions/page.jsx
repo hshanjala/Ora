@@ -246,6 +246,10 @@ function TemplateSetupModal({ onClose, onSaved }) {
 function PrescriptionDetailModal({ prescription, onClose, tplSettings }) {
   const supabase = createClient()
   const [items, setItems] = useState([])
+  const [rx, setRx] = useState(prescription)
+  const [editFollowUp, setEditFollowUp] = useState(false)
+  const [followUpVal, setFollowUpVal] = useState(prescription.follow_up_date || '')
+  const [savingFollowUp, setSavingFollowUp] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -257,12 +261,22 @@ function PrescriptionDetailModal({ prescription, onClose, tplSettings }) {
     load()
   }, [prescription.id])
 
+  async function saveFollowUp() {
+    setSavingFollowUp(true)
+    await supabase.from('prescriptions').update({
+      follow_up_date: followUpVal || null
+    }).eq('id', rx.id)
+    setRx(prev => ({ ...prev, follow_up_date: followUpVal || null }))
+    setSavingFollowUp(false)
+    setEditFollowUp(false)
+  }
+
   function handlePrint() {
     const win = window.open('', '_blank')
     win.document.write(buildPrintHtml(
       tplSettings?.prescription_template || 1,
       tplSettings || {},
-      prescription,
+      rx,
       items
     ))
     win.document.close()
@@ -333,6 +347,44 @@ function PrescriptionDetailModal({ prescription, onClose, tplSettings }) {
               <p className="text-sm text-slate-700">{prescription.notes}</p>
             </div>
           )}
+
+          {/* Follow-up date */}
+          <div className="bg-emerald-50 rounded-xl p-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold text-emerald-600 mb-1">Next Visit / Follow-up Date</p>
+              {editFollowUp ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="date"
+                    className="input text-sm py-1"
+                    value={followUpVal}
+                    onChange={e => setFollowUpVal(e.target.value)}
+                  />
+                  <button onClick={saveFollowUp} disabled={savingFollowUp}
+                    className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg disabled:opacity-50">
+                    {savingFollowUp ? 'Saving…' : 'Save'}
+                  </button>
+                  <button onClick={() => { setEditFollowUp(false); setFollowUpVal(rx.follow_up_date || '') }}
+                    className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1.5">
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <p className="text-sm font-bold text-emerald-800">
+                  {rx.follow_up_date
+                    ? format(new Date(rx.follow_up_date + 'T00:00:00'), 'dd MMM yyyy')
+                    : <span className="font-normal text-emerald-500 text-xs">Not set</span>
+                  }
+                </p>
+              )}
+            </div>
+            {!editFollowUp && (
+              <button onClick={() => setEditFollowUp(true)}
+                className="text-xs font-semibold text-emerald-700 bg-white border border-emerald-200 hover:bg-emerald-100 px-3 py-1.5 rounded-lg shrink-0">
+                {rx.follow_up_date ? 'Edit' : 'Set date'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
