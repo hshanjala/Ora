@@ -101,6 +101,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
   const [payDate, setPayDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [payNote, setPayNote] = useState('')
   const [updating, setUpdating] = useState(false)
+  const [payError, setPayError] = useState('')
   const [inv, setInv] = useState(invoice)
 
   useEffect(() => {
@@ -117,21 +118,29 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
 
   async function recordPayment() {
     setUpdating(true)
+    setPayError('')
     const addPaid = parseFloat(payAmount || 0)
     if (!addPaid || addPaid <= 0) { setUpdating(false); return }
     const { data: { user } } = await supabase.auth.getUser()
     const newPaid = Math.min(inv.total, (inv.paid_amount || 0) + addPaid)
     const status = newPaid >= inv.total ? 'paid' : newPaid > 0 ? 'partial' : 'unpaid'
-    await Promise.all([
-      supabase.from('invoice_payments').insert({
-        invoice_id: invoice.id,
-        clinic_id: user.id,
-        amount: addPaid,
-        date: payDate,
-        note: payNote || null,
-      }),
-      supabase.from('invoices').update({ paid_amount: newPaid, status }).eq('id', invoice.id),
-    ])
+
+    const { error: insertError } = await supabase.from('invoice_payments').insert({
+      invoice_id: invoice.id,
+      clinic_id: user.id,
+      amount: addPaid,
+      date: payDate,
+      note: payNote || null,
+    })
+
+    if (insertError) {
+      setPayError('Failed to save payment: ' + insertError.message)
+      setUpdating(false)
+      return
+    }
+
+    await supabase.from('invoices').update({ paid_amount: newPaid, status }).eq('id', invoice.id)
+
     const { data: payData } = await supabase.from('invoice_payments').select('*').eq('invoice_id', invoice.id).order('created_at', { ascending: true })
     setPayments(payData || [])
     setInv(prev => ({ ...prev, paid_amount: newPaid, status }))
@@ -276,6 +285,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
           {inv.status !== 'paid' && (
             <div className="border border-slate-200 rounded-xl p-4">
               <p className="text-sm font-bold text-slate-700 mb-3">Record Payment</p>
+              {payError && <p className="text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2 mb-3">{payError}</p>}
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <input
                   type="number" className="input"
