@@ -60,45 +60,36 @@ ${(invoice.paid_amount || 0) > 0 ? (() => {
     const ledgerTotal = payments.reduce((s, p) => s + Number(p.amount), 0)
     const priorAmount = Math.round(((invoice.paid_amount || 0) - ledgerTotal) * 100) / 100
     let cumulative = 0
-    let rowNum = 0
     const rows = []
     if (priorAmount > 0) {
-      rowNum++
       cumulative += priorAmount
       const bal = Math.max(0, invoice.total - cumulative)
       rows.push(`
-        <tr style="border-bottom:1px solid #f1f5f9;background:#f8fafc">
-          <td style="padding:8px 12px;font-size:12px;color:#94a3b8">${rowNum}</td>
-          <td style="padding:8px 12px;font-size:12px;color:#94a3b8;font-style:italic">—</td>
-          <td style="padding:8px 12px;font-size:12px;color:#94a3b8;font-style:italic">Prior payment</td>
-          <td style="padding:8px 12px;font-size:12px;color:#065f46;font-weight:700;text-align:right">&#2547;${priorAmount.toLocaleString()}</td>
-          <td style="padding:8px 12px;font-size:12px;font-weight:700;text-align:right;color:${bal > 0 ? '#b91c1c' : '#065f46'}">&#2547;${bal.toLocaleString()}</td>
+        <tr style="border-bottom:1px solid #e2e8f0">
+          <td style="padding:12px 16px;font-size:13px;color:#94a3b8;font-style:italic">—</td>
+          <td style="padding:12px 16px;font-size:13px;color:#1e293b;font-weight:600;text-align:center">&#2547;${priorAmount.toLocaleString()}</td>
+          <td style="padding:12px 16px;font-size:13px;font-weight:700;text-align:right;color:${bal > 0 ? '#b91c1c' : '#065f46'}">&#2547;${bal.toLocaleString()}</td>
         </tr>`)
     }
     payments.forEach(p => {
-      rowNum++
       cumulative += Number(p.amount)
       const bal = Math.max(0, invoice.total - cumulative)
       rows.push(`
-        <tr style="border-bottom:1px solid #f1f5f9">
-          <td style="padding:8px 12px;font-size:12px;color:#94a3b8">${rowNum}</td>
-          <td style="padding:8px 12px;font-size:12px;color:#1e293b;font-weight:600;white-space:nowrap">${format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}</td>
-          <td style="padding:8px 12px;font-size:12px;color:#64748b">${p.note || '—'}</td>
-          <td style="padding:8px 12px;font-size:12px;color:#065f46;font-weight:700;text-align:right">&#2547;${Number(p.amount).toLocaleString()}</td>
-          <td style="padding:8px 12px;font-size:12px;font-weight:700;text-align:right;color:${bal > 0 ? '#b91c1c' : '#065f46'}">&#2547;${bal.toLocaleString()}</td>
+        <tr style="border-bottom:1px solid #e2e8f0">
+          <td style="padding:12px 16px;font-size:13px;color:#1e293b">${format(new Date(p.date + 'T00:00:00'), 'dd.MM.yy')}</td>
+          <td style="padding:12px 16px;font-size:13px;color:#1e293b;font-weight:600;text-align:center">&#2547;${Number(p.amount).toLocaleString()}</td>
+          <td style="padding:12px 16px;font-size:13px;font-weight:700;text-align:right;color:${bal > 0 ? '#b91c1c' : '#065f46'}">&#2547;${bal.toLocaleString()}</td>
         </tr>`)
     })
     return `
-<div style="margin-bottom:24px">
-  <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Payment Ledger</div>
-  <table style="width:100%;border-collapse:collapse">
+<div style="margin:32px 0 24px">
+  <h2 style="text-align:center;font-size:20px;font-weight:700;color:#1e293b;margin-bottom:20px">Payment Details</h2>
+  <table style="width:100%;border-collapse:collapse;border-top:1px solid #e2e8f0">
     <thead>
-      <tr style="background:#f0fdf4">
-        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">#</th>
-        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">Date</th>
-        <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">Note</th>
-        <th style="padding:8px 12px;text-align:right;font-size:11px;color:#065f46;font-weight:600">Amount Paid</th>
-        <th style="padding:8px 12px;text-align:right;font-size:11px;color:#b91c1c;font-weight:600">Balance Due</th>
+      <tr style="border-bottom:1px solid #e2e8f0">
+        <th style="padding:10px 16px;text-align:left;font-size:13px;color:#1e293b;font-weight:600">Date</th>
+        <th style="padding:10px 16px;text-align:center;font-size:13px;color:#1e293b;font-weight:600">Paid Amount</th>
+        <th style="padding:10px 16px;text-align:right;font-size:13px;color:#1e293b;font-weight:600">Due Amount</th>
       </tr>
     </thead>
     <tbody>${rows.join('')}</tbody>
@@ -256,55 +247,42 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
             const priorAmount = Math.round(((inv.paid_amount || 0) - ledgerTotal) * 100) / 100
             const rows = []
             let cumulative = 0
-            let rowNum = 0
             if (priorAmount > 0) {
-              rowNum++
               cumulative += priorAmount
               const bal = Math.max(0, inv.total - cumulative)
               rows.push(
                 <tr key="prior" className="border-t border-slate-100 bg-slate-50">
-                  <td className="px-3 py-2.5 text-slate-400 text-xs">{rowNum}</td>
-                  <td className="px-3 py-2.5 text-slate-400 text-xs italic">—</td>
-                  <td className="px-3 py-2.5 text-slate-400 text-xs italic">Prior payment</td>
-                  <td className="px-3 py-2.5 text-right font-bold text-emerald-600">৳{priorAmount.toLocaleString()}</td>
-                  <td className="px-3 py-2.5 text-right font-bold">
-                    <span className={bal > 0 ? 'text-red-500' : 'text-emerald-600'}>৳{bal.toLocaleString()}</span>
-                  </td>
+                  <td className="px-4 py-3 text-slate-400 text-sm italic">—</td>
+                  <td className="px-4 py-3 text-center font-semibold text-emerald-600">৳{priorAmount.toLocaleString()}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${bal > 0 ? 'text-red-500' : 'text-emerald-600'}`}>৳{bal.toLocaleString()}</td>
                 </tr>
               )
             }
             payments.forEach(p => {
-              rowNum++
               cumulative += Number(p.amount)
               const bal = Math.max(0, inv.total - cumulative)
               rows.push(
                 <tr key={p.id} className="border-t border-slate-100">
-                  <td className="px-3 py-2.5 text-slate-400 text-xs">{rowNum}</td>
-                  <td className="px-3 py-2.5 font-medium text-slate-700 whitespace-nowrap">
-                    {format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}
+                  <td className="px-4 py-3 text-slate-700 text-sm font-medium whitespace-nowrap">
+                    {format(new Date(p.date + 'T00:00:00'), 'dd.MM.yy')}
                   </td>
-                  <td className="px-3 py-2.5 text-slate-400 text-xs">{p.note || '—'}</td>
-                  <td className="px-3 py-2.5 text-right font-bold text-emerald-600">৳{Number(p.amount).toLocaleString()}</td>
-                  <td className="px-3 py-2.5 text-right font-bold">
-                    <span className={bal > 0 ? 'text-red-500' : 'text-emerald-600'}>৳{bal.toLocaleString()}</span>
-                  </td>
+                  <td className="px-4 py-3 text-center font-semibold text-emerald-600">৳{Number(p.amount).toLocaleString()}</td>
+                  <td className={`px-4 py-3 text-right font-bold ${bal > 0 ? 'text-red-500' : 'text-emerald-600'}`}>৳{bal.toLocaleString()}</td>
                 </tr>
               )
             })
             return (
               <div className="mb-5">
                 <p className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                  <Clock size={14} className="text-slate-400" /> Payment Ledger
+                  <Clock size={14} className="text-slate-400" /> Payment Details
                 </p>
                 <div className="border border-slate-100 rounded-xl overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-slate-50 border-b border-slate-100">
                       <tr>
-                        <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">#</th>
-                        <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">Date</th>
-                        <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">Note</th>
-                        <th className="text-right px-3 py-2 text-xs font-semibold text-emerald-600">Paid</th>
-                        <th className="text-right px-3 py-2 text-xs font-semibold text-red-500">Balance Due</th>
+                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Date</th>
+                        <th className="text-center px-4 py-2.5 text-xs font-semibold text-slate-600">Paid Amount</th>
+                        <th className="text-right px-4 py-2.5 text-xs font-semibold text-slate-600">Due Amount</th>
                       </tr>
                     </thead>
                     <tbody>{rows}</tbody>
