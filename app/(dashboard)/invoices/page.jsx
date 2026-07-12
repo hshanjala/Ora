@@ -56,19 +56,37 @@ td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
 </div>
 <span class="sbadge ${invoice.status === 'paid' ? 'spaid' : invoice.status === 'partial' ? 'spartial' : 'sunpaid'}">${(invoice.status || '').toUpperCase()}</span>
 ${invoice.notes ? `<div class="notes"><strong>Notes:</strong> ${invoice.notes}</div>` : ''}
-${payments.length > 0 ? (() => {
+${(invoice.paid_amount || 0) > 0 ? (() => {
+    const ledgerTotal = payments.reduce((s, p) => s + Number(p.amount), 0)
+    const priorAmount = Math.round(((invoice.paid_amount || 0) - ledgerTotal) * 100) / 100
     let cumulative = 0
-    const rows = payments.map((p, i) => {
+    let rowNum = 0
+    const rows = []
+    if (priorAmount > 0) {
+      rowNum++
+      cumulative += priorAmount
+      const bal = Math.max(0, invoice.total - cumulative)
+      rows.push(`
+        <tr style="border-bottom:1px solid #f1f5f9;background:#f8fafc">
+          <td style="padding:8px 12px;font-size:12px;color:#94a3b8">${rowNum}</td>
+          <td style="padding:8px 12px;font-size:12px;color:#94a3b8;font-style:italic">—</td>
+          <td style="padding:8px 12px;font-size:12px;color:#94a3b8;font-style:italic">Prior payment</td>
+          <td style="padding:8px 12px;font-size:12px;color:#065f46;font-weight:700;text-align:right">&#2547;${priorAmount.toLocaleString()}</td>
+          <td style="padding:8px 12px;font-size:12px;font-weight:700;text-align:right;color:${bal > 0 ? '#b91c1c' : '#065f46'}">&#2547;${bal.toLocaleString()}</td>
+        </tr>`)
+    }
+    payments.forEach(p => {
+      rowNum++
       cumulative += Number(p.amount)
-      const balance = Math.max(0, invoice.total - cumulative)
-      return `
+      const bal = Math.max(0, invoice.total - cumulative)
+      rows.push(`
         <tr style="border-bottom:1px solid #f1f5f9">
-          <td style="padding:8px 12px;font-size:12px;color:#94a3b8">${i + 1}</td>
+          <td style="padding:8px 12px;font-size:12px;color:#94a3b8">${rowNum}</td>
           <td style="padding:8px 12px;font-size:12px;color:#1e293b;font-weight:600;white-space:nowrap">${format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}</td>
           <td style="padding:8px 12px;font-size:12px;color:#64748b">${p.note || '—'}</td>
           <td style="padding:8px 12px;font-size:12px;color:#065f46;font-weight:700;text-align:right">&#2547;${Number(p.amount).toLocaleString()}</td>
-          <td style="padding:8px 12px;font-size:12px;font-weight:700;text-align:right;color:${balance > 0 ? '#b91c1c' : '#065f46'}">&#2547;${balance.toLocaleString()}</td>
-        </tr>`
+          <td style="padding:8px 12px;font-size:12px;font-weight:700;text-align:right;color:${bal > 0 ? '#b91c1c' : '#065f46'}">&#2547;${bal.toLocaleString()}</td>
+        </tr>`)
     })
     return `
 <div style="margin-bottom:24px">
@@ -233,50 +251,68 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
             </div>
           </div>
 
-          {payments.length > 0 && (
-            <div className="mb-5">
-              <p className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                <Clock size={14} className="text-slate-400" /> Payment Ledger
-              </p>
-              <div className="border border-slate-100 rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">#</th>
-                      <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">Date</th>
-                      <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">Note</th>
-                      <th className="text-right px-3 py-2 text-xs font-semibold text-emerald-600">Paid</th>
-                      <th className="text-right px-3 py-2 text-xs font-semibold text-red-500">Balance Due</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      let cumulative = 0
-                      return payments.map((p, i) => {
-                        cumulative += Number(p.amount)
-                        const balance = Math.max(0, inv.total - cumulative)
-                        return (
-                          <tr key={p.id} className="border-t border-slate-100">
-                            <td className="px-3 py-2.5 text-slate-400 text-xs">{i + 1}</td>
-                            <td className="px-3 py-2.5 font-medium text-slate-700 whitespace-nowrap">
-                              {format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}
-                            </td>
-                            <td className="px-3 py-2.5 text-slate-400 text-xs">{p.note || '—'}</td>
-                            <td className="px-3 py-2.5 text-right font-bold text-emerald-600">৳{Number(p.amount).toLocaleString()}</td>
-                            <td className="px-3 py-2.5 text-right font-bold">
-                              <span className={balance > 0 ? 'text-red-500' : 'text-emerald-600'}>
-                                ৳{balance.toLocaleString()}
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      })
-                    })()}
-                  </tbody>
-                </table>
+          {(inv.paid_amount || 0) > 0 && (() => {
+            const ledgerTotal = payments.reduce((s, p) => s + Number(p.amount), 0)
+            const priorAmount = Math.round(((inv.paid_amount || 0) - ledgerTotal) * 100) / 100
+            const rows = []
+            let cumulative = 0
+            let rowNum = 0
+            if (priorAmount > 0) {
+              rowNum++
+              cumulative += priorAmount
+              const bal = Math.max(0, inv.total - cumulative)
+              rows.push(
+                <tr key="prior" className="border-t border-slate-100 bg-slate-50">
+                  <td className="px-3 py-2.5 text-slate-400 text-xs">{rowNum}</td>
+                  <td className="px-3 py-2.5 text-slate-400 text-xs italic">—</td>
+                  <td className="px-3 py-2.5 text-slate-400 text-xs italic">Prior payment</td>
+                  <td className="px-3 py-2.5 text-right font-bold text-emerald-600">৳{priorAmount.toLocaleString()}</td>
+                  <td className="px-3 py-2.5 text-right font-bold">
+                    <span className={bal > 0 ? 'text-red-500' : 'text-emerald-600'}>৳{bal.toLocaleString()}</span>
+                  </td>
+                </tr>
+              )
+            }
+            payments.forEach(p => {
+              rowNum++
+              cumulative += Number(p.amount)
+              const bal = Math.max(0, inv.total - cumulative)
+              rows.push(
+                <tr key={p.id} className="border-t border-slate-100">
+                  <td className="px-3 py-2.5 text-slate-400 text-xs">{rowNum}</td>
+                  <td className="px-3 py-2.5 font-medium text-slate-700 whitespace-nowrap">
+                    {format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}
+                  </td>
+                  <td className="px-3 py-2.5 text-slate-400 text-xs">{p.note || '—'}</td>
+                  <td className="px-3 py-2.5 text-right font-bold text-emerald-600">৳{Number(p.amount).toLocaleString()}</td>
+                  <td className="px-3 py-2.5 text-right font-bold">
+                    <span className={bal > 0 ? 'text-red-500' : 'text-emerald-600'}>৳{bal.toLocaleString()}</span>
+                  </td>
+                </tr>
+              )
+            })
+            return (
+              <div className="mb-5">
+                <p className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                  <Clock size={14} className="text-slate-400" /> Payment Ledger
+                </p>
+                <div className="border border-slate-100 rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">#</th>
+                        <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">Date</th>
+                        <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">Note</th>
+                        <th className="text-right px-3 py-2 text-xs font-semibold text-emerald-600">Paid</th>
+                        <th className="text-right px-3 py-2 text-xs font-semibold text-red-500">Balance Due</th>
+                      </tr>
+                    </thead>
+                    <tbody>{rows}</tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           {inv.notes && (
             <div className="bg-slate-50 rounded-xl p-3 mb-5 text-sm text-slate-500">{inv.notes}</div>
