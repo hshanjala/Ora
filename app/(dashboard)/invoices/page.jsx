@@ -56,29 +56,37 @@ td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
 </div>
 <span class="sbadge ${invoice.status === 'paid' ? 'spaid' : invoice.status === 'partial' ? 'spartial' : 'sunpaid'}">${(invoice.status || '').toUpperCase()}</span>
 ${invoice.notes ? `<div class="notes"><strong>Notes:</strong> ${invoice.notes}</div>` : ''}
-${payments.length > 0 ? `
+${payments.length > 0 ? (() => {
+    let cumulative = 0
+    const rows = payments.map((p, i) => {
+      cumulative += Number(p.amount)
+      const balance = Math.max(0, invoice.total - cumulative)
+      return `
+        <tr style="border-bottom:1px solid #f1f5f9">
+          <td style="padding:8px 12px;font-size:12px;color:#94a3b8">${i + 1}</td>
+          <td style="padding:8px 12px;font-size:12px;color:#1e293b;font-weight:600;white-space:nowrap">${format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}</td>
+          <td style="padding:8px 12px;font-size:12px;color:#64748b">${p.note || '—'}</td>
+          <td style="padding:8px 12px;font-size:12px;color:#065f46;font-weight:700;text-align:right">&#2547;${Number(p.amount).toLocaleString()}</td>
+          <td style="padding:8px 12px;font-size:12px;font-weight:700;text-align:right;color:${balance > 0 ? '#b91c1c' : '#065f46'}">&#2547;${balance.toLocaleString()}</td>
+        </tr>`
+    })
+    return `
 <div style="margin-bottom:24px">
-  <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Payment History</div>
+  <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Payment Ledger</div>
   <table style="width:100%;border-collapse:collapse">
     <thead>
       <tr style="background:#f0fdf4">
         <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">#</th>
         <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">Date</th>
         <th style="padding:8px 12px;text-align:left;font-size:11px;color:#065f46;font-weight:600">Note</th>
-        <th style="padding:8px 12px;text-align:right;font-size:11px;color:#065f46;font-weight:600">Amount</th>
+        <th style="padding:8px 12px;text-align:right;font-size:11px;color:#065f46;font-weight:600">Amount Paid</th>
+        <th style="padding:8px 12px;text-align:right;font-size:11px;color:#b91c1c;font-weight:600">Balance Due</th>
       </tr>
     </thead>
-    <tbody>
-      ${payments.map((p, i) => `
-        <tr style="border-bottom:1px solid #f1f5f9">
-          <td style="padding:8px 12px;font-size:12px;color:#94a3b8">${i + 1}</td>
-          <td style="padding:8px 12px;font-size:12px;color:#1e293b;font-weight:600">${format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}</td>
-          <td style="padding:8px 12px;font-size:12px;color:#64748b">${p.note || '—'}</td>
-          <td style="padding:8px 12px;font-size:12px;color:#065f46;font-weight:700;text-align:right">&#2547;${Number(p.amount).toLocaleString()}</td>
-        </tr>`).join('')}
-    </tbody>
+    <tbody>${rows.join('')}</tbody>
   </table>
-</div>` : ''}
+</div>`
+  })() : ''}
 <div class="footer">Thank you for choosing ${clinicName || 'Ora Dental Clinic'} &middot; Powered by Ora</div>
 </body></html>`)
   win.document.close()
@@ -99,7 +107,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
     async function load() {
       const [{ data: itemData }, { data: payData }] = await Promise.all([
         supabase.from('invoice_items').select('*').eq('invoice_id', invoice.id),
-        supabase.from('invoice_payments').select('*').eq('invoice_id', invoice.id).order('date', { ascending: false }),
+        supabase.from('invoice_payments').select('*').eq('invoice_id', invoice.id).order('created_at', { ascending: true }),
       ])
       setItems(itemData || [])
       setPayments(payData || [])
@@ -124,7 +132,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
       }),
       supabase.from('invoices').update({ paid_amount: newPaid, status }).eq('id', invoice.id),
     ])
-    const { data: payData } = await supabase.from('invoice_payments').select('*').eq('invoice_id', invoice.id).order('date', { ascending: false })
+    const { data: payData } = await supabase.from('invoice_payments').select('*').eq('invoice_id', invoice.id).order('created_at', { ascending: true })
     setPayments(payData || [])
     setInv(prev => ({ ...prev, paid_amount: newPaid, status }))
     setPayAmount('')
@@ -219,20 +227,44 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
           {payments.length > 0 && (
             <div className="mb-5">
               <p className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                <Clock size={14} className="text-slate-400" /> Payment History
+                <Clock size={14} className="text-slate-400" /> Payment Ledger
               </p>
               <div className="border border-slate-100 rounded-xl overflow-hidden">
-                {payments.map((p, i) => (
-                  <div key={p.id} className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-slate-100' : ''}`}>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-700">৳{Number(p.amount).toLocaleString()}</p>
-                      {p.note && <p className="text-xs text-slate-400 mt-0.5">{p.note}</p>}
-                    </div>
-                    <p className="text-xs text-slate-400 font-medium">
-                      {format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}
-                    </p>
-                  </div>
-                ))}
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">#</th>
+                      <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">Date</th>
+                      <th className="text-left px-3 py-2 text-xs font-semibold text-slate-500">Note</th>
+                      <th className="text-right px-3 py-2 text-xs font-semibold text-emerald-600">Paid</th>
+                      <th className="text-right px-3 py-2 text-xs font-semibold text-red-500">Balance Due</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      let cumulative = 0
+                      return payments.map((p, i) => {
+                        cumulative += Number(p.amount)
+                        const balance = Math.max(0, inv.total - cumulative)
+                        return (
+                          <tr key={p.id} className="border-t border-slate-100">
+                            <td className="px-3 py-2.5 text-slate-400 text-xs">{i + 1}</td>
+                            <td className="px-3 py-2.5 font-medium text-slate-700 whitespace-nowrap">
+                              {format(new Date(p.date + 'T00:00:00'), 'dd MMM yyyy')}
+                            </td>
+                            <td className="px-3 py-2.5 text-slate-400 text-xs">{p.note || '—'}</td>
+                            <td className="px-3 py-2.5 text-right font-bold text-emerald-600">৳{Number(p.amount).toLocaleString()}</td>
+                            <td className="px-3 py-2.5 text-right font-bold">
+                              <span className={balance > 0 ? 'text-red-500' : 'text-emerald-600'}>
+                                ৳{balance.toLocaleString()}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    })()}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -308,7 +340,7 @@ export default function InvoicesPage() {
     e.stopPropagation()
     const [{ data: items }, { data: payments }] = await Promise.all([
       supabase.from('invoice_items').select('*').eq('invoice_id', inv.id),
-      supabase.from('invoice_payments').select('*').eq('invoice_id', inv.id).order('date', { ascending: true }),
+      supabase.from('invoice_payments').select('*').eq('invoice_id', inv.id).order('created_at', { ascending: true }),
     ])
     printInvoice(inv, items || [], clinicName, payments || [])
   }
