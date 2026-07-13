@@ -66,7 +66,7 @@ ${(invoice.paid_amount || 0) > 0 ? (() => {
       const bal = Math.max(0, invoice.total - cumulative)
       rows.push(`
         <tr style="border-bottom:1px solid #e2e8f0">
-          <td style="padding:12px 16px;font-size:13px;color:#94a3b8;font-style:italic">—</td>
+          <td style="padding:12px 16px;font-size:13px;color:#1e293b">${format(new Date(invoice.date + 'T00:00:00'), 'dd.MM.yy')}</td>
           <td style="padding:12px 16px;font-size:13px;color:#1e293b;font-weight:600;text-align:center">&#2547;${priorAmount.toLocaleString()}</td>
           <td style="padding:12px 16px;font-size:13px;font-weight:700;text-align:right;color:${bal > 0 ? '#b91c1c' : '#065f46'}">&#2547;${bal.toLocaleString()}</td>
         </tr>`)
@@ -251,8 +251,10 @@ function InvoiceDetailModal({ invoice, onClose, onUpdate, clinicName }) {
               cumulative += priorAmount
               const bal = Math.max(0, inv.total - cumulative)
               rows.push(
-                <tr key="prior" className="border-t border-slate-100 bg-slate-50">
-                  <td className="px-4 py-3 text-slate-400 text-sm italic">—</td>
+                <tr key="prior" className="border-t border-slate-100">
+                  <td className="px-4 py-3 text-slate-700 text-sm font-medium whitespace-nowrap">
+                    {format(new Date(inv.date + 'T00:00:00'), 'dd.MM.yy')}
+                  </td>
                   <td className="px-4 py-3 text-center font-semibold text-emerald-600">৳{priorAmount.toLocaleString()}</td>
                   <td className={`px-4 py-3 text-right font-bold ${bal > 0 ? 'text-red-500' : 'text-emerald-600'}`}>৳{bal.toLocaleString()}</td>
                 </tr>
