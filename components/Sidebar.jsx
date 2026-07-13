@@ -7,6 +7,7 @@ import {
   LayoutDashboard, CalendarDays, Users, FileText,
   TrendingDown, Pill, Settings, LogOut, AlertCircle, Menu, X
 } from 'lucide-react'
+import NotificationButton from '@/components/NotificationButton'
 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -82,8 +83,9 @@ function SidebarContent({ clinicName, onClose }) {
         })}
       </nav>
 
-      {/* Sign out */}
-      <div className="px-3 pb-6">
+      {/* Notifications + Sign out */}
+      <div className="px-3 pb-6 space-y-1">
+        <NotificationButton />
         <button
           onClick={handleSignOut}
           className="sidebar-link w-full text-red-300 hover:bg-red-500/20"
