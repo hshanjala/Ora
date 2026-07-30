@@ -293,7 +293,15 @@ export default function CreateInvoiceModal({ onClose, onSuccess, patientId, pati
 
             {/* Paid now */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-              <label className="font-semibold text-emerald-700 text-sm">Paid Now</label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={parseFloat(form.paid_now || 0) >= total && total > 0}
+                  onChange={e => setForm(f => ({ ...f, paid_now: e.target.checked ? String(total) : '' }))}
+                  className="w-4 h-4 rounded accent-emerald-600 cursor-pointer"
+                />
+                <span className="font-semibold text-emerald-700 text-sm">Paid Now</span>
+              </label>
               <div className="flex items-center gap-2">
                 <span className="text-slate-500 text-sm">৳</span>
                 <input
