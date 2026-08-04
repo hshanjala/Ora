@@ -311,7 +311,7 @@ export default function CreateInvoiceModal({ onClose, onSuccess, patientId, pati
                   placeholder="0.00"
                   value={form.paid_now}
                   onChange={handleFormChange}
-                  className="w-32 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-24 sm:w-32 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             </div>
