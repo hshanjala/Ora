@@ -564,12 +564,20 @@ function Step4Invoice({ items, setItems, form, setForm, patientName }) {
           <span className="text-xl font-black text-slate-800">৳{total.toLocaleString()}</span>
         </div>
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-          <label className="font-semibold text-emerald-700 text-sm">Paid Now</label>
+          <span className="font-semibold text-emerald-700 text-sm">Paid Now</span>
           <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 cursor-pointer" title="Mark as fully paid">
+              <input
+                type="checkbox"
+                checked={parseFloat(form.paid_now || 0) >= total && total > 0}
+                onChange={e => setForm(f => ({ ...f, paid_now: e.target.checked ? String(total) : '' }))}
+                className="w-4 h-4 rounded accent-emerald-600 cursor-pointer"
+              />
+            </label>
             <span className="text-slate-500 text-sm">৳</span>
             <input name="paid_now" type="number" min="0" step="0.01" placeholder="0.00"
               value={form.paid_now} onChange={handleFormChange}
-              className="w-28 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-24 sm:w-28 text-right border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-semibold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
         </div>
         <div className="flex items-center justify-between px-4 py-3">
