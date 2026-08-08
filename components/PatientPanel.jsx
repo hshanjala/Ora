@@ -320,6 +320,7 @@ function VisitRow({ visit, clinicId }) {
 // ── Edit Modal ────────────────────────────────────────────────────────────────
 function EditModal({ patient, onClose, onSaved }) {
   const supabase = createClient()
+  const photoRef = useRef(null)
   const [form, setForm] = useState({
     name: patient.name || '',
     phone: patient.phone || '',
@@ -330,10 +331,27 @@ function EditModal({ patient, onClose, onSaved }) {
     medical_history: patient.medical_history || '',
     referred_by: patient.referred_by || '',
   })
+  const [photoUrl, setPhotoUrl] = useState(patient.photo_url || null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [saving, setSaving] = useState(false)
 
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const ext = file.name.split('.').pop()
+    const path = `${user.id}/${patient.id}/photo.${ext}`
+    await supabase.storage.from('patient-images').upload(path, file, { upsert: true })
+    const { data: { publicUrl } } = supabase.storage.from('patient-images').getPublicUrl(path)
+    await supabase.from('patients').update({ photo_url: publicUrl }).eq('id', patient.id)
+    setPhotoUrl(publicUrl)
+    setUploadingPhoto(false)
+    e.target.value = ''
   }
 
   async function handleSave(e) {
@@ -350,7 +368,7 @@ function EditModal({ patient, onClose, onSaved }) {
       referred_by: form.referred_by || null,
     }).eq('id', patient.id)
     setSaving(false)
-    onSaved(form)
+    onSaved({ ...form, photo_url: photoUrl })
     onClose()
   }
 
@@ -362,6 +380,29 @@ function EditModal({ patient, onClose, onSaved }) {
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
         </div>
         <form onSubmit={handleSave} className="p-6 space-y-4">
+          {/* Photo upload */}
+          <div className="flex items-center gap-4">
+            <div
+              className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-100 flex items-center justify-center shrink-0 cursor-pointer relative"
+              onClick={() => photoRef.current?.click()}
+            >
+              {uploadingPhoto
+                ? <Loader2 size={20} className="animate-spin text-emerald-600" />
+                : photoUrl
+                  ? <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" />
+                  : <span className="text-2xl font-black text-emerald-600">{form.name?.[0]?.toUpperCase() || '?'}</span>
+              }
+            </div>
+            <div>
+              <button type="button" onClick={() => photoRef.current?.click()}
+                className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+                {photoUrl ? 'Change photo' : 'Upload photo'}
+              </button>
+              <p className="text-xs text-slate-400 mt-0.5">JPG, PNG — shown in patient list</p>
+            </div>
+            <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="label">Full Name</label>
