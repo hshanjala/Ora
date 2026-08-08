@@ -98,9 +98,9 @@ function VisitRow({ visit, clinicId }) {
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [notes, setNotes] = useState('')
-  const [notesLoaded, setNotesLoaded] = useState(false)
   const [notesSaving, setNotesSaving] = useState(false)
   const notesRef = useRef('')
+  const notesLoadedRef = useRef(false)
   const fileRef = useRef(null)
 
   async function loadImages() {
@@ -119,9 +119,9 @@ function VisitRow({ visit, clinicId }) {
   }
 
   async function loadNotes() {
-    if (notesLoaded) return
+    if (notesLoadedRef.current) return
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setNotesLoaded(true); return }
+    if (!user) { notesLoadedRef.current = true; return }
     const { data } = await supabase
       .from('visit_notes')
       .select('notes')
@@ -131,21 +131,22 @@ function VisitRow({ visit, clinicId }) {
       .maybeSingle()
     const loaded = data?.notes || ''
     notesRef.current = loaded
+    notesLoadedRef.current = true
     setNotes(loaded)
-    setNotesLoaded(true)
   }
 
   async function saveNotes() {
-    if (!notesLoaded) return
+    if (!notesLoadedRef.current) return
     setNotesSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setNotesSaving(false); return }
-    await supabase.from('visit_notes').upsert({
+    const { error } = await supabase.from('visit_notes').upsert({
       clinic_id: user.id,
       patient_id: visit.patientId,
       date: visit.date,
       notes: notesRef.current,
     }, { onConflict: 'clinic_id,patient_id,date' })
+    if (error) console.error('visit_notes save error:', error)
     setNotesSaving(false)
   }
 
