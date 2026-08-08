@@ -119,10 +119,12 @@ function VisitRow({ visit, clinicId }) {
 
   async function loadNotes() {
     if (notesLoaded) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setNotesLoaded(true); return }
     const { data } = await supabase
       .from('visit_notes')
       .select('notes')
-      .eq('clinic_id', clinicId)
+      .eq('clinic_id', user.id)
       .eq('patient_id', visit.patientId)
       .eq('date', visit.date)
       .maybeSingle()
@@ -133,8 +135,10 @@ function VisitRow({ visit, clinicId }) {
   async function saveNotes() {
     if (!notesLoaded) return
     setNotesSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setNotesSaving(false); return }
     await supabase.from('visit_notes').upsert({
-      clinic_id: clinicId,
+      clinic_id: user.id,
       patient_id: visit.patientId,
       date: visit.date,
       notes,
