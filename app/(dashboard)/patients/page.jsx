@@ -5,7 +5,8 @@ import AddPatientModal from '@/components/modals/AddPatientModal'
 import PatientPanel from '@/components/PatientPanel'
 import AddPrescriptionModal from '@/components/modals/AddPrescriptionModal'
 import CreateInvoiceModal from '@/components/modals/CreateInvoiceModal'
-import { Plus, Search, User, Phone, Mail, Users, Pill, FileText } from 'lucide-react'
+import AddAppointmentModal from '@/components/modals/AddAppointmentModal'
+import { Plus, Search, User, Phone, Mail, Users, Pill, FileText, CalendarPlus } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function PatientsPage() {
@@ -17,6 +18,7 @@ export default function PatientsPage() {
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [rxPatient, setRxPatient] = useState(null)
   const [invoicePatient, setInvoicePatient] = useState(null)
+  const [schedulePatient, setSchedulePatient] = useState(null)
 
   async function loadPatients() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -101,8 +103,10 @@ export default function PatientsPage() {
                   >
                     <td className="table-td">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-                          <User size={16} className="text-emerald-600" />
+                        <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden bg-emerald-100 flex items-center justify-center">
+                          {patient.photo_url
+                            ? <img src={patient.photo_url} alt={patient.name} className="w-full h-full object-cover" />
+                            : <User size={16} className="text-emerald-600" />}
                         </div>
                         <div>
                           <span className="font-semibold text-slate-800 hover:text-emerald-700 transition-colors block">
@@ -135,6 +139,13 @@ export default function PatientsPage() {
                     </td>
                     <td className="table-td" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
+                        <button
+                          onClick={e => { e.stopPropagation(); setSchedulePatient(patient) }}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="New Appointment"
+                        >
+                          <CalendarPlus size={15} />
+                        </button>
                         <button
                           onClick={e => { e.stopPropagation(); setRxPatient(patient) }}
                           className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
@@ -185,6 +196,13 @@ export default function PatientsPage() {
           patientName={invoicePatient.name}
           onClose={() => setInvoicePatient(null)}
           onSuccess={() => setInvoicePatient(null)}
+        />
+      )}
+      {schedulePatient && (
+        <AddAppointmentModal
+          defaultPatient={schedulePatient}
+          onClose={() => setSchedulePatient(null)}
+          onSuccess={() => setSchedulePatient(null)}
         />
       )}
     </div>

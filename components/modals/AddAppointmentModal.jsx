@@ -4,14 +4,14 @@ import { X, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 
-export default function AddAppointmentModal({ onClose, onSuccess, defaultDate }) {
+export default function AddAppointmentModal({ onClose, onSuccess, defaultDate, defaultPatient }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [patients, setPatients] = useState([])
   const [error, setError] = useState('')
-  const [patientQuery, setPatientQuery] = useState('')
+  const [patientQuery, setPatientQuery] = useState(defaultPatient?.name || '')
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [selectedPatientId, setSelectedPatientId] = useState(null)
+  const [selectedPatientId, setSelectedPatientId] = useState(defaultPatient?.id || null)
   const inputRef = useRef(null)
   const dropdownRef = useRef(null)
 
