@@ -97,6 +97,9 @@ function VisitRow({ visit, clinicId }) {
   const [imagesLoaded, setImagesLoaded] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [notes, setNotes] = useState('')
+  const [notesLoaded, setNotesLoaded] = useState(false)
+  const [notesSaving, setNotesSaving] = useState(false)
   const fileRef = useRef(null)
 
   async function loadImages() {
@@ -114,8 +117,36 @@ function VisitRow({ visit, clinicId }) {
     setImagesLoaded(true)
   }
 
+  async function loadNotes() {
+    if (notesLoaded) return
+    const { data } = await supabase
+      .from('visit_notes')
+      .select('notes')
+      .eq('clinic_id', clinicId)
+      .eq('patient_id', visit.patientId)
+      .eq('date', visit.date)
+      .maybeSingle()
+    setNotes(data?.notes || '')
+    setNotesLoaded(true)
+  }
+
+  async function saveNotes() {
+    if (!notesLoaded) return
+    setNotesSaving(true)
+    await supabase.from('visit_notes').upsert({
+      clinic_id: clinicId,
+      patient_id: visit.patientId,
+      date: visit.date,
+      notes,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'clinic_id,patient_id,date' })
+    setNotesSaving(false)
+  }
+
   async function handleToggle() {
-    if (!open) await loadImages()
+    if (!open) {
+      await Promise.all([loadImages(), loadNotes()])
+    }
     setOpen(o => !o)
   }
 
@@ -276,6 +307,31 @@ function VisitRow({ visit, clinicId }) {
           ) : (
             <p style={{ fontSize: 11, color: '#cbd5e1', marginBottom: 12 }}>No invoice for this visit</p>
           )}
+
+          {/* Treatment Notes */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+              <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', margin: 0 }}>Treatment Notes</p>
+              {notesSaving && <span style={{ fontSize: 10, color: '#059669' }}>Saving…</span>}
+            </div>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              onBlur={saveNotes}
+              placeholder="Add treatment details, doctor name, observations…"
+              rows={3}
+              style={{
+                width: '100%', background: '#fff',
+                border: '0.5px solid #e2e8f0', borderRadius: 8,
+                padding: '8px 12px', fontSize: 12, color: '#1e293b',
+                resize: 'vertical', fontFamily: 'inherit',
+                outline: 'none', lineHeight: 1.5,
+                boxSizing: 'border-box',
+              }}
+              onFocus={e => { e.target.style.borderColor = '#059669' }}
+              onBlurCapture={e => { e.target.style.borderColor = '#e2e8f0' }}
+            />
+          </div>
 
           {/* X-rays & Images */}
           <div>
