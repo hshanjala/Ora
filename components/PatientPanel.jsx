@@ -100,6 +100,7 @@ function VisitRow({ visit, clinicId }) {
   const [notes, setNotes] = useState('')
   const [notesLoaded, setNotesLoaded] = useState(false)
   const [notesSaving, setNotesSaving] = useState(false)
+  const notesRef = useRef('')
   const fileRef = useRef(null)
 
   async function loadImages() {
@@ -128,7 +129,9 @@ function VisitRow({ visit, clinicId }) {
       .eq('patient_id', visit.patientId)
       .eq('date', visit.date)
       .maybeSingle()
-    setNotes(data?.notes || '')
+    const loaded = data?.notes || ''
+    notesRef.current = loaded
+    setNotes(loaded)
     setNotesLoaded(true)
   }
 
@@ -141,8 +144,7 @@ function VisitRow({ visit, clinicId }) {
       clinic_id: user.id,
       patient_id: visit.patientId,
       date: visit.date,
-      notes,
-      updated_at: new Date().toISOString(),
+      notes: notesRef.current,
     }, { onConflict: 'clinic_id,patient_id,date' })
     setNotesSaving(false)
   }
@@ -320,7 +322,7 @@ function VisitRow({ visit, clinicId }) {
             </div>
             <textarea
               value={notes}
-              onChange={e => setNotes(e.target.value)}
+              onChange={e => { notesRef.current = e.target.value; setNotes(e.target.value) }}
               onBlur={saveNotes}
               placeholder="Add treatment details, doctor name, observations…"
               rows={3}
