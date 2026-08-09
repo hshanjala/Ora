@@ -1,9 +1,9 @@
-import { Plus_Jakarta_Sans } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
-const jakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-jakarta',
+  variable: '--font-inter',
   display: 'swap',
 })
 
@@ -14,8 +14,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={jakarta.variable}>
-      <body className="font-sans bg-slate-50 text-slate-800 antialiased">
+    <html lang="en" className={inter.variable}>
+      <body className="font-sans bg-[#fafafa] text-gray-900 antialiased">
         {children}
       </body>
     </html>
