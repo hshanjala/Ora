@@ -194,7 +194,7 @@ export default function DashboardPage() {
             {greeting()}, {settings?.doctor_name || 'Doctor'}!
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">
-            {format(new Date(), 'EEEE, MMMM d, yyyy')} · Here&apos;s your clinic overview
+            {format(new Date(), 'EEEE, MMMM d, yyyy')}
           </p>
         </div>
         <SubscriptionBanner settings={settings} />
