@@ -28,13 +28,13 @@ function PaymentModal({ onClose }) {
         <div className="p-6">
           <div className="flex items-start justify-between mb-5">
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Renew Subscription</h2>
-              <p className="text-sm text-slate-500 mt-0.5">Send ৳299 to renew for 1 month</p>
+              <h2 className="text-base font-semibold text-gray-900">Renew Subscription</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Send ৳299 to renew for 1 month</p>
             </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
           </div>
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
-            <p className="text-sm font-semibold text-amber-800 mb-2">How to pay</p>
+          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-4">
+            <p className="text-sm font-medium text-amber-800 mb-2">How to pay</p>
             <ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside">
               <li>Send ৳299 to one of the numbers below</li>
               <li>Use &quot;Send Money&quot; option</li>
@@ -43,31 +43,26 @@ function PaymentModal({ onClose }) {
             </ol>
           </div>
           {[
-            { label: 'bKash', num: '01629775202', bg: 'bg-pink-100', text: 'text-pink-600', code: 'bkash' },
-            { label: 'Nagad', num: '01799900323', bg: 'bg-orange-100', text: 'text-orange-600', code: 'nagad' },
-          ].map(({ label, num, bg, text, code }) => (
-            <div key={code} className="border border-slate-200 rounded-xl p-4 mb-3">
+            { label: 'bKash', num: '01629775202', code: 'bkash' },
+            { label: 'Nagad', num: '01799900323', code: 'nagad' },
+          ].map(({ label, num, code }) => (
+            <div key={code} className="border border-gray-100 rounded-xl p-4 mb-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 ${bg} ${text} rounded-xl flex items-center justify-center font-black text-sm`}>
-                    {label.slice(0, 2)}
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">{label}</p>
-                    <p className="font-bold text-slate-800 text-lg">{num}</p>
-                  </div>
+                <div>
+                  <p className="text-xs text-gray-400">{label}</p>
+                  <p className="font-semibold text-gray-900 text-base">{num}</p>
                 </div>
                 <button
                   onClick={() => copy(num, code)}
-                  className="flex items-center gap-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold transition-colors"
+                  className="flex items-center gap-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-lg font-medium transition-colors"
                 >
-                  <Copy size={13} />
+                  <Copy size={12} />
                   {copied === code ? 'Copied!' : 'Copy'}
                 </button>
               </div>
             </div>
           ))}
-          <p className="text-xs text-slate-400 text-center mt-2">
+          <p className="text-xs text-gray-400 text-center mt-2">
             Account extended within 24 hours after payment.
           </p>
         </div>
@@ -77,16 +72,16 @@ function PaymentModal({ onClose }) {
 }
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
-function StatCard({ label, value, icon: Icon, color, textColor }) {
+function StatCard({ label, value, icon: Icon, iconClass }) {
   return (
-    <div className={`${color} rounded-2xl p-5 flex flex-col gap-3`}>
-      <div className="flex items-center justify-between">
-        <p className={`text-sm font-semibold ${textColor} opacity-80`}>{label}</p>
-        <div className={`w-9 h-9 rounded-xl ${textColor} bg-white/30 flex items-center justify-center`}>
-          <Icon size={18} />
+    <div className="card p-5">
+      <p className="text-xs font-medium text-gray-400 mb-3">{label}</p>
+      <div className="flex items-end justify-between">
+        <p className="text-2xl font-semibold text-gray-900">{value}</p>
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconClass}`}>
+          <Icon size={14} />
         </div>
       </div>
-      <p className={`text-3xl font-black ${textColor}`}>{value}</p>
     </div>
   )
 }
@@ -190,14 +185,15 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="p-5 md:p-8 max-w-7xl mx-auto">
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-8">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-slate-800">
+          <h1 className="text-xl font-semibold text-gray-900">
             {greeting()}, {settings?.doctor_name || 'Doctor'}!
           </h1>
-          <p className="text-slate-500 text-sm mt-0.5">
+          <p className="text-sm text-gray-400 mt-0.5">
             {format(new Date(), 'EEEE, MMMM d, yyyy')} · Here&apos;s your clinic overview
           </p>
         </div>
@@ -205,49 +201,46 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-6">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</p>
-        <div className="flex flex-wrap gap-3">
-          <button onClick={() => setShowQuickAdd(true)}
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer">
-            <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0">
-              <UserPlus size={17} className="text-white" />
-            </div>
-            <span className="text-sm font-semibold text-slate-700">Quick Add</span>
+      <div className="mb-7">
+        <p className="text-xs font-medium text-gray-400 mb-3">Quick Actions</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowQuickAdd(true)}
+            className="btn-primary"
+          >
+            <UserPlus size={15} />
+            Quick Add
           </button>
-
-          <button onClick={() => setShowSchedule(true)}
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
-              <CalendarPlus size={17} className="text-white" />
-            </div>
-            <span className="text-sm font-semibold text-slate-700">Add Schedule</span>
+          <button
+            onClick={() => setShowSchedule(true)}
+            className="btn-secondary"
+          >
+            <CalendarPlus size={15} />
+            Add Schedule
           </button>
-
-          <button onClick={() => setShowInvoice(true)}
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer">
-            <div className="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center shrink-0">
-              <FileText size={17} className="text-white" />
-            </div>
-            <span className="text-sm font-semibold text-slate-700">Create Invoice</span>
+          <button
+            onClick={() => setShowInvoice(true)}
+            className="btn-secondary"
+          >
+            <FileText size={15} />
+            Create Invoice
           </button>
-
-          <button onClick={() => setShowExpense(true)}
-            className="flex items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 transition-all duration-150 cursor-pointer">
-            <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
-              <TrendingDown size={17} className="text-white" />
-            </div>
-            <span className="text-sm font-semibold text-slate-700">Add Expenses</span>
+          <button
+            onClick={() => setShowExpense(true)}
+            className="btn-secondary"
+          >
+            <TrendingDown size={15} />
+            Add Expense
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-        <StatCard label="Bookings Today"   value={stats.bookings}                        icon={Calendar}    color="bg-teal-50"   textColor="text-teal-700" />
-        <StatCard label="Monthly Income"   value={`৳${stats.income.toLocaleString()}`}    icon={TrendingUp}  color="bg-blue-50"   textColor="text-blue-700" />
-        <StatCard label="Monthly Expenses" value={`৳${stats.expenses.toLocaleString()}`}  icon={DollarSign}  color="bg-orange-50" textColor="text-orange-700" />
-        <StatCard label="Monthly Dues"        value={`৳${stats.dues.toLocaleString()}`}      icon={AlertCircle} color="bg-red-50"    textColor="text-red-600" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <StatCard label="Bookings Today"   value={stats.bookings}                       icon={Calendar}    iconClass="bg-emerald-50 text-emerald-600" />
+        <StatCard label="Monthly Income"   value={`৳${stats.income.toLocaleString()}`}   icon={TrendingUp}  iconClass="bg-emerald-50 text-emerald-600" />
+        <StatCard label="Monthly Expenses" value={`৳${stats.expenses.toLocaleString()}`} icon={DollarSign}  iconClass="bg-gray-100 text-gray-400" />
+        <StatCard label="Monthly Dues"     value={`৳${stats.dues.toLocaleString()}`}     icon={AlertCircle} iconClass="bg-red-50 text-red-400" />
       </div>
 
       {/* Bottom grid */}
@@ -255,21 +248,21 @@ export default function DashboardPage() {
 
         {/* Today's Schedule */}
         <div className="lg:col-span-2 card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-slate-800">Today&apos;s Schedule</h2>
-            <Link href="/schedule" className="text-xs text-emerald-600 font-semibold hover:underline">View all →</Link>
+          <div className="flex items-center justify-between px-5 pt-5 pb-3">
+            <h2 className="text-sm font-semibold text-gray-700">Today&apos;s Schedule</h2>
+            <Link href="/schedule" className="text-xs text-emerald-600 font-medium hover:underline">View all →</Link>
           </div>
           {todaySchedule.length === 0 ? (
-            <div className="text-center py-10 text-slate-400">
-              <Calendar size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">No appointments today</p>
-              <button onClick={() => setShowSchedule(true)} className="text-emerald-600 text-xs font-semibold mt-1 block hover:underline mx-auto">Add one →</button>
+            <div className="text-center py-12 text-gray-300">
+              <Calendar size={28} className="mx-auto mb-2" />
+              <p className="text-sm text-gray-400">No appointments today</p>
+              <button onClick={() => setShowSchedule(true)} className="text-emerald-600 text-xs font-medium mt-1 hover:underline">Add one →</button>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-gray-50">
                     <th className="table-th">Time</th>
                     <th className="table-th">Patient</th>
                     <th className="table-th">Procedure</th>
@@ -280,22 +273,22 @@ export default function DashboardPage() {
                 <tbody>
                   {todaySchedule.map(appt => (
                     <tr key={appt.id} className="table-tr">
-                      <td className="table-td font-semibold text-slate-600 whitespace-nowrap">
+                      <td className="table-td font-medium text-gray-600 whitespace-nowrap">
                         {appt.time ? format(new Date(`2000-01-01T${appt.time}`), 'h:mm a') : '—'}
                       </td>
                       <td className="table-td font-medium">{appt.patients?.name || '—'}</td>
-                      <td className="table-td text-slate-500">{appt.procedure || '—'}</td>
+                      <td className="table-td text-gray-400">{appt.procedure || '—'}</td>
                       <td className="table-td">{statusBadge(appt.status)}</td>
                       <td className="table-td">
                         {appt.status === 'scheduled' && (
                           <div className="flex gap-1">
-                            <button onClick={() => updateStatus(appt.id, 'checked-in')} className="text-blue-600 hover:text-blue-700" title="Check In"><CheckCircle size={16} /></button>
-                            <button onClick={() => updateStatus(appt.id, 'completed')} className="text-emerald-600 hover:text-emerald-700" title="Complete"><Clock size={16} /></button>
-                            <button onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-400 hover:text-red-600" title="Cancel"><XCircle size={16} /></button>
+                            <button onClick={() => updateStatus(appt.id, 'checked-in')} className="text-blue-500 hover:text-blue-600" title="Check In"><CheckCircle size={15} /></button>
+                            <button onClick={() => updateStatus(appt.id, 'completed')} className="text-emerald-500 hover:text-emerald-600" title="Complete"><Clock size={15} /></button>
+                            <button onClick={() => updateStatus(appt.id, 'cancelled')} className="text-gray-300 hover:text-red-400" title="Cancel"><XCircle size={15} /></button>
                           </div>
                         )}
                         {appt.status === 'checked-in' && (
-                          <button onClick={() => updateStatus(appt.id, 'completed')} className="text-emerald-600 text-xs font-semibold hover:underline">Mark Done</button>
+                          <button onClick={() => updateStatus(appt.id, 'completed')} className="text-emerald-600 text-xs font-medium hover:underline">Mark Done</button>
                         )}
                       </td>
                     </tr>
@@ -307,29 +300,27 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="card">
-          <h2 className="font-bold text-slate-800 mb-4">Recent Activity</h2>
+        <div className="card p-5">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">Recent Activity</h2>
           {recentActivity.length === 0 ? (
-            <div className="text-center py-10 text-slate-400">
-              <RefreshCw size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">No activity yet</p>
+            <div className="text-center py-10 text-gray-300">
+              <RefreshCw size={24} className="mx-auto mb-2" />
+              <p className="text-sm text-gray-400">No activity yet</p>
             </div>
           ) : (
             <div className="space-y-3">
               {recentActivity.map(item => (
-                <div key={item.id} className="flex gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                    item.type === 'invoice' ? 'bg-violet-100 text-violet-600' : 'bg-blue-100 text-blue-600'
-                  }`}>
-                    {item.type === 'invoice' ? <FileText size={16} /> : <Calendar size={16} />}
+                <div key={item.id} className="flex gap-3 items-start">
+                  <div className="w-8 h-8 bg-gray-100 text-gray-400 rounded-lg flex items-center justify-center shrink-0">
+                    {item.type === 'invoice' ? <FileText size={14} /> : <Calendar size={14} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-700 truncate">
+                    <p className="text-sm font-medium text-gray-700 truncate">
                       {item.type === 'invoice'
                         ? `Invoice ${item.invoice_number || '#'} — ${item.patients?.name}`
                         : `Appointment — ${item.patients?.name}`}
                     </p>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-gray-400 mt-0.5">
                       {item.type === 'invoice'
                         ? `৳${item.total?.toLocaleString()} · ${item.status}`
                         : `${item.date} at ${item.time ? format(new Date(`2000-01-01T${item.time}`), 'h:mm a') : '—'}`}
@@ -342,7 +333,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Overlays */}
       {showQuickAdd && (
         <QuickAddFlow
           onClose={() => setShowQuickAdd(false)}
