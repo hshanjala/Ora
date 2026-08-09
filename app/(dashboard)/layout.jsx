@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f7f8f9' }}>
         <div className="text-center">
           <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <span className="text-2xl font-black text-white">O</span>
@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen" style={{ background: '#f7f8f9' }}>
       <Sidebar clinicName={settings?.clinic_name} />
       <main className="flex-1 overflow-x-hidden pt-14 md:pt-0">
         {children}
