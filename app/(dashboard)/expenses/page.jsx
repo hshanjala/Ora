@@ -86,7 +86,7 @@ export default function ExpensesPage() {
   const isFiltered = Boolean(search) || filterCategory !== 'all'
 
   return (
-    <div className="mx-auto max-w-[1440px] p-4 md:p-6">
+    <div className="mx-auto max-w-content p-4 md:p-6">
       <PageHeader
         title="Expenses"
         subtitle="Track all clinic expenses"

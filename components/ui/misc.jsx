@@ -43,6 +43,7 @@ const Progress = forwardRef(function Progress(
       className={cn('h-1.5 w-full overflow-hidden rounded-full bg-surface-hover', className)}
       {...props}
     >
+      {/* design-lint-allow-inline-style: width is a runtime percentage */}
       <div
         className={cn(
           'h-full rounded-full transition-all duration-base ease-out',

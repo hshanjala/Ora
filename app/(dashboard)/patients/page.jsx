@@ -82,7 +82,7 @@ export default function PatientsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1440px] p-4 md:p-6">
+    <div className="mx-auto max-w-content p-4 md:p-6">
       <PageHeader
         title="Patients"
         subtitle={`${patients.length} patient${patients.length !== 1 ? 's' : ''} registered`}
@@ -125,7 +125,7 @@ export default function PatientsPage() {
             {
               key: 'email', header: 'Email', hideBelow: 'md',
               cell: (p) => p.email
-                ? <span className="block max-w-[180px] truncate text-secondary">{p.email}</span>
+                ? <span className="block max-w-cell truncate text-secondary">{p.email}</span>
                 : <span className="text-tertiary">—</span>,
             },
             {

@@ -17,16 +17,25 @@
   --gray-100: #F1F2F4; /* hover, active nav */
   --gray-200: #E7E9EC; /* hairline border — the most important token */
   --gray-300: #D5D8DD; /* strong border, disabled */
-  --gray-400: #A0A6B0; /* placeholder, tertiary text */
-  --gray-500: #6D7480; /* secondary text, labels */
-  --gray-700: #3C424C;
-  --gray-900: #14171C; /* primary text */
+  /* The three text greys are set by contrast, not by eye: each clears WCAG AA
+     (4.5:1) against the WORST background it can land on — surface-hover — while
+     staying visually distinct from its neighbours. See scripts/check-contrast.mjs. */
+  --gray-400: #666D78; /* tertiary text — 4.66:1 worst case */
+  --gray-500: #464D58; /* secondary text, labels — 7.61:1 worst case */
+  --gray-700: #2C323B;
+  --gray-900: #14171C; /* primary text — 16.04:1 worst case */
+
+  /* Placeholder and disabled text are the one exception: WCAG exempts
+     incidental and disabled text, and a compliant grey here would be
+     indistinguishable from real content. */
+  --gray-placeholder: #8A909B;
 
   /* ── Raw scale · Brand green (clinical, calm, not neon) ────────────────── */
   --green-50:  #EDF8F2;
   --green-100: #D2EEDF;
   --green-500: #1FA363;
-  --green-600: #16874F; /* primary actions */
+  --green-600: #16874F; /* primary actions — 4.55:1 with white text */
+  --green-650: #0F7A46; /* success pill foreground — 4.96:1 on green-50 */
   --green-700: #0F6A3E;
 
   /* ── Raw scale · Status (badges, alerts, chart marks ONLY) ─────────────── */
@@ -52,10 +61,11 @@
   --border-strong:  var(--gray-300);
 
   /* Text */
-  --text-primary:   var(--gray-900);
-  --text-secondary: var(--gray-500);
-  --text-tertiary:  var(--gray-400);
-  --text-inverse:   var(--gray-0);
+  --text-primary:     var(--gray-900);
+  --text-secondary:   var(--gray-500);
+  --text-tertiary:    var(--gray-400);
+  --text-placeholder: var(--gray-placeholder);
+  --text-inverse:     var(--gray-0);
 
   /* Accent */
   --accent:        var(--green-600);
@@ -70,7 +80,7 @@
   --overlay: rgba(16, 24, 40, 0.4);
 
   /* Status (fg on bg pairs) */
-  --status-success-fg: var(--green-600);
+  --status-success-fg: var(--green-650);
   --status-success-bg: var(--green-50);
   --status-warning-fg: var(--amber-700);
   --status-warning-bg: var(--amber-50);
@@ -86,6 +96,10 @@
   --sidebar-fg-active:   var(--gray-900);
   --sidebar-item-active: var(--gray-100);
   --sidebar-border:      var(--gray-200);
+
+  /* ── Layout ────────────────────────────────────────────────────────────── */
+  --content-max: 1440px; /* page content column */
+  --cell-max: 10rem;     /* truncating table cell */
 
   /* ── Radius ────────────────────────────────────────────────────────────── */
   --radius-sm:  6px;

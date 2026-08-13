@@ -46,6 +46,7 @@ export function Specimen({ label, note, className, children }) {
 export function Swatch({ token, util, value, use }) {
   return (
     <div className="flex items-center gap-3 py-2">
+      {/* design-lint-allow-inline-style: swatch reads the live token variable */}
       <span
         className="h-9 w-9 shrink-0 rounded-md border"
         style={{ background: `var(${token.replace('-*', '-fg')})` }}
