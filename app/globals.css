@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Everything visual resolves to a token in app/styles/tokens.css.
+   The legacy @layer components proto-system (.btn-primary, .card, .input,
+   .badge-*, .modal-*, .table-*, .spinner) was deleted once screen migration
+   removed its last consumer — components/ui/ replaces all of it. */
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -17,8 +22,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Money, IDs, dates: tabular figures so columns align. Applied by the
-     design-system components (Phase 2); available as a utility everywhere. */
+  /* Money, IDs, dates: tabular figures so columns align. */
   .tabular {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
@@ -31,79 +35,18 @@
   }
 }
 
-/* Legacy component classes: still serving un-migrated screens. Each block is
-   deleted as Phase 4 replaces its last consumer. */
-@layer components {
-  /* ── Buttons ─────────────────────────────────────── */
-  .btn-primary {
-    @apply inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition-colors cursor-pointer;
-  }
-
-  .btn-secondary {
-    @apply inline-flex items-center gap-2 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 text-sm font-medium px-3.5 py-2 rounded-lg border border-gray-200 transition-colors cursor-pointer;
-  }
-
-  /* ── Card ────────────────────────────────────────── */
-  .card {
-    @apply bg-white rounded-xl border border-gray-100 overflow-hidden;
-  }
-
-  /* ── Input ───────────────────────────────────────── */
-  .input {
-    @apply w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-400 transition-all;
-  }
-
-  /* ── Label ───────────────────────────────────────── */
-  .label {
-    @apply block text-xs font-medium text-gray-500 mb-1.5;
-  }
-
-  /* ── Badges ──────────────────────────────────────── */
-  .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
-  }
-
-  .badge-green  { @apply badge bg-emerald-50 text-emerald-700; }
-  .badge-yellow { @apply badge bg-amber-50 text-amber-700; }
-  .badge-red    { @apply badge bg-red-50 text-red-600; }
-  .badge-blue   { @apply badge bg-blue-50 text-blue-700; }
-  .badge-gray   { @apply badge bg-gray-100 text-gray-500; }
-
-  /* ── Modal ───────────────────────────────────────── */
-  .modal-overlay {
-    @apply fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4;
-  }
-
-  .modal-box {
-    @apply bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto;
-  }
-
-  /* ── Table ───────────────────────────────────────── */
-  .table-th {
-    @apply text-xs font-medium text-gray-400 px-4 py-3 text-left;
-  }
-
-  .table-td {
-    @apply px-4 py-3 text-sm text-gray-700;
-  }
-
-  .table-tr {
-    @apply border-b border-gray-50 hover:bg-gray-50/70 transition-colors duration-100;
-  }
-}
-
 /* Scrollbar */
 ::-webkit-scrollbar       { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
-/* Layout helpers for sheets/bottom bars */
+/* Layout helpers for sheets and bottom bars */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 .max-h-sheet { max-height: 85dvh; }
 
-/* Overlay + modal entrances (durations collapse to 0 under reduced motion
-   because they read the motion tokens) */
+/* Overlay, modal and sheet entrances. Durations read the motion tokens, so
+   they collapse to 0ms under prefers-reduced-motion. */
 @keyframes overlay-in {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -120,18 +63,7 @@
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
-.animate-overlay-in     { animation: overlay-in var(--duration-base) var(--ease-out); }
-.animate-modal-in       { animation: modal-in var(--duration-base) var(--ease-out); }
+.animate-overlay-in      { animation: overlay-in var(--duration-base) var(--ease-out); }
+.animate-modal-in        { animation: modal-in var(--duration-base) var(--ease-out); }
 .animate-sheet-in-right  { animation: sheet-in-right var(--duration-slow) var(--ease-out); }
 .animate-sheet-in-bottom { animation: sheet-in-bottom var(--duration-slow) var(--ease-out); }
-
-/* Spinner */
-@keyframes spin { to { transform: rotate(360deg); } }
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #059669;
-  border-radius: 50%;
-  animation: spin 0.65s linear infinite;
-}
