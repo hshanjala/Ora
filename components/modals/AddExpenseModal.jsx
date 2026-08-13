@@ -1,16 +1,18 @@
 'use client'
 import { useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
-
-const CATEGORIES = [
-  'Rent', 'Salaries', 'Utilities', 'Equipment', 'Supplies',
-  'Medicines', 'Lab Fees', 'Marketing', 'Maintenance', 'Other'
-]
+import {
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalClose,
+  Button, FormField, Input, DateInput, Alert,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  useToast,
+} from '@/components/ui'
+import { EXPENSE_CATEGORIES } from '@/components/expenses/categories'
 
 export default function AddExpenseModal({ onClose, onSuccess }) {
   const supabase = createClient()
+  const toast = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
@@ -45,54 +47,69 @@ export default function AddExpenseModal({ onClose, onSuccess }) {
       return
     }
 
+    toast.success('Expense added', `${form.category} · ৳${Number(form.amount).toLocaleString()}`)
     onSuccess()
     onClose()
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="font-bold text-slate-800 text-lg">Add Expense</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
-        </div>
+    <Modal open onOpenChange={(v) => { if (!v) onClose() }}>
+      <ModalContent size="sm">
+        <ModalHeader title="Add expense" />
+        <form onSubmit={handleSubmit} className="contents">
+          <ModalBody className="space-y-4">
+            {error && <Alert status="danger">{error}</Alert>}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
+            <FormField label="Category" required>
+              <Select
+                value={form.category || undefined}
+                onValueChange={(v) => setForm(prev => ({ ...prev, category: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  {EXPENSE_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </FormField>
 
-          <div>
-            <label className="label">Category *</label>
-            <select name="category" className="input" value={form.category} onChange={handleChange} required>
-              <option value="">Select category</option>
-              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-            </select>
-          </div>
+            <FormField label="Description">
+              <Input
+                name="description"
+                placeholder="Brief description of expense"
+                value={form.description}
+                onChange={handleChange}
+              />
+            </FormField>
 
-          <div>
-            <label className="label">Description</label>
-            <input name="description" className="input" placeholder="Brief description of expense" value={form.description} onChange={handleChange} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label">Amount (৳) *</label>
-              <input name="amount" type="number" min="0" step="0.01" className="input" placeholder="0.00" value={form.amount} onChange={handleChange} required />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Amount (৳)" required>
+                <Input
+                  name="amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={form.amount}
+                  onChange={handleChange}
+                  className="tabular"
+                  required
+                />
+              </FormField>
+              <FormField label="Date" required>
+                <DateInput name="date" value={form.date} onChange={handleChange} required />
+              </FormField>
             </div>
-            <div>
-              <label className="label">Date *</label>
-              <input name="date" type="date" className="input" value={form.date} onChange={handleChange} required />
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">Cancel</button>
-            <button type="submit" disabled={loading} className="btn-primary flex-1 justify-center">
-              {loading && <Loader2 size={16} className="animate-spin" />}
-              {loading ? 'Saving...' : 'Add Expense'}
-            </button>
-          </div>
+          </ModalBody>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button type="button" variant="secondary">Cancel</Button>
+            </ModalClose>
+            <Button type="submit" loading={loading}>
+              {loading ? 'Saving…' : 'Add expense'}
+            </Button>
+          </ModalFooter>
         </form>
-      </div>
-    </div>
+      </ModalContent>
+    </Modal>
   )
 }
