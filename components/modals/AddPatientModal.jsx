@@ -1,16 +1,22 @@
 'use client'
 import { useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import {
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalClose,
+  Button, FormField, Input, Textarea, Alert,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  useToast,
+} from '@/components/ui'
 
 export default function AddPatientModal({ onClose, onSuccess }) {
   const supabase = createClient()
+  const toast = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     name: '', phone: '', email: '',
     age: '', gender: '',
-    address: '', medical_history: '', referred_by: ''
+    address: '', medical_history: '', referred_by: '',
   })
 
   function handleChange(e) {
@@ -42,70 +48,67 @@ export default function AddPatientModal({ onClose, onSuccess }) {
       return
     }
 
+    toast.success('Patient added', form.name)
     onSuccess()
     onClose()
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="font-bold text-slate-800 text-lg">Add New Patient</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
-        </div>
+    <Modal open onOpenChange={(v) => { if (!v) onClose() }}>
+      <ModalContent>
+        <ModalHeader title="Add new patient" />
+        <form onSubmit={handleSubmit} className="contents">
+          <ModalBody className="space-y-4">
+            {error && <Alert status="danger">{error}</Alert>}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3">{error}</div>}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="label">Full Name *</label>
-              <input name="name" className="input" placeholder="Patient's full name" value={form.name} onChange={handleChange} required />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField label="Full name" required className="sm:col-span-2">
+                <Input name="name" placeholder="Patient's full name" value={form.name} onChange={handleChange} required />
+              </FormField>
+              <FormField label="Phone">
+                <Input name="phone" placeholder="01XXXXXXXXX" value={form.phone} onChange={handleChange} />
+              </FormField>
+              <FormField label="Email">
+                <Input name="email" type="email" placeholder="patient@email.com" value={form.email} onChange={handleChange} />
+              </FormField>
+              <FormField label="Age">
+                <Input name="age" type="number" min="0" max="120" placeholder="e.g. 35" value={form.age} onChange={handleChange} />
+              </FormField>
+              <FormField label="Gender">
+                <Select value={form.gender || undefined} onValueChange={(v) => setForm(prev => ({ ...prev, gender: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+              <FormField label="Address" className="sm:col-span-2">
+                <Input name="address" placeholder="Full address" value={form.address} onChange={handleChange} />
+              </FormField>
+              <FormField label="Referred by" className="sm:col-span-2">
+                <Input name="referred_by" placeholder="Doctor or clinic name" value={form.referred_by} onChange={handleChange} />
+              </FormField>
+              <FormField
+                label="Medical history / notes"
+                className="sm:col-span-2"
+                hint="Allergies, chronic conditions, previous treatments"
+              >
+                <Textarea name="medical_history" value={form.medical_history} onChange={handleChange} />
+              </FormField>
             </div>
-            <div>
-              <label className="label">Phone</label>
-              <input name="phone" className="input" placeholder="01XXXXXXXXX" value={form.phone} onChange={handleChange} />
-            </div>
-            <div>
-              <label className="label">Email</label>
-              <input name="email" type="email" className="input" placeholder="patient@email.com" value={form.email} onChange={handleChange} />
-            </div>
-            <div>
-              <label className="label">Age</label>
-              <input name="age" type="number" min="0" max="120" className="input" placeholder="e.g. 35" value={form.age} onChange={handleChange} />
-            </div>
-            <div>
-              <label className="label">Gender</label>
-              <select name="gender" className="input" value={form.gender} onChange={handleChange}>
-                <option value="">Select gender</option>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div className="col-span-2">
-              <label className="label">Address</label>
-              <input name="address" className="input" placeholder="Full address" value={form.address} onChange={handleChange} />
-            </div>
-            <div className="col-span-2">
-              <label className="label">Referred by</label>
-              <input name="referred_by" className="input" placeholder="Doctor or clinic name" value={form.referred_by} onChange={handleChange} />
-            </div>
-            <div className="col-span-2">
-              <label className="label">Medical History / Notes</label>
-              <textarea name="medical_history" className="input min-h-[80px] resize-none" placeholder="Allergies, chronic conditions, previous treatments..." value={form.medical_history} onChange={handleChange} />
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">Cancel</button>
-            <button type="submit" disabled={loading} className="btn-primary flex-1 justify-center">
-              {loading && <Loader2 size={16} className="animate-spin" />}
-              {loading ? 'Adding...' : 'Add Patient'}
-            </button>
-          </div>
+          </ModalBody>
+          <ModalFooter>
+            <ModalClose asChild>
+              <Button type="button" variant="secondary">Cancel</Button>
+            </ModalClose>
+            <Button type="submit" loading={loading}>
+              {loading ? 'Adding…' : 'Add patient'}
+            </Button>
+          </ModalFooter>
         </form>
-      </div>
-    </div>
+      </ModalContent>
+    </Modal>
   )
 }

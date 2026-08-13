@@ -2,17 +2,23 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AddPatientModal from '@/components/modals/AddPatientModal'
-import PatientPanel from '@/components/PatientPanel'
+import PatientPanel from '@/components/patients/patient-panel'
 import AddPrescriptionModal from '@/components/modals/AddPrescriptionModal'
 import CreateInvoiceModal from '@/components/modals/CreateInvoiceModal'
 import AddAppointmentModal from '@/components/modals/AddAppointmentModal'
-import { Plus, Search, User, Phone, Mail, Users, Pill, FileText, CalendarPlus } from 'lucide-react'
+import { Plus, Users, Pill, FileText, CalendarPlus } from 'lucide-react'
 import { format } from 'date-fns'
+import {
+  Button, IconButton, Tooltip, Card, PageHeader, SearchInput,
+  DataTable, Avatar, EmptyState,
+} from '@/components/ui'
 
 export default function PatientsPage() {
   const supabase = createClient()
   const [patients, setPatients] = useState([])
+  const [clinicName, setClinicName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
@@ -21,19 +27,28 @@ export default function PatientsPage() {
   const [schedulePatient, setSchedulePatient] = useState(null)
 
   async function loadPatients() {
-    const { data: { user } } = await supabase.auth.getUser()
-    const { data } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('clinic_id', user.id)
-      .neq('is_active', false)        // ← only show active patients
-      .order('created_at', { ascending: false })
-    setPatients(data || [])
+    setError(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data, error: qErr } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('clinic_id', user.id)
+        .neq('is_active', false)        // ← only show active patients
+        .order('created_at', { ascending: false })
+      if (qErr) throw qErr
+      setPatients(data || [])
+
+      const { data: sett } = await supabase
+        .from('clinic_settings').select('clinic_name').eq('clinic_id', user.id).single()
+      setClinicName(sett?.clinic_name || '')
+    } catch (err) {
+      setError(err)
+    }
     setLoading(false)
   }
 
   useEffect(() => { loadPatients() }, [])
-
 
   const filtered = patients.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -41,134 +56,125 @@ export default function PatientsPage() {
     (p.email || '').toLowerCase().includes(search.toLowerCase())
   )
 
+  function rowActions(patient) {
+    return (
+      <div
+        className="flex items-center justify-end gap-0.5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Tooltip label="New appointment">
+          <IconButton aria-label="New appointment" size="sm" onClick={() => setSchedulePatient(patient)}>
+            <CalendarPlus size={14} strokeWidth={1.75} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip label="New prescription">
+          <IconButton aria-label="New prescription" size="sm" onClick={() => setRxPatient(patient)}>
+            <Pill size={14} strokeWidth={1.75} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip label="New invoice">
+          <IconButton aria-label="New invoice" size="sm" onClick={() => setInvoicePatient(patient)}>
+            <FileText size={14} strokeWidth={1.75} />
+          </IconButton>
+        </Tooltip>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-black text-slate-800">Patients</h1>
-          <p className="text-slate-500 text-sm mt-0.5">
-            {patients.length} patient{patients.length !== 1 ? 's' : ''} registered
-          </p>
-        </div>
-        <button onClick={() => setShowAddModal(true)} className="btn-primary">
-          <Plus size={18} /> <span className="hidden sm:inline">Add Patient</span>
-        </button>
-      </div>
+    <div className="mx-auto max-w-[1440px] p-4 md:p-6">
+      <PageHeader
+        title="Patients"
+        subtitle={`${patients.length} patient${patients.length !== 1 ? 's' : ''} registered`}
+        actions={
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus size={15} strokeWidth={1.75} /> Add patient
+          </Button>
+        }
+      />
 
-      <div className="relative mb-4">
-        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          className="input pl-10"
-          placeholder="Search by name, phone, or email..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+      <SearchInput
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        onClear={() => setSearch('')}
+        placeholder="Search by name, phone, or email…"
+        className="mb-4 max-w-md"
+      />
+
+      <Card>
+        <DataTable
+          columns={[
+            {
+              key: 'name', header: 'Patient', sortable: true,
+              cell: (p) => (
+                <span className="flex items-center gap-2.5">
+                  <Avatar name={p.name} src={p.photo_url} size="sm" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-body-md text-primary">{p.name}</span>
+                    <span className="block text-label text-tertiary sm:hidden">
+                      {[p.gender, p.age ? `${p.age} yrs` : null].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                </span>
+              ),
+            },
+            {
+              key: 'phone', header: 'Phone', tabular: true,
+              cell: (p) => p.phone || <span className="text-tertiary">—</span>,
+            },
+            {
+              key: 'email', header: 'Email', hideBelow: 'md',
+              cell: (p) => p.email
+                ? <span className="block max-w-[180px] truncate text-secondary">{p.email}</span>
+                : <span className="text-tertiary">—</span>,
+            },
+            {
+              key: 'gender', header: 'Gender', hideBelow: 'sm',
+              cell: (p) => <span className="text-secondary">{p.gender || '—'}</span>,
+            },
+            {
+              key: 'age', header: 'Age', hideBelow: 'sm', align: 'right', tabular: true,
+              cell: (p) => p.age ? `${p.age}` : '—',
+            },
+            {
+              key: 'created_at', header: 'Joined', hideBelow: 'lg', tabular: true, sortable: true,
+              cell: (p) => format(new Date(p.created_at), 'MMM d, yyyy'),
+            },
+            { key: 'actions', header: '', align: 'right', cell: rowActions },
+          ]}
+          data={filtered}
+          loading={loading}
+          error={error}
+          onRetry={() => { setLoading(true); loadPatients() }}
+          onRowClick={(p) => setSelectedPatient(p)}
+          emptyState={{
+            icon: Users,
+            title: search ? 'No patients match your search' : 'No patients yet',
+            description: search
+              ? 'Try a different name, phone number, or email.'
+              : 'Add your first patient to start booking appointments and invoices.',
+            action: !search && (
+              <Button size="sm" onClick={() => setShowAddModal(true)}>
+                <Plus size={14} strokeWidth={1.75} /> Add first patient
+              </Button>
+            ),
+          }}
+          renderCard={(p) => (
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex min-w-0 items-center gap-2.5">
+                <Avatar name={p.name} src={p.photo_url} size="sm" />
+                <span className="min-w-0">
+                  <span className="block truncate text-body-md text-primary">{p.name}</span>
+                  <span className="tabular block text-label text-tertiary">
+                    {p.phone || 'No phone'}
+                  </span>
+                </span>
+              </span>
+              {rowActions(p)}
+            </div>
+          )}
         />
-      </div>
-
-      <div className="card">
-        {loading ? (
-          <div className="flex justify-center py-12"><div className="spinner" /></div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <Users size={40} className="mx-auto text-slate-300 mb-3" />
-            <p className="text-slate-500 font-medium">
-              {search ? 'No patients match your search' : 'No patients yet'}
-            </p>
-            {!search && (
-              <button onClick={() => setShowAddModal(true)} className="btn-primary mt-4 mx-auto">
-                <Plus size={16} /> Add First Patient
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="table-th">Patient</th>
-                  <th className="table-th">Phone</th>
-                  <th className="table-th hidden md:table-cell">Email</th>
-                  <th className="table-th hidden sm:table-cell">Gender</th>
-                  <th className="table-th hidden sm:table-cell">Age</th>
-                  <th className="table-th hidden md:table-cell">Joined</th>
-                  <th className="table-th">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(patient => (
-                  <tr
-                    key={patient.id}
-                    className="table-tr cursor-pointer"
-                    onClick={() => setSelectedPatient(patient)}
-                  >
-                    <td className="table-td">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden bg-emerald-100 flex items-center justify-center">
-                          {patient.photo_url
-                            ? <img src={patient.photo_url} alt={patient.name} className="w-full h-full object-cover" />
-                            : <User size={16} className="text-emerald-600" />}
-                        </div>
-                        <div>
-                          <span className="font-semibold text-slate-800 hover:text-emerald-700 transition-colors block">
-                            {patient.name}
-                          </span>
-                          <span className="text-xs text-slate-400 sm:hidden">
-                            {patient.gender || ''}{patient.gender && patient.age ? ' · ' : ''}{patient.age ? `${patient.age} yrs` : ''}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="table-td">
-                      <div className="flex items-center gap-1.5 text-slate-500">
-                        {patient.phone ? <><Phone size={13} />{patient.phone}</> : '—'}
-                      </div>
-                    </td>
-                    <td className="table-td hidden md:table-cell">
-                      <div className="flex items-center gap-1.5 text-slate-500">
-                        {patient.email
-                          ? <><Mail size={13} /><span className="truncate max-w-[140px]">{patient.email}</span></>
-                          : '—'}
-                      </div>
-                    </td>
-                    <td className="table-td text-slate-500 hidden sm:table-cell">{patient.gender || '—'}</td>
-                    <td className="table-td text-slate-500 hidden sm:table-cell">
-                      {patient.age ? `${patient.age} yrs` : '—'}
-                    </td>
-                    <td className="table-td text-slate-400 text-xs hidden md:table-cell">
-                      {format(new Date(patient.created_at), 'MMM d, yyyy')}
-                    </td>
-                    <td className="table-td" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={e => { e.stopPropagation(); setSchedulePatient(patient) }}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="New Appointment"
-                        >
-                          <CalendarPlus size={15} />
-                        </button>
-                        <button
-                          onClick={e => { e.stopPropagation(); setRxPatient(patient) }}
-                          className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="New Prescription"
-                        >
-                          <Pill size={15} />
-                        </button>
-                        <button
-                          onClick={e => { e.stopPropagation(); setInvoicePatient(patient) }}
-                          className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
-                          title="New Invoice"
-                        >
-                          <FileText size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      </Card>
 
       {showAddModal && (
         <AddPatientModal
@@ -178,8 +184,11 @@ export default function PatientsPage() {
       )}
       {selectedPatient && (
         <PatientPanel
+          key={selectedPatient.id}
           patient={selectedPatient}
-          onClose={() => setSelectedPatient(null)}
+          clinicName={clinicName}
+          open
+          onOpenChange={(v) => { if (!v) setSelectedPatient(null) }}
         />
       )}
       {rxPatient && (
