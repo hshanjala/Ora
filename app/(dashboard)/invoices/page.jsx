@@ -82,7 +82,7 @@ export default function InvoicesPage() {
   const isFiltered = Boolean(search) || filterStatus !== 'all'
 
   return (
-    <div className="mx-auto max-w-[1440px] p-4 md:p-6">
+    <div className="mx-auto max-w-content p-4 md:p-6">
       <PageHeader
         title="Invoices & billing"
         subtitle={`${invoices.length} invoice${invoices.length !== 1 ? 's' : ''} total`}

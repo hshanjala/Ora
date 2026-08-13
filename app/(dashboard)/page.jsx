@@ -166,7 +166,7 @@ export default function DashboardPage() {
   }
 
   const page = (content) => (
-    <div className="mx-auto max-w-[1440px] p-4 md:p-6">{content}</div>
+    <div className="mx-auto max-w-content p-4 md:p-6">{content}</div>
   )
 
   if (loading) return page(<DashboardSkeleton />)

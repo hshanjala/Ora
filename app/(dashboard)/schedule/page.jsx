@@ -112,7 +112,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1440px] p-4 md:p-6">
+    <div className="mx-auto max-w-content p-4 md:p-6">
       <PageHeader
         title="Schedule"
         subtitle="Manage all appointments"
@@ -203,7 +203,7 @@ export default function SchedulePage() {
             {
               key: 'notes', header: 'Notes', hideBelow: 'lg',
               cell: (a) => (
-                <span className="block max-w-[160px] truncate text-secondary">{a.notes || '—'}</span>
+                <span className="block max-w-cell truncate text-secondary">{a.notes || '—'}</span>
               ),
             },
             { key: 'actions', header: '', align: 'right', cell: rowActions },

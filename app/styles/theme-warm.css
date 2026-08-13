@@ -1,0 +1,58 @@
+/* ────────────────────────────────────────────────────────────────────────────
+   RE-SKIN PROOF — "Warm Clinical"
+
+   An alternative skin for Ora. It changes the accent hue, warms every neutral,
+   and tightens every radius. It touches NOTHING but token values.
+
+   To try it, import this after tokens.css in app/layout.jsx:
+       import './styles/tokens.css'
+       import './styles/theme-warm.css'
+
+   Not imported by default — this file exists to prove the system re-skins from
+   tokens alone. See docs/CONTRIBUTING_UI.md § Re-skin proof for the audit.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Neutrals: warm greys (a red/yellow bias instead of the cool blue one) */
+  --gray-0:   #FFFFFF;
+  --gray-25:  #FDFCFB;
+  --gray-50:  #F8F6F3; /* canvas — warm paper instead of cool white */
+  --gray-100: #F2EFEA;
+  --gray-200: #E8E3DB; /* the hairline, warmed */
+  --gray-300: #D8D1C6;
+  --gray-400: #A79E90;
+  --gray-500: #736B5F;
+  --gray-700: #453F37;
+  --gray-900: #1C1813;
+
+  /* ── Brand: terracotta instead of clinical green */
+  --green-50:  #FDF2EE;
+  --green-100: #FADFD5;
+  --green-500: #C4562F;
+  --green-600: #A84523;
+  --green-700: #85341A;
+
+  /* ── Status: warmed to sit with the new neutrals */
+  --red-600:   #B3261E;
+  --red-50:    #FCEDEC;
+  --amber-700: #8A5A0B;
+  --amber-50:  #FBF3E4;
+  --blue-600:  #2A5C8A;
+  --blue-50:   #EDF3F8;
+
+  /* ── Radius: tighter, more utilitarian */
+  --radius-sm:  3px;
+  --radius-md:  4px;
+  --radius-lg:  5px;
+  --radius-xl:  6px;
+  --radius-2xl: 8px;
+
+  /* ── Motion: slightly snappier */
+  --duration-fast: 90ms;
+  --duration-base: 140ms;
+  --duration-slow: 200ms;
+
+  /* Everything else — the entire semantic layer, the sidebar group, shadows,
+     the type scale — is inherited from tokens.css unchanged. The semantic
+     tokens point at the scales above, so they re-map automatically. */
+}

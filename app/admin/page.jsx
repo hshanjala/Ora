@@ -260,7 +260,7 @@ function AdminPanel({ onLoggedOut }) {
 
   return (
     <div className="min-h-dvh bg-canvas">
-      <div className="mx-auto max-w-[1440px] p-4 md:p-6">
+      <div className="mx-auto max-w-content p-4 md:p-6">
         <PageHeader
           title="Ora admin"
           subtitle={`${clinics.length} clinic${clinics.length !== 1 ? 's' : ''} registered`}
@@ -300,7 +300,7 @@ function AdminPanel({ onLoggedOut }) {
                   <span className="min-w-0">
                     <span className="block truncate text-body-md text-primary">{c.clinic_name || '—'}</span>
                     {c.clinic_address && (
-                      <span className="block max-w-[180px] truncate text-label text-tertiary">
+                      <span className="block max-w-cell truncate text-label text-tertiary">
                         {c.clinic_address}
                       </span>
                     )}

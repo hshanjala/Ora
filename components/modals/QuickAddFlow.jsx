@@ -280,7 +280,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
 
   return (
     <Modal open onOpenChange={(v) => { if (!v) onClose() }}>
-      <ModalContent size="lg" className="max-h-[calc(100dvh-2rem)]">
+      <ModalContent size="lg">
         {done ? (
           <SuccessScreen
             patientName={patientForm.name}

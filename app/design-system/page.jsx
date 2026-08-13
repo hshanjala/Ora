@@ -225,6 +225,7 @@ export default function DesignSystemPage() {
                     <div key={s.util} className="flex items-center gap-3">
                       <span className="w-10 shrink-0 font-mono text-label text-secondary">{s.util}</span>
                       <span className="tabular w-12 shrink-0 text-label text-tertiary">{s.px}px</span>
+                      {/* design-lint-allow-inline-style: ramp width is the token value itself */}
                       <span className="h-3 rounded-sm bg-accent-subtle" style={{ width: s.px }} />
                     </div>
                   ))}

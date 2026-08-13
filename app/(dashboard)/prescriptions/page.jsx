@@ -87,7 +87,7 @@ export default function PrescriptionsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1440px] p-4 md:p-6">
+    <div className="mx-auto max-w-content p-4 md:p-6">
       <PageHeader
         title="Prescriptions"
         subtitle={`${prescriptions.length} prescription${prescriptions.length !== 1 ? 's' : ''} total`}
@@ -128,7 +128,7 @@ export default function PrescriptionsPage() {
             {
               key: 'chief_complaint', header: 'C/C', hideBelow: 'md',
               cell: (rx) => (
-                <span className="block max-w-[150px] truncate text-secondary">
+                <span className="block max-w-cell truncate text-secondary">
                   {rx.chief_complaint || '—'}
                 </span>
               ),
@@ -136,7 +136,7 @@ export default function PrescriptionsPage() {
             {
               key: 'diagnosis', header: 'O/E', hideBelow: 'lg',
               cell: (rx) => (
-                <span className="block max-w-[150px] truncate text-secondary">
+                <span className="block max-w-cell truncate text-secondary">
                   {rx.diagnosis || '—'}
                 </span>
               ),

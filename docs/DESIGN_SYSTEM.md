@@ -27,12 +27,15 @@ Feature code consumes **semantic utilities only**. The raw scales (`--gray-*`, `
 | `bg-active` | `--bg-active` | Selected/active nav item, pressed state. |
 
 ### Text
-| Utility | Use when |
-|---|---|
-| `text-primary` | Values, names, numbers — the content someone came to read. Contrast comes from pairing this with `text-secondary` labels, not from size. |
-| `text-secondary` | Labels, descriptions, table headers, nav items at rest. |
-| `text-tertiary` | Placeholders, timestamps, meta, disabled text. If information matters, it doesn't get tertiary. |
-| `text-inverse` | Text on accent/dark fills (primary buttons). |
+The three greys are set by **measured contrast, not by eye**. Each clears WCAG AA (4.5:1) against the worst background it can land on (`surface-hover`), while staying visually distinct from its neighbours. `npm run check:contrast` fails the build if that stops being true.
+
+| Utility | Value | Worst-case ratio | Use when |
+|---|---|---|---|
+| `text-primary` | `#14171C` | 16.04:1 | Values, names, numbers — the content someone came to read. |
+| `text-secondary` | `#464D58` | 7.61:1 | Labels, descriptions, table headers, nav items at rest. |
+| `text-tertiary` | `#666D78` | 4.66:1 | Timestamps, meta, secondary counts. Still real content — it passes AA. |
+| `text-placeholder` | `#8A909B` | 3.21:1 | **Placeholder and disabled text only.** WCAG exempts incidental and disabled text; a compliant grey here would be indistinguishable from real content. Never use it for anything a user must read. |
+| `text-inverse` | `#FFFFFF` | — | Text on accent/danger fills. |
 
 ### Borders
 | Utility | Use when |
@@ -50,6 +53,10 @@ Feature code consumes **semantic utilities only**. The raw scales (`--gray-*`, `
 
 ### Status — `success` / `warning` / `danger` / `info`
 Each has `text-{status}` (fg) and `bg-{status}-subtle` (tint). Rule: **fg on its own subtle bg, at small size + medium/semibold weight**. Status color never paints large areas, page sections, or plain body text. `danger` is also the destructive-action variant.
+
+All four pairs clear AA on their own tint (4.67–6.03:1). Note `--status-success-fg` uses `--green-650`, a shade darker than the accent green: the accent at `--green-600` measured 4.19:1 on `--green-50`, which failed.
+
+**Colour never carries meaning alone** — always pair a status tint with a text label.
 
 ### Sidebar
 `bg-sidebar`, `text-sidebar-fg`, `text-sidebar-fg-active`, `bg-sidebar-active`, `border-sidebar-border`. The sidebar has its own token group so a dark sidebar variant is a **token swap** — components never hardcode either look.
@@ -119,8 +126,21 @@ Decision rule: if you're adding a shadow to make a box visible, use a border ins
 
 ---
 
-## 5. Migration status & guardrails
+## 5. Guardrails
 
-- **Tailwind's stock palette (`slate-*`, `emerald-*`, …) is still enabled** — every un-migrated screen depends on it, and removing it now would visually break the live app. It is removed in Phase 6 after screen migration.
-- New/migrated code: zero raw hex, zero `rgb(`, zero arbitrary values (`text-[13px]`), zero stock-palette classes. `npm run lint:design` (Phase 6) will enforce this.
-- Legacy `@layer components` classes in `globals.css` (`.btn-primary`, `.card`, `.input`, …) keep serving un-migrated screens; they are deleted as Phase 4 replaces their last consumer.
+Migration is complete and the system is locked down:
+
+- **Tailwind's stock palette is removed**, not merely discouraged. `theme.colors` replaces the default palette, so `bg-slate-500` compiles to nothing.
+- **The legacy `@layer components` proto-system is deleted** (`.btn-primary`, `.card`, `.input`, `.badge-*`, `.modal-*`, `.table-*`, `.spinner`) — `components/ui/` replaces all of it.
+- `npm run lint:design` fails on raw hex, `rgb()`, arbitrary Tailwind values, stock-palette classes, off-scale font sizes, and unmarked inline styles.
+- `npm run check:contrast` fails on any text/background pair below AA.
+- `npm run check:design` runs both. Wire it into CI to keep the system honest.
+
+**Documented exceptions**, both encoded in the linter:
+1. `app/styles/*.css` — token sources; raw values live there by definition.
+2. Google's logo colours in the login page — brand assets must not be re-tinted.
+3. Inline styles marked `design-lint-allow-inline-style` — genuinely runtime values (a progress bar's width, the styleguide's own swatches).
+
+## 6. Re-skinning
+
+`app/styles/theme-warm.css` proves the system re-skins from tokens alone: importing it after `tokens.css` changes accent hue, every neutral, every radius and every duration across the whole product — **without touching a single component file**. See `docs/CONTRIBUTING_UI.md § Re-skin proof`.

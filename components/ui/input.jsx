@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn'
 import { useFormField } from './form-field'
 
 const inputClasses =
-  'w-full h-9 rounded-md border bg-surface px-3 text-body text-primary placeholder:text-tertiary transition-colors duration-fast ease-out hover:border-strong focus:border-strong disabled:opacity-50 disabled:pointer-events-none aria-[invalid=true]:border-danger'
+  'w-full h-9 rounded-md border bg-surface px-3 text-body text-primary placeholder:text-placeholder transition-colors duration-fast ease-out hover:border-strong focus:border-strong disabled:opacity-50 disabled:pointer-events-none aria-[invalid=true]:border-danger'
 
 const Input = forwardRef(function Input({ className, ...props }, ref) {
   const field = useFormField()
