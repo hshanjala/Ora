@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Sidebar from '@/components/Sidebar'
+import AppShell from '@/components/shell/app-shell'
+import { Spinner } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
 
 export default function DashboardLayout({ children }) {
@@ -32,23 +33,16 @@ export default function DashboardLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
-        <div className="text-center">
-          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <span className="text-lg font-bold text-white">O</span>
-          </div>
-          <div className="spinner mx-auto" />
+      <div className="flex min-h-dvh items-center justify-center bg-canvas">
+        <div className="flex flex-col items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-accent text-body-md text-inverse">
+            O
+          </span>
+          <Spinner size={18} className="text-tertiary" />
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="flex min-h-screen bg-[#fafafa]">
-      <Sidebar clinicName={settings?.clinic_name} />
-      <main className="flex-1 overflow-x-hidden pt-14 md:pt-0">
-        {children}
-      </main>
-    </div>
-  )
+  return <AppShell settings={settings}>{children}</AppShell>
 }

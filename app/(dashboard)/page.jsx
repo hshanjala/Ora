@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import SubscriptionBanner from '@/components/SubscriptionBanner'
 import QuickAddFlow from '@/components/modals/QuickAddFlow'
 import AddAppointmentModal from '@/components/modals/AddAppointmentModal'
 import CreateInvoiceModal from '@/components/modals/CreateInvoiceModal'
@@ -10,66 +9,9 @@ import { format } from 'date-fns'
 import {
   UserPlus, CalendarPlus, FileText, TrendingDown,
   Calendar, DollarSign, TrendingUp, AlertCircle,
-  CheckCircle, Clock, XCircle, RefreshCw, Copy
+  CheckCircle, Clock, XCircle, RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
-
-// ── Payment Modal ─────────────────────────────────────────────────────────────
-function PaymentModal({ onClose }) {
-  const [copied, setCopied] = useState(null)
-  function copy(num, type) {
-    navigator.clipboard.writeText(num)
-    setCopied(type)
-    setTimeout(() => setCopied(null), 2000)
-  }
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box max-w-sm" onClick={e => e.stopPropagation()}>
-        <div className="p-6">
-          <div className="flex items-start justify-between mb-5">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">Renew Subscription</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Send ৳299 to renew for 1 month</p>
-            </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
-          </div>
-          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-4">
-            <p className="text-sm font-medium text-amber-800 mb-2">How to pay</p>
-            <ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside">
-              <li>Send ৳299 to one of the numbers below</li>
-              <li>Use &quot;Send Money&quot; option</li>
-              <li>Screenshot your transaction</li>
-              <li>WhatsApp us the screenshot</li>
-            </ol>
-          </div>
-          {[
-            { label: 'bKash', num: '01629775202', code: 'bkash' },
-            { label: 'Nagad', num: '01799900323', code: 'nagad' },
-          ].map(({ label, num, code }) => (
-            <div key={code} className="border border-gray-100 rounded-xl p-4 mb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-400">{label}</p>
-                  <p className="font-semibold text-gray-900 text-base">{num}</p>
-                </div>
-                <button
-                  onClick={() => copy(num, code)}
-                  className="flex items-center gap-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-lg font-medium transition-colors"
-                >
-                  <Copy size={12} />
-                  {copied === code ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-            </div>
-          ))}
-          <p className="text-xs text-gray-400 text-center mt-2">
-            Account extended within 24 hours after payment.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, iconClass }) {
@@ -187,7 +129,7 @@ export default function DashboardPage() {
   return (
     <div className="p-5 md:p-8 max-w-7xl mx-auto">
 
-      {/* Header */}
+      {/* Header — subscription state now lives in the app shell */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-8">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
@@ -197,7 +139,6 @@ export default function DashboardPage() {
             {format(new Date(), 'EEEE, MMMM d, yyyy')}
           </p>
         </div>
-        <SubscriptionBanner settings={settings} />
       </div>
 
       {/* Quick Actions */}

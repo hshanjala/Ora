@@ -31,16 +31,9 @@
   }
 }
 
+/* Legacy component classes: still serving un-migrated screens. Each block is
+   deleted as Phase 4 replaces its last consumer. */
 @layer components {
-  /* ── Sidebar ─────────────────────────────────────── */
-  .sidebar-link {
-    @apply flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#6b7280] hover:text-gray-100 hover:bg-white/[0.06] transition-colors duration-100 text-sm font-normal cursor-pointer;
-  }
-
-  .sidebar-link.active {
-    @apply text-white bg-white/[0.08];
-  }
-
   /* ── Buttons ─────────────────────────────────────── */
   .btn-primary {
     @apply inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition-colors cursor-pointer;
