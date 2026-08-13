@@ -1,9 +1,15 @@
-import { Inter } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+import { Anek_Bangla } from 'next/font/google'
+import './styles/tokens.css'
 import './globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+// Bangla fallback — patient names and any Bangla copy must never render in a
+// system fallback font. Wired into --font-sans in tokens.css.
+const anekBangla = Anek_Bangla({
+  subsets: ['bengali'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-anek-bangla',
   display: 'swap',
 })
 
@@ -14,8 +20,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans bg-[#fafafa] text-gray-900 antialiased">
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable} ${anekBangla.variable}`}
+    >
+      <body className="font-sans bg-canvas text-primary antialiased">
         {children}
       </body>
     </html>
