@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2 } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
+import { Button, Card, FormField, Input, Alert } from '@/components/ui'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -20,7 +21,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false)
 
   function handleChange(e) {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
   async function handleRegister(e) {
@@ -61,91 +62,60 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">✅</span>
-          </div>
-          <h2 className="text-xl font-bold text-slate-800 mb-2">Account created!</h2>
-          <p className="text-slate-500 text-sm mb-6">
-            Please check your email <strong>{formData.email}</strong> and click the confirmation link to activate your account.
-          </p>
-          <Link href="/login" className="btn-primary justify-center w-full">
-            Go to Login
-          </Link>
-        </div>
-      </div>
+      <Card className="p-6 text-center">
+        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-subtle text-success">
+          <CheckCircle2 size={24} strokeWidth={1.75} />
+        </span>
+        <h2 className="text-h2 text-primary">Account created</h2>
+        <p className="mt-1 text-small text-secondary">
+          Check your email <span className="text-primary">{formData.email}</span> and click the
+          confirmation link to activate your account.
+        </p>
+        <Button className="mt-5 w-full" size="lg" onClick={() => router.push('/login')}>
+          Go to login
+        </Button>
+      </Card>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 flex items-center justify-center p-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-      </div>
+    <Card className="p-6">
+      <h2 className="text-h2 text-primary">Create your clinic</h2>
+      <p className="mt-0.5 text-small text-secondary">
+        14-day free trial · no payment required to start
+      </p>
 
-      <div className="w-full max-w-md relative">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-xl mb-4">
-            <span className="text-3xl font-black text-emerald-700">O</span>
-          </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Ora</h1>
-          <p className="text-emerald-300 mt-1 text-sm">Start your 14-day free trial</p>
-        </div>
+      {error && <Alert status="danger" className="mt-4">{error}</Alert>}
 
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
-          <h2 className="text-xl font-bold text-slate-800 mb-1">Create your clinic</h2>
-          <p className="text-slate-500 text-sm mb-6">No payment required to start</p>
+      <form onSubmit={handleRegister} className="mt-5 space-y-4">
+        <FormField label="Clinic name" required>
+          <Input name="clinicName" placeholder="Smile Dental BD" value={formData.clinicName} onChange={handleChange} required />
+        </FormField>
+        <FormField label="Doctor / owner name" required>
+          <Input name="doctorName" placeholder="Dr. Rahman" value={formData.doctorName} onChange={handleChange} required />
+        </FormField>
+        <FormField label="Phone number">
+          <Input name="phone" type="tel" placeholder="01XXXXXXXXX" value={formData.phone} onChange={handleChange} />
+        </FormField>
+        <FormField label="Email address" required>
+          <Input name="email" type="email" placeholder="doctor@clinic.com" value={formData.email} onChange={handleChange} autoComplete="email" required />
+        </FormField>
+        <FormField label="Password" required hint="Minimum 6 characters">
+          <Input name="password" type="password" placeholder="••••••••" value={formData.password} onChange={handleChange} autoComplete="new-password" minLength={6} required />
+        </FormField>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-5">
-              {error}
-            </div>
-          )}
+        <Button type="submit" size="lg" className="w-full" loading={loading}>
+          {loading ? 'Creating account…' : 'Start free trial'}
+        </Button>
+      </form>
 
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label className="label">Clinic Name</label>
-              <input name="clinicName" type="text" className="input" placeholder="Smile Dental BD" value={formData.clinicName} onChange={handleChange} required />
-            </div>
-            <div>
-              <label className="label">Doctor / Owner Name</label>
-              <input name="doctorName" type="text" className="input" placeholder="Dr. Rahman" value={formData.doctorName} onChange={handleChange} required />
-            </div>
-            <div>
-              <label className="label">Phone Number</label>
-              <input name="phone" type="tel" className="input" placeholder="01XXXXXXXXX" value={formData.phone} onChange={handleChange} />
-            </div>
-            <div>
-              <label className="label">Email Address</label>
-              <input name="email" type="email" className="input" placeholder="doctor@clinic.com" value={formData.email} onChange={handleChange} required />
-            </div>
-            <div>
-              <label className="label">Password</label>
-              <input name="password" type="password" className="input" placeholder="Min. 6 characters" value={formData.password} onChange={handleChange} required minLength={6} />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-70 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
-            >
-              {loading && <Loader2 size={18} className="animate-spin" />}
-              {loading ? 'Creating account...' : 'Start Free Trial →'}
-            </button>
-          </form>
-
-          <p className="text-center text-xs text-slate-400 mt-4">
-            ৳299/month after 14-day trial • Cancel anytime
-          </p>
-
-          <p className="text-center text-sm text-slate-500 mt-4">
-            Already have an account?{' '}
-            <Link href="/login" className="text-emerald-600 font-semibold hover:underline">Sign in</Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      <p className="mt-4 text-center text-label text-tertiary">
+        ৳299/month after the 14-day trial · cancel anytime
+      </p>
+      <p className="mt-3 text-center text-small text-secondary">
+        Already have an account?{' '}
+        <Link href="/login" className="text-accent-text hover:underline">Sign in</Link>
+      </p>
+    </Card>
   )
 }
