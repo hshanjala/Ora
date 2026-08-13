@@ -1,12 +1,16 @@
 'use client'
+// Push-notification toggle (logic unchanged from the retired
+// components/NotificationButton.jsx — presentation rebuilt on the system).
 import { useState, useEffect } from 'react'
 import { Bell, BellOff } from 'lucide-react'
+import { IconButton, Tooltip } from '@/components/ui'
+import { cn } from '@/lib/cn'
 
 function urlB64ToUint8Array(b64) {
   const padding = '='.repeat((4 - (b64.length % 4)) % 4)
   const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/')
   const raw = atob(base64)
-  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)))
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)))
 }
 
 export default function NotificationButton() {
@@ -21,10 +25,13 @@ export default function NotificationButton() {
       setStatus('denied')
       return
     }
-    navigator.serviceWorker.register('/sw.js').then(async reg => {
-      const sub = await reg.pushManager.getSubscription()
-      setStatus(sub ? 'on' : 'off')
-    }).catch(() => setStatus('unsupported'))
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(async (reg) => {
+        const sub = await reg.pushManager.getSubscription()
+        setStatus(sub ? 'on' : 'off')
+      })
+      .catch(() => setStatus('unsupported'))
   }, [])
 
   async function toggle() {
@@ -42,7 +49,10 @@ export default function NotificationButton() {
       setStatus('off')
     } else {
       const permission = await Notification.requestPermission()
-      if (permission !== 'granted') { setStatus('denied'); return }
+      if (permission !== 'granted') {
+        setStatus('denied')
+        return
+      }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlB64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY),
@@ -58,23 +68,27 @@ export default function NotificationButton() {
 
   if (status === 'loading' || status === 'unsupported') return null
 
-  if (status === 'denied') {
-    return (
-      <div className="sidebar-link w-full opacity-50 cursor-not-allowed" title="Notifications blocked — change in browser settings">
-        <BellOff size={18} />
-        <span>Notifications blocked</span>
-      </div>
-    )
-  }
+  const label =
+    status === 'denied'
+      ? 'Notifications blocked — enable in browser settings'
+      : status === 'on'
+        ? 'Notifications on — click to turn off'
+        : 'Enable appointment notifications'
 
   return (
-    <button
-      onClick={toggle}
-      className={`sidebar-link w-full ${status === 'on' ? 'text-emerald-300' : 'opacity-70'}`}
-      title={status === 'on' ? 'Notifications ON — click to turn off' : 'Enable appointment notifications'}
-    >
-      {status === 'on' ? <Bell size={18} /> : <BellOff size={18} />}
-      <span>{status === 'on' ? 'Notifications On' : 'Enable Notifications'}</span>
-    </button>
+    <Tooltip label={label}>
+      <IconButton
+        aria-label={label}
+        onClick={status === 'denied' ? undefined : toggle}
+        disabled={status === 'denied'}
+        className={cn(status === 'on' && 'text-accent-text')}
+      >
+        {status === 'on' ? (
+          <Bell size={16} strokeWidth={1.75} />
+        ) : (
+          <BellOff size={16} strokeWidth={1.75} />
+        )}
+      </IconButton>
+    </Tooltip>
   )
 }
