@@ -66,6 +66,9 @@
   /* Focus */
   --focus-ring: var(--green-500);
 
+  /* Overlay behind modals/drawers */
+  --overlay: rgba(16, 24, 40, 0.4);
+
   /* Status (fg on bg pairs) */
   --status-success-fg: var(--green-600);
   --status-success-bg: var(--green-50);
@@ -132,6 +135,8 @@
   --accent-text:   #4CC58A;
 
   --focus-ring: #1FA363;
+
+  --overlay: rgba(0, 0, 0, 0.6);
 
   --status-success-fg: #4CC58A;
   --status-success-bg: #12291D;

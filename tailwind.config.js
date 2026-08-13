@@ -61,6 +61,8 @@ module.exports = {
         },
         // Focus ring
         ring: 'var(--focus-ring)',
+        // Modal/drawer backdrop
+        overlay: 'var(--overlay)',
       },
 
       // Plain `border` class resolves to the hairline token.
