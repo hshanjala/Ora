@@ -105,6 +105,33 @@
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
+/* Layout helpers for sheets/bottom bars */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.max-h-sheet { max-height: 85dvh; }
+
+/* Overlay + modal entrances (durations collapse to 0 under reduced motion
+   because they read the motion tokens) */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes sheet-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes sheet-in-bottom {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.animate-overlay-in     { animation: overlay-in var(--duration-base) var(--ease-out); }
+.animate-modal-in       { animation: modal-in var(--duration-base) var(--ease-out); }
+.animate-sheet-in-right  { animation: sheet-in-right var(--duration-slow) var(--ease-out); }
+.animate-sheet-in-bottom { animation: sheet-in-bottom var(--duration-slow) var(--ease-out); }
+
 /* Spinner */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinner {
