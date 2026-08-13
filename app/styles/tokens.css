@@ -1,0 +1,164 @@
+/* ────────────────────────────────────────────────────────────────────────────
+   Ora Design Tokens — the single source of truth for the entire visual layer.
+
+   Rules:
+   • Feature code NEVER reads the raw scales (--gray-*, --green-*) directly.
+     It consumes the semantic layer only (--bg-*, --text-*, --border-*,
+     --accent*, --status-*, --sidebar-*).
+   • Re-skinning the product = editing this file. Component files never change.
+   • The [data-theme="dark"] block is provisional; dark mode ships later.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Raw scale · Neutrals (the product is 90% this) ────────────────────── */
+  --gray-0:   #FFFFFF; /* surface */
+  --gray-25:  #FCFCFD;
+  --gray-50:  #F7F8F9; /* canvas / table header */
+  --gray-100: #F1F2F4; /* hover, active nav */
+  --gray-200: #E7E9EC; /* hairline border — the most important token */
+  --gray-300: #D5D8DD; /* strong border, disabled */
+  --gray-400: #A0A6B0; /* placeholder, tertiary text */
+  --gray-500: #6D7480; /* secondary text, labels */
+  --gray-700: #3C424C;
+  --gray-900: #14171C; /* primary text */
+
+  /* ── Raw scale · Brand green (clinical, calm, not neon) ────────────────── */
+  --green-50:  #EDF8F2;
+  --green-100: #D2EEDF;
+  --green-500: #1FA363;
+  --green-600: #16874F; /* primary actions */
+  --green-700: #0F6A3E;
+
+  /* ── Raw scale · Status (badges, alerts, chart marks ONLY) ─────────────── */
+  --red-600:    #C62828;
+  --red-50:     #FDECEC;
+  --amber-700:  #B45309;
+  --amber-50:   #FEF6E7;
+  --blue-600:   #1D4ED8;
+  --blue-50:    #EEF3FE;
+
+  /* ═══ SEMANTIC LAYER — what components consume ═══════════════════════════ */
+
+  /* Backgrounds */
+  --bg-canvas:         var(--gray-50);
+  --bg-surface:        var(--gray-0);
+  --bg-surface-subtle: var(--gray-25);
+  --bg-hover:          var(--gray-100);
+  --bg-active:         var(--gray-100);
+
+  /* Borders */
+  --border-subtle:  var(--gray-200);
+  --border-default: var(--gray-200);
+  --border-strong:  var(--gray-300);
+
+  /* Text */
+  --text-primary:   var(--gray-900);
+  --text-secondary: var(--gray-500);
+  --text-tertiary:  var(--gray-400);
+  --text-inverse:   var(--gray-0);
+
+  /* Accent */
+  --accent:        var(--green-600);
+  --accent-hover:  var(--green-700);
+  --accent-subtle: var(--green-50);
+  --accent-text:   var(--green-700);
+
+  /* Focus */
+  --focus-ring: var(--green-500);
+
+  /* Status (fg on bg pairs) */
+  --status-success-fg: var(--green-600);
+  --status-success-bg: var(--green-50);
+  --status-warning-fg: var(--amber-700);
+  --status-warning-bg: var(--amber-50);
+  --status-danger-fg:  var(--red-600);
+  --status-danger-bg:  var(--red-50);
+  --status-info-fg:    var(--blue-600);
+  --status-info-bg:    var(--blue-50);
+
+  /* Sidebar (own group so a dark sidebar is a token swap, never a component
+     change) */
+  --sidebar-bg:          var(--gray-0);
+  --sidebar-fg:          var(--gray-500);
+  --sidebar-fg-active:   var(--gray-900);
+  --sidebar-item-active: var(--gray-100);
+  --sidebar-border:      var(--gray-200);
+
+  /* ── Radius ────────────────────────────────────────────────────────────── */
+  --radius-sm:  6px;
+  --radius-md:  8px;
+  --radius-lg:  10px;
+  --radius-xl:  12px;
+  --radius-2xl: 16px;
+
+  /* ── Elevation (borders do the work; shadows are almost invisible) ─────── */
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);  /* popovers, dropdowns */
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12); /* modals */
+
+  /* ── Motion ────────────────────────────────────────────────────────────── */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 260ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Font stacks (populated by next/font variables in app/layout.jsx) ──── */
+  --font-sans: var(--font-geist-sans), var(--font-anek-bangla),
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* ── Dark theme (provisional — values will be tuned when dark mode ships) ── */
+[data-theme='dark'] {
+  --bg-canvas:         #101216;
+  --bg-surface:        #16191E;
+  --bg-surface-subtle: #191C22;
+  --bg-hover:          #1F232A;
+  --bg-active:         #242933;
+
+  --border-subtle:  #262B33;
+  --border-default: #262B33;
+  --border-strong:  #333A45;
+
+  --text-primary:   #F2F4F7;
+  --text-secondary: #9AA1AC;
+  --text-tertiary:  #6D7480;
+  --text-inverse:   #14171C;
+
+  --accent:        #1FA363;
+  --accent-hover:  #26B871;
+  --accent-subtle: #12291D;
+  --accent-text:   #4CC58A;
+
+  --focus-ring: #1FA363;
+
+  --status-success-fg: #4CC58A;
+  --status-success-bg: #12291D;
+  --status-warning-fg: #E0A03E;
+  --status-warning-bg: #2B2012;
+  --status-danger-fg:  #E06060;
+  --status-danger-bg:  #2E1616;
+  --status-info-fg:    #6C93F0;
+  --status-info-bg:    #151E33;
+
+  --sidebar-bg:          #16191E;
+  --sidebar-fg:          #9AA1AC;
+  --sidebar-fg-active:   #F2F4F7;
+  --sidebar-item-active: #1F232A;
+  --sidebar-border:      #262B33;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* Motion respects the user's preference, globally. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}
