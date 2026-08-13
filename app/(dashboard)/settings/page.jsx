@@ -1,16 +1,38 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Save, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { Save, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
+import {
+  Button, IconButton, Card, CardHeader, CardBody, PageHeader,
+  FormField, Input, Textarea, Skeleton, SkeletonText, Eyebrow, useToast,
+} from '@/components/ui'
+import {
+  PaymentInstructions, PaymentMethodList, MONTHLY_PRICE, SUPPORT_NUMBER,
+} from '@/components/billing/payment-methods'
+
+function SettingsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-40" />
+        <Skeleton className="h-4 w-56" />
+      </div>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Card key={i} className="p-5"><SkeletonText lines={4} /></Card>
+      ))}
+    </div>
+  )
+}
 
 export default function SettingsPage() {
   const supabase = createClient()
+  const toast = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
-  const [passwordSaved, setPasswordSaved] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
   const [user, setUser] = useState(null)
   const [newPassword, setNewPassword] = useState('')
   const [form, setForm] = useState({
@@ -64,149 +86,139 @@ export default function SettingsPage() {
 
     setSaving(false)
     setSaved(true)
+    toast.success('Clinic information saved')
     setTimeout(() => setSaved(false), 3000)
   }
 
   async function handlePasswordChange(e) {
     e.preventDefault()
+    setPasswordError('')
     if (newPassword.length < 6) return
     setChangingPassword(true)
 
-    await supabase.auth.updateUser({ password: newPassword })
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
 
     setChangingPassword(false)
-    setPasswordSaved(true)
+    if (error) {
+      setPasswordError(error.message)
+      return
+    }
     setNewPassword('')
-    setTimeout(() => setPasswordSaved(false), 3000)
+    toast.success('Password updated')
   }
 
-  if (loading) {
-    return <div className="p-8 flex justify-center"><div className="spinner" /></div>
-  }
+  const page = (content) => (
+    <div className="mx-auto max-w-3xl p-4 md:p-6">{content}</div>
+  )
 
-  return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-slate-800">Settings</h1>
-        <p className="text-slate-500 text-sm mt-0.5">Manage your clinic information</p>
-      </div>
+  if (loading) return page(<SettingsSkeleton />)
 
-      {/* Clinic Info */}
-      <div className="card mb-5">
-        <h2 className="font-bold text-slate-800 mb-5 text-lg">Clinic Information</h2>
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className="label">Clinic Name</label>
-            <input name="clinic_name" className="input" placeholder="Your Clinic Name" value={form.clinic_name} onChange={handleChange} />
-          </div>
-          <div>
-            <label className="label">Doctor / Owner Name</label>
-            <input name="doctor_name" className="input" placeholder="Dr. Your Name" value={form.doctor_name} onChange={handleChange} />
-          </div>
-          <div>
-            <label className="label">Phone Number</label>
-            <input name="doctor_phone" className="input" placeholder="01XXXXXXXXX" value={form.doctor_phone} onChange={handleChange} />
-          </div>
-          <div>
-            <label className="label">Clinic Address</label>
-            <textarea name="clinic_address" className="input min-h-[80px] resize-none" placeholder="Full clinic address" value={form.clinic_address} onChange={handleChange} />
-          </div>
+  return page(
+    <>
+      <PageHeader title="Settings" subtitle="Manage your clinic information" />
 
-          <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? <Loader2 size={16} className="animate-spin" /> : saved ? <CheckCircle size={16} /> : <Save size={16} />}
-            {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
-          </button>
-        </form>
-      </div>
-
-      {/* Account Info */}
-      <div className="card mb-5">
-        <h2 className="font-bold text-slate-800 mb-4 text-lg">Account</h2>
-        <div className="bg-slate-50 rounded-xl p-4">
-          <p className="text-xs text-slate-500 mb-1">Login Email</p>
-          <p className="font-semibold text-slate-800">{user?.email}</p>
-        </div>
-      </div>
-
-      {/* Change Password */}
-      <div className="card mb-5">
-        <h2 className="font-bold text-slate-800 mb-4 text-lg">Change Password</h2>
-        <form onSubmit={handlePasswordChange} className="space-y-4">
-          <div>
-            <label className="label">New Password</label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className="input pr-11"
-                placeholder="Min. 6 characters"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                minLength={6}
-                required
-              />
-              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-          <button type="submit" disabled={changingPassword || newPassword.length < 6} className="btn-primary">
-            {changingPassword ? <Loader2 size={16} className="animate-spin" /> : passwordSaved ? <CheckCircle size={16} /> : null}
-            {changingPassword ? 'Updating...' : passwordSaved ? 'Password Updated!' : 'Update Password'}
-          </button>
-        </form>
-      </div>
-
-      {/* Subscription Info */}
-      <div className="card">
-        <h2 className="font-bold text-slate-800 mb-4 text-lg">Subscription</h2>
-        <div className="bg-emerald-50 rounded-xl p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold text-emerald-800">Ora Monthly Plan</p>
-              <p className="text-xl font-black text-emerald-700">৳299 / month</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-emerald-600 font-semibold">Payment Methods</p>
-              <p className="text-sm font-bold text-emerald-800">bKash • Nagad</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="border border-slate-200 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center">
-                  <span className="text-pink-600 font-black text-sm">bK</span>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">bKash</p>
-                  <p className="font-bold text-slate-800">01629775202</p>
-                </div>
+      <div className="space-y-4">
+        {/* Clinic info */}
+        <Card>
+          <CardHeader title="Clinic information" subtitle="Appears on invoices and prescriptions" />
+          <CardBody>
+            <form onSubmit={handleSave} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField label="Clinic name">
+                  <Input name="clinic_name" placeholder="Your clinic name" value={form.clinic_name} onChange={handleChange} />
+                </FormField>
+                <FormField label="Doctor / owner name">
+                  <Input name="doctor_name" placeholder="Dr. Your Name" value={form.doctor_name} onChange={handleChange} />
+                </FormField>
+                <FormField label="Phone number">
+                  <Input name="doctor_phone" placeholder="01XXXXXXXXX" value={form.doctor_phone} onChange={handleChange} />
+                </FormField>
+                <FormField label="Clinic address" className="sm:col-span-2">
+                  <Textarea name="clinic_address" rows={2} placeholder="Full clinic address" value={form.clinic_address} onChange={handleChange} />
+                </FormField>
               </div>
-            </div>
-          </div>
+              <Button type="submit" loading={saving}>
+                {saved && !saving
+                  ? <CheckCircle2 size={15} strokeWidth={1.75} />
+                  : !saving && <Save size={15} strokeWidth={1.75} />}
+                {saving ? 'Saving…' : saved ? 'Saved' : 'Save changes'}
+              </Button>
+            </form>
+          </CardBody>
+        </Card>
 
-          <div className="border border-slate-200 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                  <span className="text-orange-600 font-black text-sm">Ng</span>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">Nagad</p>
-                  <p className="font-bold text-slate-800">01799900323</p>
-                </div>
-              </div>
+        {/* Account */}
+        <Card>
+          <CardHeader title="Account" />
+          <CardBody>
+            <div className="rounded-md bg-surface-subtle p-3.5">
+              <Eyebrow>Login email</Eyebrow>
+              <p className="mt-0.5 text-body-md text-primary">{user?.email}</p>
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
-        <p className="text-xs text-slate-400 mt-4 text-center">
-          Send ৳299 via bKash or Nagad, then WhatsApp your transaction screenshot to 01629775202.
-          Your subscription will be activated within 24 hours.
-        </p>
+        {/* Password */}
+        <Card>
+          <CardHeader title="Change password" />
+          <CardBody>
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <FormField
+                label="New password"
+                hint="Minimum 6 characters"
+                error={passwordError || undefined}
+                className="max-w-sm"
+              >
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                    minLength={6}
+                    className="pr-10"
+                    required
+                  />
+                  <IconButton
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    size="sm"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                  >
+                    {showPassword
+                      ? <EyeOff size={15} strokeWidth={1.75} />
+                      : <Eye size={15} strokeWidth={1.75} />}
+                  </IconButton>
+                </div>
+              </FormField>
+              <Button
+                type="submit"
+                loading={changingPassword}
+                disabled={newPassword.length < 6}
+              >
+                {changingPassword ? 'Updating…' : 'Update password'}
+              </Button>
+            </form>
+          </CardBody>
+        </Card>
+
+        {/* Subscription */}
+        <Card>
+          <CardHeader
+            title="Subscription"
+            subtitle={`Ora monthly plan · ${MONTHLY_PRICE}/month`}
+          />
+          <CardBody className="space-y-3">
+            <PaymentInstructions />
+            <PaymentMethodList onCopied={(m) => toast.success('Number copied', `${m.label} · ${m.number}`)} />
+            <p className="text-center text-label text-tertiary">
+              Send {MONTHLY_PRICE} via bKash or Nagad, then WhatsApp your transaction screenshot to{' '}
+              <span className="tabular">{SUPPORT_NUMBER}</span>. Your subscription is activated within 24 hours.
+            </p>
+          </CardBody>
+        </Card>
       </div>
-    </div>
+    </>
   )
 }
