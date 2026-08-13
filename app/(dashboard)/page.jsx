@@ -15,22 +15,11 @@ import {
 import {
   Button, IconButton, Tooltip,
   Card, CardHeader, StatCard, PageHeader,
-  DataTable, StatusPill, EmptyState, ErrorState,
+  DataTable, EmptyState, ErrorState,
   SkeletonStat, SkeletonTable, SkeletonText, Skeleton,
   useToast,
 } from '@/components/ui'
-
-const STATUS_LABEL = {
-  scheduled: { label: 'Scheduled', status: 'info' },
-  'checked-in': { label: 'Checked In', status: 'warning' },
-  completed: { label: 'Completed', status: 'success' },
-  cancelled: { label: 'Cancelled', status: 'danger' },
-}
-
-function statusPill(status) {
-  const cfg = STATUS_LABEL[status]
-  return <StatusPill status={cfg?.status || 'neutral'}>{cfg?.label || status}</StatusPill>
-}
+import { APPOINTMENT_STATUS, statusPill } from '@/components/schedule/status'
 
 function fmtTime(time) {
   return time ? format(new Date(`2000-01-01T${time}`), 'h:mm a') : '—'
@@ -139,7 +128,7 @@ export default function DashboardPage() {
   async function updateStatus(apptId, status) {
     await supabase.from('appointments').update({ status }).eq('id', apptId)
     setTodaySchedule(prev => prev.map(a => a.id === apptId ? { ...a, status } : a))
-    toast.success(`Marked ${(STATUS_LABEL[status]?.label || status).toLowerCase()}`)
+    toast.success(`Marked ${(APPOINTMENT_STATUS[status]?.label || status).toLowerCase()}`)
   }
 
   function rowActions(appt) {
