@@ -5,7 +5,7 @@ import { cn } from '@/lib/cn'
 import {
   Button, IconButton, FormField, Input, Textarea, DateInput, TimeInput,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-  Alert, Label, Avatar, Checkbox, Card, Divider,
+  Alert, Label, Avatar, Checkbox, Card, Divider, Tooltip,
 } from '@/components/ui'
 import {
   LabelDropdown, MedicineRow, AddFieldButton, ExtraFieldRow,
@@ -371,17 +371,18 @@ export function Step4Invoice({ items, setItems, form, setForm, patientName }) {
         </div>
         <Divider />
         <div className="flex items-center justify-between gap-3 px-4 py-2.5">
-          <label className="flex cursor-pointer items-center gap-2 text-small text-secondary">
-            <Checkbox
-              checked={paidNow >= total && total > 0}
-              onCheckedChange={(checked) =>
-                setForm(f => ({ ...f, paid_now: checked ? String(total) : '' }))
-              }
-              aria-label="Mark as fully paid"
-            />
-            Paid now
-          </label>
-          <div className="flex items-center gap-1.5">
+          <span className="text-small text-secondary">Paid now</span>
+          {/* Fully-paid toggle sits beside the amount it fills in */}
+          <div className="flex items-center gap-2">
+            <Tooltip label="Mark as fully paid">
+              <Checkbox
+                checked={paidNow >= total && total > 0}
+                onCheckedChange={(checked) =>
+                  setForm(f => ({ ...f, paid_now: checked ? String(total) : '' }))
+                }
+                aria-label="Mark as fully paid"
+              />
+            </Tooltip>
             <span className="text-small text-tertiary">৳</span>
             <Input
               name="paid_now"
