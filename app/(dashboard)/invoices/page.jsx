@@ -86,9 +86,11 @@ export default function InvoicesPage() {
       <PageHeader
         title="Invoices & billing"
         subtitle={`${invoices.length} invoice${invoices.length !== 1 ? 's' : ''} total`}
+        inlineActions
         actions={
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus size={15} strokeWidth={1.75} /> Create invoice
+          <Button aria-label="Create invoice" onClick={() => setShowCreateModal(true)}>
+            <Plus size={15} strokeWidth={1.75} />
+            <span className="hidden sm:inline">Create invoice</span>
           </Button>
         }
       />
@@ -104,16 +106,18 @@ export default function InvoicesPage() {
         />
       </div>
 
-      {/* Stats */}
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatCard label="Collected" value={`৳${totalIncome.toLocaleString()}`} icon={TrendingUp} tone="success" />
+      {/* Stats — three across at every width; `compact` keeps them legible on
+          a phone, where each card only gets about a third of the screen. */}
+      <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
+        <StatCard compact label="Collected" value={`৳${totalIncome.toLocaleString()}`} icon={TrendingUp} tone="success" />
         <StatCard
+          compact
           label="Dues"
           value={`৳${totalDues.toLocaleString()}`}
           icon={AlertCircle}
           tone={totalDues > 0 ? 'danger' : 'neutral'}
         />
-        <StatCard label="Invoices" value={filtered.length} icon={Receipt} />
+        <StatCard compact label="Invoices" value={filtered.length} icon={Receipt} />
       </div>
 
       {/* Filters */}
