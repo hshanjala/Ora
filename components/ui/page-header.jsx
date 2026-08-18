@@ -2,16 +2,25 @@
 import { forwardRef } from 'react'
 import { cn } from '@/lib/cn'
 
-// Used by every page: title + subtitle + actions slot.
+/**
+ * Used by every page: title + subtitle + actions slot.
+ *
+ * By default the actions drop below the title on mobile, which is right when
+ * a page has several full-width actions. Pass `inlineActions` when the actions
+ * collapse to icons on small screens and should stay on the title row instead.
+ */
 const PageHeader = forwardRef(function PageHeader(
-  { className, title, subtitle, actions, children, ...props },
+  { className, title, subtitle, actions, inlineActions = false, children, ...props },
   ref
 ) {
   return (
     <div
       ref={ref}
       className={cn(
-        'mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between',
+        'mb-6 flex gap-3',
+        inlineActions
+          ? 'flex-row items-start justify-between'
+          : 'flex-col sm:flex-row sm:items-start sm:justify-between',
         className
       )}
       {...props}

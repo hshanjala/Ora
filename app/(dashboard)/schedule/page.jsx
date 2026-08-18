@@ -116,6 +116,7 @@ export default function SchedulePage() {
       <PageHeader
         title="Schedule"
         subtitle="Manage all appointments"
+        inlineActions
         actions={
           <>
             <Button variant="secondary" onClick={() => setShowList(true)}>
