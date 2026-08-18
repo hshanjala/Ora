@@ -44,6 +44,8 @@
 /* Layout helpers for sheets and bottom bars */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 .max-h-sheet { max-height: 85dvh; }
+/* Enlarged photo viewer — leaves room for the modal header on short screens */
+.max-h-photo { max-height: 70dvh; }
 
 /* Overlay, modal and sheet entrances. Durations read the motion tokens, so
    they collapse to 0ms under prefers-reduced-motion. */

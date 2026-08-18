@@ -5,10 +5,11 @@ import { Pencil } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Sheet, SheetContent, SheetHeader, SheetBody,
-  Avatar, IconButton, Alert, Eyebrow, SpinnerBlock, EmptyState, ErrorState, Button,
+  IconButton, Alert, Eyebrow, SpinnerBlock, EmptyState, ErrorState, Button,
 } from '@/components/ui'
 import VisitRow from './visit-row'
 import EditPatientModal from './edit-patient-modal'
+import PatientPhoto from './patient-photo'
 
 function Field({ label, value }) {
   return (
@@ -96,7 +97,7 @@ export default function PatientPanel({ patient: initialPatient, open, onOpenChan
         <SheetContent className="md:max-w-lg">
           <SheetHeader>
             <div className="flex items-center gap-3">
-              <Avatar name={patient.name} src={patient.photo_url} size="lg" />
+              <PatientPhoto name={patient.name} src={patient.photo_url} size="lg" />
               <div className="min-w-0">
                 <p className="truncate text-h2 text-primary">{patient.name}</p>
                 <p className="mt-0.5 text-small text-secondary">{meta}</p>
