@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { getBlockReason } from '@/lib/subscriptionAccess'
 
 export async function middleware(request) {
   let supabaseResponse = NextResponse.next({ request })
@@ -60,22 +61,7 @@ export async function middleware(request) {
       .single()
 
     if (settings) {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      let blockReason = null
-
-      if (settings.subscription_status === 'suspended') {
-        blockReason = 'suspended'
-      } else {
-        const isOnTrial = settings.subscription_status === 'trial' || !settings.subscription_status
-        const isActive  = settings.subscription_status === 'active'
-        const endStr = isOnTrial ? settings.trial_end : isActive ? settings.subscription_end : null
-        if (endStr) {
-          const end = new Date(endStr + 'T00:00:00')
-          if (end < today) blockReason = 'expired'
-        }
-      }
+      const blockReason = getBlockReason(settings)
 
       if (blockReason) {
         const url = request.nextUrl.clone()
