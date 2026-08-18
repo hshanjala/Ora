@@ -119,11 +119,11 @@ export default function SchedulePage() {
         inlineActions
         actions={
           <>
-            <Button variant="secondary" onClick={() => setShowList(true)}>
+            <Button aria-label="All appointments" variant="secondary" onClick={() => setShowList(true)}>
               <List size={15} strokeWidth={1.75} />
               <span className="hidden sm:inline">All appointments</span>
             </Button>
-            <Button onClick={() => setShowModal(true)}>
+            <Button aria-label="Add appointment" onClick={() => setShowModal(true)}>
               <Plus size={15} strokeWidth={1.75} />
               <span className="hidden sm:inline">Add appointment</span>
             </Button>
