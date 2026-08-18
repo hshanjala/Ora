@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { LogOut, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/cn'
-import { Tooltip } from '@/components/ui'
+import { IconButton, Tooltip } from '@/components/ui'
 import { NAV_MAIN, NAV_WORKSPACE, isActivePath } from './nav-items'
 
 const COLLAPSE_KEY = 'ora-sidebar-collapsed'
@@ -76,19 +76,37 @@ export default function Sidebar({ clinicName }) {
         collapsed ? 'w-16' : 'w-60'
       )}
     >
-      {/* Logo */}
-      <div className={cn('flex items-center gap-2.5 px-4 pb-4 pt-5', collapsed && 'justify-center px-0')}>
+      {/* Logo + collapse toggle. Collapsed, the two stack: a 64px rail has no
+          room for them side by side. */}
+      <div
+        className={cn(
+          'flex items-center gap-2.5 px-3 pb-4 pt-5',
+          collapsed && 'flex-col gap-2 px-0'
+        )}
+      >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent text-label text-inverse">
           O
         </span>
         {!collapsed && (
-          <span className="min-w-0">
+          <span className="min-w-0 flex-1">
             <span className="block text-body-md leading-none text-primary">Ora</span>
             {clinicName && (
               <span className="mt-0.5 block truncate text-micro text-tertiary">{clinicName}</span>
             )}
           </span>
         )}
+        <Tooltip label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} side="right">
+          <IconButton
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            size="sm"
+            onClick={toggleCollapsed}
+            className="shrink-0 text-sidebar-fg"
+          >
+            {collapsed
+              ? <PanelLeft size={16} strokeWidth={1.75} />
+              : <PanelLeftClose size={16} strokeWidth={1.75} />}
+          </IconButton>
+        </Tooltip>
       </div>
 
       {/* Nav */}
@@ -117,25 +135,8 @@ export default function Sidebar({ clinicName }) {
         </div>
       </nav>
 
-      {/* Footer: collapse + sign out */}
-      <div className="space-y-0.5 border-t border-sidebar-border px-3 py-3">
-        <button
-          onClick={toggleCollapsed}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={cn(
-            'flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-body-md text-sidebar-fg transition-colors duration-fast ease-out hover:bg-surface-hover hover:text-sidebar-fg-active',
-            collapsed && 'justify-center px-0'
-          )}
-        >
-          {collapsed ? (
-            <PanelLeft size={16} strokeWidth={1.75} />
-          ) : (
-            <>
-              <PanelLeftClose size={16} strokeWidth={1.75} />
-              <span>Collapse</span>
-            </>
-          )}
-        </button>
+      {/* Footer: sign out (the collapse toggle now sits beside the logo) */}
+      <div className="border-t border-sidebar-border px-3 py-3">
         {collapsed ? (
           <Tooltip label="Sign out" side="right">
             <button
