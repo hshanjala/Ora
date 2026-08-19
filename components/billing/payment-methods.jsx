@@ -7,11 +7,11 @@ import { Copy, Check } from 'lucide-react'
 import { Button, Card, Alert } from '@/components/ui'
 
 export const PAYMENT_METHODS = [
-  { key: 'bkash', label: 'bKash', number: '01629775202', short: 'bK' },
+  { key: 'bkash', label: 'bKash', number: '01799900323', short: 'bK' },
   { key: 'nagad', label: 'Nagad', number: '01799900323', short: 'Ng' },
 ]
 
-export const SUPPORT_NUMBER = '01629775202'
+export const SUPPORT_NUMBER = '01799900323'
 export const MONTHLY_PRICE = '৳299'
 
 export function PaymentInstructions() {
