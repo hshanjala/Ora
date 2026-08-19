@@ -86,9 +86,11 @@ export default function PatientsPage() {
       <PageHeader
         title="Patients"
         subtitle={`${patients.length} patient${patients.length !== 1 ? 's' : ''} registered`}
+        inlineActions
         actions={
-          <Button onClick={() => setShowAddModal(true)}>
-            <Plus size={15} strokeWidth={1.75} /> Add patient
+          <Button aria-label="Add patient" onClick={() => setShowAddModal(true)}>
+            <Plus size={15} strokeWidth={1.75} />
+            <span className="hidden sm:inline">Add patient</span>
           </Button>
         }
       />

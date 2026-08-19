@@ -91,13 +91,14 @@ export default function PrescriptionsPage() {
       <PageHeader
         title="Prescriptions"
         subtitle={`${prescriptions.length} prescription${prescriptions.length !== 1 ? 's' : ''} total`}
+        inlineActions
         actions={
           <>
-            <Button variant="secondary" onClick={() => setShowTemplate(true)}>
+            <Button aria-label="Template" variant="secondary" onClick={() => setShowTemplate(true)}>
               <Settings2 size={15} strokeWidth={1.75} />
               <span className="hidden sm:inline">Template</span>
             </Button>
-            <Button onClick={() => setShowModal(true)}>
+            <Button aria-label="New prescription" onClick={() => setShowModal(true)}>
               <Plus size={15} strokeWidth={1.75} />
               <span className="hidden sm:inline">New prescription</span>
             </Button>
