@@ -90,16 +90,20 @@ export default function ExpensesPage() {
       <PageHeader
         title="Expenses"
         subtitle="Track all clinic expenses"
+        inlineActions
         actions={
-          <Button onClick={() => setShowModal(true)}>
-            <Plus size={15} strokeWidth={1.75} /> Add expense
+          <Button aria-label="Add expense" onClick={() => setShowModal(true)}>
+            <Plus size={15} strokeWidth={1.75} />
+            <span className="hidden sm:inline">Add expense</span>
           </Button>
         }
       />
 
-      {/* Month + totals */}
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="p-4">
+      {/* Month + totals. On a phone the filter takes the full width and the
+          three totals sit in one row below it; from `sm` up the grid is
+          unchanged (2-up, then 4-up on large screens). */}
+      <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
+        <Card className="col-span-3 p-4 sm:col-span-1">
           <Label htmlFor="expense-month">Filter month</Label>
           <input
             id="expense-month"
@@ -110,17 +114,20 @@ export default function ExpensesPage() {
           />
         </Card>
         <StatCard
+          compact
           label="Total this month"
           value={`৳${monthTotal.toLocaleString()}`}
           icon={TrendingDown}
           tone={monthTotal > 0 ? 'danger' : 'neutral'}
         />
         <StatCard
+          compact
           label={isFiltered ? 'Filtered total' : 'Entries'}
           value={isFiltered ? `৳${filteredTotal.toLocaleString()}` : expenses.length}
           icon={Wallet}
         />
         <StatCard
+          compact
           label="Categories used"
           value={Object.keys(byCategory).length}
           icon={Tags}
