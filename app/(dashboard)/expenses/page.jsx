@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AddExpenseModal from '@/components/modals/AddExpenseModal'
 import { EXPENSE_CATEGORIES } from '@/components/expenses/categories'
-import { Plus, TrendingDown, Trash2, Wallet, Tags } from 'lucide-react'
+import { Plus, TrendingDown, Trash2, Wallet, Tags, CalendarDays } from 'lucide-react'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import {
   Button, IconButton, Tooltip, Card, PageHeader, SearchInput,
@@ -89,21 +89,53 @@ export default function ExpensesPage() {
     <div className="mx-auto max-w-content p-4 md:p-6">
       <PageHeader
         title="Expenses"
-        subtitle="Track all clinic expenses"
+        subtitle={
+          <>
+            {/* On a phone the month card is gone, so the subtitle says which
+                month is on screen — otherwise picking July shows July's
+                numbers with nothing on the page admitting it. */}
+            <span className="tabular sm:hidden">
+              {format(new Date(monthFilter + '-01'), 'MMMM yyyy')}
+            </span>
+            <span className="hidden sm:inline">Track all clinic expenses</span>
+          </>
+        }
         inlineActions
         actions={
-          <Button aria-label="Add expense" onClick={() => setShowModal(true)}>
-            <Plus size={15} strokeWidth={1.75} />
-            <span className="hidden sm:inline">Add expense</span>
-          </Button>
+          <>
+            {/* Phone-only month picker. The native input sits transparent over
+                the icon rather than calling showPicker(), which Safari has
+                only shipped recently — tapping the button taps the real
+                input, so the OS picker opens everywhere. */}
+            <div className="relative shrink-0 rounded-md has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring sm:hidden">
+              <span
+                aria-hidden="true"
+                className="flex h-9 w-9 items-center justify-center rounded-md border bg-surface text-primary"
+              >
+                <CalendarDays size={16} strokeWidth={1.75} />
+              </span>
+              <input
+                type="month"
+                aria-label="Filter month"
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value)}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              />
+            </div>
+            <Button aria-label="Add expense" onClick={() => setShowModal(true)}>
+              <Plus size={15} strokeWidth={1.75} />
+              <span className="hidden sm:inline">Add expense</span>
+            </Button>
+          </>
         }
       />
 
-      {/* Month + totals. On a phone the filter takes the full width and the
-          three totals sit in one row below it; from `sm` up the grid is
-          unchanged (2-up, then 4-up on large screens). */}
+      {/* Month + totals. On a phone the month card is hidden — its job moved to
+          the picker button in the header — leaving the three totals in one
+          row. From `sm` up the grid is unchanged (2-up, then 4-up on large
+          screens). */}
       <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
-        <Card className="col-span-3 p-4 sm:col-span-1">
+        <Card className="hidden p-4 sm:block">
           <Label htmlFor="expense-month">Filter month</Label>
           <input
             id="expense-month"
