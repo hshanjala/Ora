@@ -14,7 +14,7 @@ import {
 } from '@/components/ui'
 
 const PAYMENT_METHODS = [
-  { label: 'bKash', num: '01629775202', key: 'bkash' },
+  { label: 'bKash', num: '01799900323', key: 'bkash' },
   { label: 'Nagad', num: '01799900323', key: 'nagad' },
 ]
 

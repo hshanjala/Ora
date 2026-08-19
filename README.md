@@ -66,7 +66,7 @@ Your app will be live at `https://your-project.vercel.app`
 ## Payment Information
 
 When clinics need to renew, they send ৳299 to:
-- **bKash**: 01629775202
+- **bKash**: 01799900323
 - **Nagad**: 01799900323
 
 After payment, update their `subscription_end` date in Supabase dashboard.
