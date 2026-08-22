@@ -199,7 +199,7 @@ export default function DesignSystemPage() {
                     <p className="tabular text-body text-primary">৳1,24,500</p>
                     <p className="tabular text-body text-primary">৳12,800</p>
                     <p className="tabular text-body text-primary">৳4,500</p>
-                    <p className="tabular text-body text-primary">৳299</p>
+                    <p className="tabular text-body text-primary">৳350</p>
                   </div>
                   <p className="mt-3 text-label text-tertiary">
                     Proportional figures for comparison — note the ragged column:
@@ -652,7 +652,7 @@ export default function DesignSystemPage() {
               <Subsection title="Alerts">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Alert status="success" title="Payment recorded">৳4,500 received on 11 Aug.</Alert>
-                  <Alert status="warning" title="Trial ends in 3 days">Renew for ৳299/month to keep access.</Alert>
+                  <Alert status="warning" title="Trial ends in 3 days">Renew for ৳350/month to keep access.</Alert>
                   <Alert status="danger" title="Payment failed">Check the amount and try again.</Alert>
                   <Alert status="info" title="Reminder scheduled">The patient will get an SMS at 9:00 AM.</Alert>
                 </div>

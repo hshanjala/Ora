@@ -65,7 +65,7 @@ Your app will be live at `https://your-project.vercel.app`
 
 ## Payment Information
 
-When clinics need to renew, they send ৳299 to:
+When clinics need to renew, they send ৳350 to:
 - **bKash**: 01799900323
 - **Nagad**: 01799900323
 
