@@ -14,6 +14,7 @@ import {
 import {
   Step1Patient, Step2Schedule, Step3Prescription, Step4Invoice,
 } from '@/components/quick-add/steps'
+import { resetRememberedFrequencies } from '@/components/prescriptions/fields'
 import SuccessScreen from '@/components/quick-add/success-screen'
 
 const STEPS = [
@@ -204,6 +205,8 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
         instructions: m.instructions || null,
       }))
       await supabase.from('prescription_items').insert(medItems)
+      // A frequency typed here becomes a suggestion for the next prescription.
+      resetRememberedFrequencies()
     }
     if (rx) {
       setSavedRx({

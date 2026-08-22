@@ -10,7 +10,8 @@
     "lint:design": "node scripts/lint-design.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:design": "npm run lint:design && npm run check:contrast",
-    "test:access": "node scripts/test-subscription-access.mjs"
+    "test:access": "node scripts/test-subscription-access.mjs",
+    "test:frequency": "node scripts/test-frequency-suggestions.mjs"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.11",
