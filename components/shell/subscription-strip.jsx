@@ -32,11 +32,11 @@ function PaymentModal({ open, onOpenChange }) {
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
       <ModalContent size="sm">
-        <ModalHeader title="Renew Subscription" subtitle="Send ৳299 to renew for 1 month" />
+        <ModalHeader title="Renew Subscription" subtitle="Send ৳350 to renew for 1 month" />
         <ModalBody className="space-y-3">
           <Alert status="warning" title="How to pay">
             <ol className="list-inside list-decimal space-y-0.5">
-              <li>Send ৳299 to one of the numbers below</li>
+              <li>Send ৳350 to one of the numbers below</li>
               <li>Use the “Send Money” option</li>
               <li>Screenshot your transaction</li>
               <li>WhatsApp us the screenshot</li>
@@ -107,7 +107,7 @@ export default function SubscriptionStrip({ settings }) {
   } else if (endDateStr) {
     message = `${isOnTrial ? 'Free trial' : 'Subscription'} ends ${endDateFormatted} — ${daysLeft} day${daysLeft === 1 ? '' : 's'} left.`
   } else {
-    message = 'Renew for ৳299/month to continue.'
+    message = 'Renew for ৳350/month to continue.'
   }
 
   return (
@@ -124,7 +124,7 @@ export default function SubscriptionStrip({ settings }) {
         </p>
         {!isSuspended && (
           <Button size="sm" variant="secondary" className="shrink-0" onClick={() => setShowModal(true)}>
-            Renew — ৳299/mo
+            Renew — ৳350/mo
           </Button>
         )}
       </div>

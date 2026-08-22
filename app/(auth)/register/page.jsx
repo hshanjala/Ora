@@ -110,7 +110,7 @@ export default function RegisterPage() {
       </form>
 
       <p className="mt-4 text-center text-label text-tertiary">
-        ৳299/month after the 14-day trial · cancel anytime
+        ৳350/month after the 14-day trial · cancel anytime
       </p>
       <p className="mt-3 text-center text-small text-secondary">
         Already have an account?{' '}

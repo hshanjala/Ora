@@ -12,7 +12,7 @@ export const PAYMENT_METHODS = [
 ]
 
 export const SUPPORT_NUMBER = '01799900323'
-export const MONTHLY_PRICE = '৳299'
+export const MONTHLY_PRICE = '৳350'
 
 export function PaymentInstructions() {
   return (
