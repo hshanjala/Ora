@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, Plus, Trash2, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import {
-  Button, IconButton, Input, Textarea, Combobox, Label,
+  IconButton, Input, Textarea, Combobox, Label,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui'
 
@@ -135,15 +135,27 @@ export function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
   )
 }
 
-export function AddFieldButton({ onAdd, existingLabels }) {
+/**
+ * Add-field trigger, styled as a dashed tile so it can sit in the column
+ * beside the advice box and fill it. `className` carries the flex sizing from
+ * ClinicalNotes: on its own it stretches to match the advice box, and once
+ * extra fields stack above it, it collapses to a normal button height.
+ */
+export function AddFieldButton({ onAdd, existingLabels, className }) {
   const available = EXTRA_OPTIONS.filter(o => !existingLabels.includes(o))
   if (available.length === 0) return null
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="secondary" size="sm">
+        <button
+          type="button"
+          className={cn(
+            'flex min-h-9 w-full items-center justify-center gap-1.5 rounded-md border border-dashed text-small font-medium text-secondary transition-colors duration-fast ease-out hover:border-strong hover:bg-surface-hover hover:text-primary',
+            className
+          )}
+        >
           <Plus size={14} strokeWidth={1.75} /> Add field
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         {available.map(opt => (
@@ -166,7 +178,11 @@ function NoteField({ label, options, onLabelChange, ...textareaProps }) {
       <div className="mb-1.5 flex h-6 items-center">
         <LabelDropdown label={label} options={options} onChange={onLabelChange} />
       </div>
-      <Textarea rows={2} aria-label={label} {...textareaProps} />
+      {/* One row rather than two: these notes are usually a short phrase, and
+          the box stays drag-resizable for the times they are not. `block`
+          drops the inline descender gap under the textarea, which otherwise
+          left this cell a few pixels taller than the add tile beside it. */}
+      <Textarea rows={1} aria-label={label} className="block" {...textareaProps} />
     </div>
   )
 }
@@ -211,7 +227,7 @@ export function ClinicalNotes({
         />
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <NoteField
           label={advLabel}
           options={ADV_OPTIONS}
@@ -221,29 +237,33 @@ export function ClinicalNotes({
           value={form.advice}
           onChange={onFormChange}
         />
+
+        {/* The column beside advice: extra fields stack here, with the add
+            tile under them. Empty, the tile stretches to match the advice box;
+            once fields are added it collapses to a button and they push it
+            down. The spacer mirrors the chip row opposite so this column
+            starts level with the advice box, not with its chip. */}
+        <div className="flex flex-col">
+          <div aria-hidden="true" className="mb-1.5 hidden h-6 sm:block" />
+          <div className="flex flex-1 flex-col gap-2">
+            {extraFields.map(field => (
+              <ExtraFieldRow
+                key={field.id}
+                field={field}
+                onChange={onUpdateField}
+                onRemove={onRemoveField}
+              />
+            ))}
+            {canAddField && (
+              <AddFieldButton
+                className="flex-1"
+                onAdd={onAddField}
+                existingLabels={extraFields.map(f => f.label)}
+              />
+            )}
+          </div>
+        </div>
       </div>
-
-      {extraFields.length > 0 && (
-        <div className="mt-3 space-y-3">
-          {extraFields.map(field => (
-            <ExtraFieldRow
-              key={field.id}
-              field={field}
-              onChange={onUpdateField}
-              onRemove={onRemoveField}
-            />
-          ))}
-        </div>
-      )}
-
-      {canAddField && (
-        <div className="mt-3 border-t pt-3">
-          <AddFieldButton
-            onAdd={onAddField}
-            existingLabels={extraFields.map(f => f.label)}
-          />
-        </div>
-      )}
     </div>
   )
 }
