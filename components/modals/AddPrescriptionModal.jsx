@@ -9,7 +9,9 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
   useToast,
 } from '@/components/ui'
-import { ClinicalNotes, MedicineRow } from '@/components/prescriptions/fields'
+import {
+  ClinicalNotes, MedicineRow, resetRememberedFrequencies,
+} from '@/components/prescriptions/fields'
 
 export default function AddPrescriptionModal({ onClose, onSuccess, patientId, patientName }) {
   const supabase = createClient()
@@ -96,6 +98,8 @@ export default function AddPrescriptionModal({ onClose, onSuccess, patientId, pa
       instructions: m.instructions || null,
     }))
     if (medItems.length > 0) await supabase.from('prescription_items').insert(medItems)
+    // A frequency typed here becomes a suggestion for the next prescription.
+    resetRememberedFrequencies()
     toast.success('Prescription saved', `${medItems.length} medicine${medItems.length === 1 ? '' : 's'}`)
     onSuccess()
     onClose()

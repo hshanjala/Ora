@@ -4,6 +4,7 @@
 // (~250 duplicated lines). One definition now serves both.
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, Plus, Trash2, X } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/cn'
 import {
   IconButton, Input, Textarea, Combobox, Label,
@@ -14,9 +15,93 @@ export const CC_OPTIONS    = ['C/C', 'P/C', 'Hx', 'Complaint', 'Chief Complaint'
 export const OE_OPTIONS    = ['O/E', 'Dx', 'Findings', 'Ix', 'On Examination']
 export const ADV_OPTIONS   = ['Adv', 'Rx Note', 'Follow-up', 'Instructions', 'Plan']
 export const EXTRA_OPTIONS = ['BP', 'Weight', 'Temperature', 'Sugar Level', 'SpO2', 'Pulse', 'Referral', 'Investigation', 'Diet', 'Next Visit']
-export const FREQ_OPTIONS  = ['1+1+1', '1+0+1', '1+0+0', '0+1+0', '0+0+1', '1+1+0']
+export const FREQ_OPTIONS  = ['1+0+1', '1+1+1', '0+0+1', '1tbs+0+1tbs', '2tbs+0+2tbs']
 export const DUR_OPTIONS   = ['3 days', '5 days', '7 days', '1 month']
 export const INSTR_OPTIONS = ['After meal', 'Before meal', 'Empty stomach']
+
+// ── Remembered frequencies ───────────────────────────────────────────────────
+// The frequency box accepts any text, and whatever a clinic types is already
+// stored on every prescription item they save. So "remember what I typed" needs
+// no new table and no migration: read back the frequencies from their own
+// recent prescriptions and offer them alongside the presets.
+//
+// Bounded deliberately at the 50 most recent prescriptions — enough to surface
+// anything in regular use, small enough that it stays cheap as a clinic builds
+// up years of records. Two plain queries rather than one join: the same shape
+// the rest of the app already uses, so there is nothing novel to get wrong
+// against the live database.
+
+const RECENT_PRESCRIPTIONS = 50
+const MAX_REMEMBERED = 12
+
+let rememberedRequest = null
+
+/**
+ * Reduce raw prescription_items rows to the suggestion list: trimmed, blanks
+ * and presets dropped, deduped in first-seen (most recent) order, capped.
+ * Exported so it can be tested without a database.
+ */
+export function pickRemembered(items) {
+  const seen = []
+  for (const item of items) {
+    // Type-checked, not assumed: a row of an unexpected shape would otherwise
+    // throw, and the catch upstream would drop every suggestion, not just this
+    // one. Only text a person actually typed belongs in the list.
+    const raw = item?.frequency
+    const value = typeof raw === 'string' ? raw.trim() : ''
+    if (!value || FREQ_OPTIONS.includes(value) || seen.includes(value)) continue
+    seen.push(value)
+    if (seen.length === MAX_REMEMBERED) break
+  }
+  return seen
+}
+
+async function loadRemembered() {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data: recent } = await supabase
+      .from('prescriptions')
+      .select('id')
+      .eq('clinic_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(RECENT_PRESCRIPTIONS)
+
+    const ids = (recent || []).map(r => r.id)
+    if (ids.length === 0) return []
+
+    const { data: items } = await supabase
+      .from('prescription_items')
+      .select('frequency')
+      .in('prescription_id', ids)
+
+    return pickRemembered(items || [])
+  } catch {
+    // Suggestions are a convenience; the field still accepts any text.
+    return []
+  }
+}
+
+/** Drops the cache so a frequency just saved shows up next time. */
+export function resetRememberedFrequencies() {
+  rememberedRequest = null
+}
+
+function useFrequencyOptions() {
+  const [remembered, setRemembered] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    // One request no matter how many medicine rows are on screen.
+    if (!rememberedRequest) rememberedRequest = loadRemembered()
+    rememberedRequest.then(list => { if (!cancelled) setRemembered(list) })
+    return () => { cancelled = true }
+  }, [])
+
+  return remembered.length ? [...FREQ_OPTIONS, ...remembered] : FREQ_OPTIONS
+}
 
 /** Relabel a section (C/C → P/C, etc.). Now a real keyboard-navigable menu. */
 export function LabelDropdown({ label, options, onChange }) {
@@ -97,6 +182,8 @@ export function MedicineInput({ value, onChange }) {
 }
 
 export function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
+  const frequencyOptions = useFrequencyOptions()
+
   return (
     <div className="rounded-md border p-3">
       <div className="mb-2 flex items-center justify-between">
@@ -114,7 +201,7 @@ export function MedicineRow({ med, index, onChange, onRemove, disableRemove }) {
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <SuggestInput
           value={med.frequency}
-          options={FREQ_OPTIONS}
+          options={frequencyOptions}
           onChange={val => onChange(index, 'frequency', val)}
           placeholder="Frequency"
         />
