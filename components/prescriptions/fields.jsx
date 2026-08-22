@@ -179,10 +179,12 @@ function NoteField({ label, options, onLabelChange, ...textareaProps }) {
         <LabelDropdown label={label} options={options} onChange={onLabelChange} />
       </div>
       {/* One row rather than two: these notes are usually a short phrase, and
-          the box stays drag-resizable for the times they are not. `block`
-          drops the inline descender gap under the textarea, which otherwise
-          left this cell a few pixels taller than the add tile beside it. */}
-      <Textarea rows={1} aria-label={label} className="block" {...textareaProps} />
+          the box stays drag-resizable for the times they are not.
+          `block` drops the inline descender gap that otherwise left this cell
+          taller than its neighbours, and `py-1.5` lands the box on exactly 36px
+          — the height of the Input an added field uses, so the two match when
+          they sit side by side. */}
+      <Textarea rows={1} aria-label={label} className="block py-1.5" {...textareaProps} />
     </div>
   )
 }
@@ -206,6 +208,10 @@ export function ClinicalNotes({
 
   return (
     <div className="rounded-md border p-3">
+      {/* Every field — the three notes and any extra ones — is a cell of one
+          grid, which is what keeps them aligned. Laying the extra fields out
+          in their own container beside advice could only ever approximate the
+          column widths and row heights of the notes above them. */}
       <div className="grid gap-3 sm:grid-cols-2">
         <NoteField
           label={ccLabel}
@@ -225,9 +231,6 @@ export function ClinicalNotes({
           value={form.on_examination}
           onChange={onFormChange}
         />
-      </div>
-
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <NoteField
           label={advLabel}
           options={ADV_OPTIONS}
@@ -237,53 +240,54 @@ export function ClinicalNotes({
           value={form.advice}
           onChange={onFormChange}
         />
-
-        {/* The column beside advice: extra fields stack here, with the add
-            tile under them. Empty, the tile stretches to match the advice box;
-            once fields are added it collapses to a button and they push it
-            down. The spacer mirrors the chip row opposite so this column
-            starts level with the advice box, not with its chip. */}
-        <div className="flex flex-col">
-          <div aria-hidden="true" className="mb-1.5 hidden h-6 sm:block" />
-          <div className="flex flex-1 flex-col gap-2">
-            {extraFields.map(field => (
-              <ExtraFieldRow
-                key={field.id}
-                field={field}
-                onChange={onUpdateField}
-                onRemove={onRemoveField}
-              />
-            ))}
-            {canAddField && (
-              <AddFieldButton
-                className="flex-1"
-                onAdd={onAddField}
-                existingLabels={extraFields.map(f => f.label)}
-              />
-            )}
-          </div>
-        </div>
+        {extraFields.map(field => (
+          <ExtraFieldRow
+            key={field.id}
+            field={field}
+            onChange={onUpdateField}
+            onRemove={onRemoveField}
+          />
+        ))}
       </div>
+
+      {/* Full width under the grid: it adds to whichever cell comes next, not
+          to one column. */}
+      {canAddField && (
+        <AddFieldButton
+          className="mt-3"
+          onAdd={onAddField}
+          existingLabels={extraFields.map(f => f.label)}
+        />
+      )}
     </div>
   )
 }
 
+/**
+ * An added field, shaped as a copy of NoteField so the two line up when they
+ * share a grid: same h-6 header row, and the input spans the full cell. The
+ * remove button sits in the header rather than beside the input, which is what
+ * used to make these inputs narrower than the note boxes above them.
+ */
 export function ExtraFieldRow({ field, onChange, onRemove }) {
   return (
-    <div className="flex items-end gap-2">
-      <div className="min-w-0 flex-1">
-        <Label htmlFor={`extra-${field.id}`}>{field.label}</Label>
-        <Input
-          id={`extra-${field.id}`}
-          className="mt-1"
-          placeholder={`Enter ${field.label}…`}
-          value={field.value}
-          onChange={e => onChange(field.id, e.target.value)}
-        />
+    <div>
+      <div className="mb-1.5 flex h-6 items-center justify-between gap-2">
+        <Label htmlFor={`extra-${field.id}`} className="truncate">{field.label}</Label>
+        <IconButton
+          aria-label={`Remove ${field.label}`}
+          className="h-6 w-6 shrink-0"
+          onClick={() => onRemove(field.id)}
+        >
+          <X size={13} strokeWidth={1.75} />
+        </IconButton>
       </div>
-      <IconButton aria-label={`Remove ${field.label}`} onClick={() => onRemove(field.id)}>
-        <X size={14} strokeWidth={1.75} />
-      </IconButton>
+      <Input
+        id={`extra-${field.id}`}
+        placeholder={`Enter ${field.label}…`}
+        value={field.value}
+        onChange={e => onChange(field.id, e.target.value)}
+      />
     </div>
   )
 }
