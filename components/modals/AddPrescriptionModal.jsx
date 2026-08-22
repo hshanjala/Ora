@@ -5,14 +5,11 @@ import { format } from 'date-fns'
 import { Plus } from 'lucide-react'
 import {
   Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalClose,
-  Button, FormField, DateInput, Textarea, Alert, Input, Label,
+  Button, FormField, DateInput, Alert, Input, Label,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
   useToast,
 } from '@/components/ui'
-import {
-  LabelDropdown, MedicineRow, AddFieldButton, ExtraFieldRow,
-  CC_OPTIONS, OE_OPTIONS, ADV_OPTIONS,
-} from '@/components/prescriptions/fields'
+import { ClinicalNotes, MedicineRow } from '@/components/prescriptions/fields'
 
 export default function AddPrescriptionModal({ onClose, onSuccess, patientId, patientName }) {
   const supabase = createClient()
@@ -136,61 +133,24 @@ export default function AddPrescriptionModal({ onClose, onSuccess, patientId, pa
               </FormField>
             </div>
 
-            {/* Complaint + examination */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <div className="mb-1.5">
-                  <LabelDropdown label={ccLabel} options={CC_OPTIONS} onChange={setCcLabel} />
-                </div>
-                <Textarea
-                  name="chief_complaint"
-                  rows={2}
-                  placeholder="Chief complaint…"
-                  value={form.chief_complaint}
-                  onChange={handleFormChange}
-                />
-              </div>
-              <div>
-                <div className="mb-1.5">
-                  <LabelDropdown label={oeLabel} options={OE_OPTIONS} onChange={setOeLabel} />
-                </div>
-                <Textarea
-                  name="on_examination"
-                  rows={2}
-                  placeholder="Examination findings…"
-                  value={form.on_examination}
-                  onChange={handleFormChange}
-                />
-              </div>
-            </div>
-
-            {/* Advice + extra fields */}
+            {/* Clinical notes */}
             <div>
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <LabelDropdown label={advLabel} options={ADV_OPTIONS} onChange={setAdvLabel} />
-                <AddFieldButton onAdd={addExtraField} existingLabels={extraFields.map(f => f.label)} />
-              </div>
-              <Textarea
-                name="advice"
-                rows={2}
-                placeholder="Advice given to patient…"
-                value={form.advice}
-                onChange={handleFormChange}
+              <Label className="mb-1.5">Clinical notes</Label>
+              <ClinicalNotes
+                ccLabel={ccLabel}
+                oeLabel={oeLabel}
+                advLabel={advLabel}
+                onCcLabelChange={setCcLabel}
+                onOeLabelChange={setOeLabel}
+                onAdvLabelChange={setAdvLabel}
+                form={form}
+                onFormChange={handleFormChange}
+                extraFields={extraFields}
+                onAddField={addExtraField}
+                onUpdateField={updateExtraField}
+                onRemoveField={removeExtraField}
               />
             </div>
-
-            {extraFields.length > 0 && (
-              <div className="space-y-3">
-                {extraFields.map(field => (
-                  <ExtraFieldRow
-                    key={field.id}
-                    field={field}
-                    onChange={updateExtraField}
-                    onRemove={removeExtraField}
-                  />
-                ))}
-              </div>
-            )}
 
             {/* Medicines */}
             <div>
