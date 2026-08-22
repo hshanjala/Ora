@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, Plus, Trash2, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import {
-  Button, IconButton, Input, Combobox, Label,
+  Button, IconButton, Input, Textarea, Combobox, Label,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui'
 
@@ -151,6 +151,100 @@ export function AddFieldButton({ onAdd, existingLabels }) {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+/**
+ * One relabelable note: the dropdown chip sits in a fixed-height row above its
+ * textarea. The fixed height is the point — the chips were previously laid out
+ * by whatever happened to share their row, so the "Adv" chip (which sat beside
+ * the Add field button) pushed its textarea lower than the other two.
+ */
+function NoteField({ label, options, onLabelChange, ...textareaProps }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex h-6 items-center">
+        <LabelDropdown label={label} options={options} onChange={onLabelChange} />
+      </div>
+      <Textarea rows={2} aria-label={label} {...textareaProps} />
+    </div>
+  )
+}
+
+/**
+ * The clinical notes block — complaint, examination, advice, plus whatever
+ * extra fields the doctor adds. Shared by the prescription modal and the
+ * quick-add wizard, which previously kept identical copies of this markup.
+ *
+ * Grouped in one bordered box so the chips read as labels of a section rather
+ * than as three loose controls, and Add field moved to the foot of that box:
+ * it creates the rows underneath it, so that is where it belongs.
+ */
+export function ClinicalNotes({
+  ccLabel, oeLabel, advLabel,
+  onCcLabelChange, onOeLabelChange, onAdvLabelChange,
+  form, onFormChange,
+  extraFields, onAddField, onUpdateField, onRemoveField,
+}) {
+  const canAddField = EXTRA_OPTIONS.some(o => !extraFields.some(f => f.label === o))
+
+  return (
+    <div className="rounded-md border p-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <NoteField
+          label={ccLabel}
+          options={CC_OPTIONS}
+          onLabelChange={onCcLabelChange}
+          name="chief_complaint"
+          placeholder="Chief complaint…"
+          value={form.chief_complaint}
+          onChange={onFormChange}
+        />
+        <NoteField
+          label={oeLabel}
+          options={OE_OPTIONS}
+          onLabelChange={onOeLabelChange}
+          name="on_examination"
+          placeholder="Examination findings…"
+          value={form.on_examination}
+          onChange={onFormChange}
+        />
+      </div>
+
+      <div className="mt-3">
+        <NoteField
+          label={advLabel}
+          options={ADV_OPTIONS}
+          onLabelChange={onAdvLabelChange}
+          name="advice"
+          placeholder="Advice given to patient…"
+          value={form.advice}
+          onChange={onFormChange}
+        />
+      </div>
+
+      {extraFields.length > 0 && (
+        <div className="mt-3 space-y-3">
+          {extraFields.map(field => (
+            <ExtraFieldRow
+              key={field.id}
+              field={field}
+              onChange={onUpdateField}
+              onRemove={onRemoveField}
+            />
+          ))}
+        </div>
+      )}
+
+      {canAddField && (
+        <div className="mt-3 border-t pt-3">
+          <AddFieldButton
+            onAdd={onAddField}
+            existingLabels={extraFields.map(f => f.label)}
+          />
+        </div>
+      )}
+    </div>
   )
 }
 
