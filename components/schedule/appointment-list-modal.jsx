@@ -1,26 +1,61 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { format, addDays, subDays } from 'date-fns'
+import {
+  format,
+  startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear,
+} from 'date-fns'
 import { Calendar } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Modal, ModalContent, ModalHeader, ModalBody,
-  Button, DateInput, Label, FilterBar, Avatar, StatusPill,
+  Button, FilterBar, Avatar,
   EmptyState, ErrorState, SpinnerBlock, Eyebrow,
 } from '@/components/ui'
-import { STATUS_FILTERS, statusPill } from './status'
+import { PERIOD_FILTERS, STATUS_FILTERS, statusPill } from './status'
 
-// Browse appointments across a date range, grouped by day.
+const ISO = (d) => format(d, 'yyyy-MM-dd')
+
+// A year of a busy clinic is a few thousand rows, each joined to a patient.
+// Capped so the modal cannot pull an unbounded payload onto a phone; the header
+// says plainly when the cap is reached rather than quietly showing less.
+const MAX_ROWS = 2000
+
+/** Whole calendar week / month / year containing `now`. */
+export function periodRange(period, now = new Date()) {
+  if (period === 'week') {
+    return {
+      from: ISO(startOfWeek(now, { weekStartsOn: 0 })),
+      to: ISO(endOfWeek(now, { weekStartsOn: 0 })),
+      label: `${format(startOfWeek(now, { weekStartsOn: 0 }), 'MMM d')} – ${format(endOfWeek(now, { weekStartsOn: 0 }), 'MMM d, yyyy')}`,
+    }
+  }
+  if (period === 'year') {
+    return {
+      from: ISO(startOfYear(now)),
+      to: ISO(endOfYear(now)),
+      label: format(now, 'yyyy'),
+    }
+  }
+  return {
+    from: ISO(startOfMonth(now)),
+    to: ISO(endOfMonth(now)),
+    label: format(now, 'MMMM yyyy'),
+  }
+}
+
+// Browse appointments across a whole week, month or year, grouped by day.
 export default function AppointmentListModal({ open, onOpenChange }) {
   const supabase = createClient()
-  const [from, setFrom] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'))
-  const [to, setTo] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
+  const [period, setPeriod] = useState('month')
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all')
 
-  async function load() {
+  const range = periodRange(period)
+
+  async function load(forPeriod = period) {
+    const { from, to } = periodRange(forPeriod)
     setLoading(true)
     setError(null)
     try {
@@ -33,6 +68,7 @@ export default function AppointmentListModal({ open, onOpenChange }) {
         .lte('date', to)
         .order('date')
         .order('time')
+        .limit(MAX_ROWS)
       if (qErr) throw qErr
       setAppointments(data || [])
     } catch (err) {
@@ -42,8 +78,8 @@ export default function AppointmentListModal({ open, onOpenChange }) {
   }
 
   useEffect(() => {
-    if (open) load()
-  }, [open])
+    if (open) load(period)
+  }, [open, period])
 
   const filtered = filter === 'all'
     ? appointments
@@ -62,21 +98,19 @@ export default function AppointmentListModal({ open, onOpenChange }) {
       <ModalContent size="lg">
         <ModalHeader
           title="All appointments"
-          subtitle={`${filtered.length} appointment${filtered.length !== 1 ? 's' : ''} in this range`}
+          subtitle={
+            `${range.label} · ${filtered.length} appointment${filtered.length !== 1 ? 's' : ''}` +
+            (appointments.length === MAX_ROWS ? ` (first ${MAX_ROWS})` : '')
+          }
         />
 
         <div className="space-y-3 border-b px-5 py-3">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-0">
-              <Label htmlFor="range-from">From</Label>
-              <DateInput id="range-from" className="mt-1 w-40" value={from} onChange={(e) => setFrom(e.target.value)} />
-            </div>
-            <div className="min-w-0">
-              <Label htmlFor="range-to">To</Label>
-              <DateInput id="range-to" className="mt-1 w-40" value={to} onChange={(e) => setTo(e.target.value)} />
-            </div>
-            <Button variant="secondary" onClick={load} loading={loading}>Apply</Button>
-          </div>
+          <FilterBar
+            value={period}
+            onChange={setPeriod}
+            options={PERIOD_FILTERS}
+            aria-label="Filter by period"
+          />
           <FilterBar
             value={filter}
             onChange={setFilter}
@@ -96,8 +130,8 @@ export default function AppointmentListModal({ open, onOpenChange }) {
           ) : Object.keys(grouped).length === 0 ? (
             <EmptyState
               icon={Calendar}
-              title="No appointments in this range"
-              description="Try widening the dates or clearing the status filter."
+              title={`No appointments in ${range.label}`}
+              description="Try a longer period or clear the status filter."
             />
           ) : (
             <div className="divide-y">
