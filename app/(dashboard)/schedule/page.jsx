@@ -184,38 +184,16 @@ export default function SchedulePage() {
         subtitle="Manage all appointments"
         inlineActions
         actions={
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="secondary" aria-label="View mode">
-                  <CalendarDays size={15} strokeWidth={1.75} />
-                  <span className="hidden sm:inline">{currentViewLabel}</span>
-                  <ChevronDown size={13} strokeWidth={2} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {VIEW_OPTIONS.map(opt => (
-                  <DropdownMenuItem
-                    key={opt.value}
-                    onSelect={() => setViewMode(opt.value)}
-                    className={opt.value === viewMode ? 'bg-accent-subtle text-accent-text' : undefined}
-                  >
-                    {opt.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button aria-label="Add appointment" onClick={() => setShowModal(true)}>
-              <Plus size={15} strokeWidth={1.75} />
-              <span className="hidden sm:inline">Add appointment</span>
-            </Button>
-          </>
+          <Button aria-label="Add appointment" onClick={() => setShowModal(true)}>
+            <Plus size={15} strokeWidth={1.75} />
+            <span className="hidden sm:inline">Add appointment</span>
+          </Button>
         }
       />
 
-      {viewMode === 'day' && (
-        <Card className="mb-4 p-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Card className="mb-4 p-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          {viewMode === 'day' ? (
             <div className="flex flex-1 items-center gap-2">
               <IconButton
                 aria-label="Previous day"
@@ -240,34 +218,47 @@ export default function SchedulePage() {
                 <ChevronRight size={16} strokeWidth={1.75} />
               </IconButton>
             </div>
-            <div className="flex items-center gap-2">
+          ) : (
+            <div className="flex-1">
+              <p className="text-h3 text-primary">{range?.label}</p>
+              <p className="mt-0.5 text-label text-secondary">
+                {periodFiltered.length} appointment{periodFiltered.length !== 1 ? 's' : ''}
+                {periodAppointments.length === MAX_ROWS ? ` (first ${MAX_ROWS})` : ''}
+              </p>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            {viewMode === 'day' && (
               <DateInput
                 aria-label="Jump to date"
                 className="w-40"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
               />
-              <Button
-                variant="secondary"
-                disabled={isToday}
-                onClick={() => setSelectedDate(format(new Date(), 'yyyy-MM-dd'))}
-              >
-                Today
-              </Button>
-            </div>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" aria-label="View mode">
+                  <CalendarDays size={15} strokeWidth={1.75} />
+                  <span className="hidden sm:inline">{currentViewLabel}</span>
+                  <ChevronDown size={13} strokeWidth={2} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {VIEW_OPTIONS.map(opt => (
+                  <DropdownMenuItem
+                    key={opt.value}
+                    onSelect={() => setViewMode(opt.value)}
+                    className={opt.value === viewMode ? 'bg-accent-subtle text-accent-text' : undefined}
+                  >
+                    {opt.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </Card>
-      )}
-
-      {viewMode !== 'day' && range && (
-        <Card className="mb-4 px-4 py-3">
-          <p className="text-h3 text-primary">{range.label}</p>
-          <p className="mt-0.5 text-label text-secondary">
-            {periodFiltered.length} appointment{periodFiltered.length !== 1 ? 's' : ''}
-            {periodAppointments.length === MAX_ROWS ? ` (first ${MAX_ROWS})` : ''}
-          </p>
-        </Card>
-      )}
+        </div>
+      </Card>
 
       <FilterBar
         value={filter}
