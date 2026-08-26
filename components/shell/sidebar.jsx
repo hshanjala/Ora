@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LogOut, PanelLeftClose, PanelLeft } from 'lucide-react'
@@ -84,9 +85,7 @@ export default function Sidebar({ clinicName }) {
           collapsed && 'flex-col gap-2 px-0'
         )}
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent text-label text-inverse">
-          O
-        </span>
+        <Image src="/logo-icon-sm.png" alt="Ora" width={28} height={28} className="shrink-0" />
         {!collapsed && (
           <span className="min-w-0 flex-1">
             <span className="block text-body-md leading-none text-primary">Ora</span>
