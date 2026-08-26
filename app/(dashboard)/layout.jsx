@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import AppShell from '@/components/shell/app-shell'
 import { Spinner } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
@@ -35,9 +36,7 @@ export default function DashboardLayout({ children }) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-canvas">
         <div className="flex flex-col items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-accent text-body-md text-inverse">
-            O
-          </span>
+          <Image src="/logo-icon-sm.png" alt="Ora" width={36} height={36} priority />
           <Spinner size={18} className="text-tertiary" />
         </div>
       </div>

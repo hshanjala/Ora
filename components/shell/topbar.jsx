@@ -1,5 +1,6 @@
 'use client'
 import { usePathname, useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { LogOut, Settings, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -29,9 +30,7 @@ export default function Topbar({ settings }) {
     <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-surface px-4 md:px-6">
       {/* Left: mobile brand + current page */}
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-accent text-micro text-inverse md:hidden">
-          O
-        </span>
+        <Image src="/logo-icon-sm.png" alt="Ora" width={24} height={24} className="shrink-0 md:hidden" />
         <h1 className="truncate text-body-md text-primary">{title}</h1>
       </div>
 

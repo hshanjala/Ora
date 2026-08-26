@@ -16,6 +16,10 @@ const anekBangla = Anek_Bangla({
 export const metadata = {
   title: 'Ora — Dental Clinic Management',
   description: 'Manage your dental clinic patients, appointments, billing and more.',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({ children }) {
