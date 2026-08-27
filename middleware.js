@@ -40,13 +40,20 @@ export async function middleware(request) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/register')) {
+  if (pathname.startsWith('/auth/callback')) {
+    return supabaseResponse
+  }
+
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register')
+    || pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password')
+
+  if (!user && !isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && (pathname.startsWith('/login') || pathname.startsWith('/register'))) {
+  if (user && isAuthPage && !pathname.startsWith('/reset-password')) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
