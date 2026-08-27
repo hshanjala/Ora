@@ -90,7 +90,15 @@ export default function LoginPage() {
           />
         </FormField>
 
-        <FormField label="Password" required>
+        <FormField
+          label="Password"
+          required
+          labelRight={
+            <Link href="/forgot-password" className="text-label text-accent-text hover:underline">
+              Forgot password?
+            </Link>
+          }
+        >
           <div className="relative">
             <Input
               type={showPassword ? 'text' : 'password'}

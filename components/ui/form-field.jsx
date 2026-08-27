@@ -20,7 +20,7 @@ export function useFormField() {
 
 // The one wrapper every form uses: label + control + hint + error.
 const FormField = forwardRef(function FormField(
-  { className, label, hint, error, required = false, children, ...props },
+  { className, label, labelRight, hint, error, required = false, children, ...props },
   ref
 ) {
   const id = useId()
@@ -31,12 +31,15 @@ const FormField = forwardRef(function FormField(
     <FormFieldContext.Provider value={{ id, hint, error, hintId, errorId }}>
       <div ref={ref} className={cn('space-y-1.5', className)} {...props}>
         {label && (
-          <Label htmlFor={id}>
-            {label}
-            {required && (
-              <span className="text-danger ml-0.5" aria-hidden="true">*</span>
-            )}
-          </Label>
+          <div className="flex items-baseline justify-between">
+            <Label htmlFor={id}>
+              {label}
+              {required && (
+                <span className="text-danger ml-0.5" aria-hidden="true">*</span>
+              )}
+            </Label>
+            {labelRight}
+          </div>
         )}
         {children}
         {error ? (
