@@ -34,6 +34,7 @@ export default function SettingsPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [user, setUser] = useState(null)
+  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [form, setForm] = useState({
     clinic_name: '',
@@ -93,8 +94,18 @@ export default function SettingsPage() {
   async function handlePasswordChange(e) {
     e.preventDefault()
     setPasswordError('')
-    if (newPassword.length < 6) return
+    if (newPassword.length < 6 || !currentPassword) return
     setChangingPassword(true)
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    })
+    if (signInError) {
+      setChangingPassword(false)
+      setPasswordError('Current password is incorrect')
+      return
+    }
 
     const { error } = await supabase.auth.updateUser({ password: newPassword })
 
@@ -103,6 +114,7 @@ export default function SettingsPage() {
       setPasswordError(error.message)
       return
     }
+    setCurrentPassword('')
     setNewPassword('')
     toast.success('Password updated')
   }
@@ -164,9 +176,22 @@ export default function SettingsPage() {
           <CardBody>
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <FormField
+                label="Current password"
+                error={passwordError || undefined}
+                className="max-w-sm"
+              >
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={currentPassword}
+                  onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError('') }}
+                  autoComplete="current-password"
+                  required
+                />
+              </FormField>
+              <FormField
                 label="New password"
                 hint="Minimum 6 characters"
-                error={passwordError || undefined}
                 className="max-w-sm"
               >
                 <div className="relative">
@@ -195,7 +220,7 @@ export default function SettingsPage() {
               <Button
                 type="submit"
                 loading={changingPassword}
-                disabled={newPassword.length < 6}
+                disabled={!currentPassword || newPassword.length < 6}
               >
                 {changingPassword ? 'Updating…' : 'Update password'}
               </Button>
