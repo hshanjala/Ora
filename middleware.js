@@ -40,7 +40,7 @@ export async function middleware(request) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (pathname.startsWith('/auth/callback')) {
+  if (pathname.startsWith('/auth/')) {
     return supabaseResponse
   }
 
