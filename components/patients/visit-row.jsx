@@ -150,15 +150,24 @@ export default function VisitRow({ visit, clinicName }) {
           </span>
         </span>
 
-        <ChevronDown
-          size={15}
-          strokeWidth={1.75}
-          aria-hidden="true"
+        <span
           className={cn(
-            'shrink-0 text-tertiary transition-transform duration-base ease-out motion-reduce:transition-none',
-            open && 'rotate-180'
+            'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-fast ease-out',
+            open
+              ? 'border-transparent bg-accent-subtle text-accent-text'
+              : 'border-border bg-surface text-secondary'
           )}
-        />
+        >
+          <ChevronDown
+            size={14}
+            strokeWidth={2}
+            aria-hidden="true"
+            className={cn(
+              'transition-transform duration-base ease-out motion-reduce:transition-none',
+              open && 'rotate-180'
+            )}
+          />
+        </span>
       </button>
 
       {open && (
