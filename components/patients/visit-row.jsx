@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/cn'
 import {
   Button, IconButton, Eyebrow, StatusPill, Alert, Spinner, Textarea,
+  Modal, ModalContent, ModalHeader, ModalBody,
 } from '@/components/ui'
 import { printInvoice } from '@/lib/printInvoice'
 
@@ -20,6 +21,7 @@ export default function VisitRow({ visit, clinicName }) {
   const [imagesLoaded, setImagesLoaded] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [viewingImage, setViewingImage] = useState(null)
   const [notes, setNotes] = useState('')
   const [notesSaving, setNotesSaving] = useState(false)
   const notesRef = useRef('')
@@ -267,16 +269,15 @@ export default function VisitRow({ visit, clinicName }) {
             )}
             <div className="flex flex-wrap gap-2">
               {images.map((img, i) => (
-                <a
+                <button
                   key={i}
-                  href={img.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block h-14 w-14 overflow-hidden rounded-md border"
+                  type="button"
+                  onClick={() => setViewingImage(img)}
+                  className="block h-14 w-14 overflow-hidden rounded-md border transition-opacity duration-fast hover:opacity-80"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img.url} alt={img.label || 'Visit image'} className="h-full w-full object-cover" />
-                </a>
+                </button>
               ))}
               <button
                 onClick={() => { setUploadError(''); fileRef.current?.click() }}
@@ -300,6 +301,19 @@ export default function VisitRow({ visit, clinicName }) {
           </div>
         </div>
       )}
+      <Modal open={!!viewingImage} onOpenChange={(v) => { if (!v) setViewingImage(null) }}>
+        <ModalContent size="md">
+          <ModalHeader title={viewingImage?.label || 'Image'} subtitle="X-ray / oral image" />
+          <ModalBody className="p-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={viewingImage?.url}
+              alt={viewingImage?.label || 'Visit image'}
+              className="max-h-photo w-full bg-surface-subtle object-contain"
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
