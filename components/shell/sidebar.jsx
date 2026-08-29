@@ -11,8 +11,8 @@ import { NAV_MAIN, NAV_WORKSPACE, isActivePath } from './nav-items'
 
 const COLLAPSE_KEY = 'ora-sidebar-collapsed'
 
-function NavItem({ item, collapsed, active }) {
-  const { label, href, icon: Icon, external } = item
+function NavItem({ item, collapsed, active, onAction }) {
+  const { label, href, icon: Icon, external, action } = item
   const inner = (
     <>
       <Icon size={16} strokeWidth={1.75} className="shrink-0" />
@@ -27,7 +27,11 @@ function NavItem({ item, collapsed, active }) {
       : 'text-sidebar-fg hover:bg-surface-hover hover:text-sidebar-fg-active'
   )
 
-  const node = external ? (
+  const node = action ? (
+    <button type="button" onClick={onAction} className={cn(classes, 'w-full')}>
+      {inner}
+    </button>
+  ) : external ? (
     <a href={href} target="_blank" rel="noopener noreferrer" className={classes}>
       {inner}
     </a>
@@ -44,7 +48,7 @@ function NavItem({ item, collapsed, active }) {
   )
 }
 
-export default function Sidebar({ clinicName }) {
+export default function Sidebar({ clinicName, onOpenFeedback }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -128,7 +132,8 @@ export default function Sidebar({ clinicName }) {
               key={item.label}
               item={item}
               collapsed={collapsed}
-              active={!item.external && isActivePath(pathname, item.href)}
+              active={!item.external && !item.action && isActivePath(pathname, item.href)}
+              onAction={item.action === 'feedback' ? onOpenFeedback : undefined}
             />
           ))}
         </div>

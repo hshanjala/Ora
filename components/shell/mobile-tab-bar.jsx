@@ -34,7 +34,7 @@ function Tab({ href, icon: Icon, label, active, onClick }) {
   )
 }
 
-export default function MobileTabBar() {
+export default function MobileTabBar({ onOpenFeedback }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -78,8 +78,18 @@ export default function MobileTabBar() {
           <SheetHeader title="More" />
           <SheetBody className="pb-6">
             <div className="space-y-0.5">
-              {NAV_MOBILE_MORE.map(({ label, href, icon: Icon, external }) =>
-                external ? (
+              {NAV_MOBILE_MORE.map(({ label, href, icon: Icon, external, action }) =>
+                action ? (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => { setMoreOpen(false); if (action === 'feedback') onOpenFeedback?.() }}
+                    className="flex min-h-11 w-full items-center gap-3 rounded-md px-2.5 text-body-md text-primary transition-colors duration-fast hover:bg-surface-hover"
+                  >
+                    <Icon size={16} strokeWidth={1.75} className="text-secondary" />
+                    {label}
+                  </button>
+                ) : external ? (
                   <a
                     key={label}
                     href={href}
