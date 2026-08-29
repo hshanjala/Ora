@@ -60,7 +60,7 @@ export default function Topbar({ settings }) {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <a href="mailto:orabdpro@gmail.com">
+              <a href="https://mail.google.com/mail/?view=cm&to=orabdpro@gmail.com&su=Problem%20Report%20-%20Ora">
                 <AlertCircle size={14} strokeWidth={1.75} /> Report a Problem
               </a>
             </DropdownMenuItem>
