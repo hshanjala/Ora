@@ -16,7 +16,7 @@ export const NAV_MAIN = [
 
 export const NAV_WORKSPACE = [
   { label: 'Settings', href: '/settings', icon: Settings },
-  { label: 'Report a Problem', href: 'mailto:orabdpro@gmail.com', icon: AlertCircle, external: true },
+  { label: 'Report a Problem', href: 'https://mail.google.com/mail/?view=cm&to=orabdpro@gmail.com&su=Problem%20Report%20-%20Ora', icon: AlertCircle, external: true },
 ]
 
 // Bottom tab bar: the 4 most-used destinations; the rest live in "More".
