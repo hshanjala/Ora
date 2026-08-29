@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import { format } from 'date-fns'
-import { ChevronDown, Printer, Plus } from 'lucide-react'
+import { ChevronDown, Printer, Plus, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/cn'
 import {
@@ -20,6 +20,7 @@ export default function VisitRow({ visit, clinicName }) {
   const [imagesLoaded, setImagesLoaded] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [viewingImage, setViewingImage] = useState(null)
   const [notes, setNotes] = useState('')
   const [notesSaving, setNotesSaving] = useState(false)
   const notesRef = useRef('')
@@ -267,16 +268,15 @@ export default function VisitRow({ visit, clinicName }) {
             )}
             <div className="flex flex-wrap gap-2">
               {images.map((img, i) => (
-                <a
+                <button
                   key={i}
-                  href={img.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block h-14 w-14 overflow-hidden rounded-md border"
+                  type="button"
+                  onClick={() => setViewingImage(img)}
+                  className="block h-14 w-14 overflow-hidden rounded-md border transition-opacity duration-fast hover:opacity-80"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img.url} alt={img.label || 'Visit image'} className="h-full w-full object-cover" />
-                </a>
+                </button>
               ))}
               <button
                 onClick={() => { setUploadError(''); fileRef.current?.click() }}
@@ -298,6 +298,31 @@ export default function VisitRow({ visit, clinicName }) {
               />
             </div>
           </div>
+        </div>
+      )}
+      {viewingImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setViewingImage(null)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setViewingImage(null) }}
+          role="dialog"
+          aria-label="Image preview"
+        >
+          <button
+            type="button"
+            onClick={() => setViewingImage(null)}
+            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            aria-label="Close preview"
+          >
+            <X size={20} strokeWidth={2} />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={viewingImage.url}
+            alt={viewingImage.label || 'Visit image'}
+            className="max-h-[85vh] max-w-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
