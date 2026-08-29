@@ -1,11 +1,12 @@
 'use client'
 import { useRef, useState } from 'react'
 import { format } from 'date-fns'
-import { ChevronDown, Printer, Plus, X } from 'lucide-react'
+import { ChevronDown, Printer, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/cn'
 import {
   Button, IconButton, Eyebrow, StatusPill, Alert, Spinner, Textarea,
+  Modal, ModalContent, ModalHeader, ModalBody,
 } from '@/components/ui'
 import { printInvoice } from '@/lib/printInvoice'
 
@@ -300,31 +301,19 @@ export default function VisitRow({ visit, clinicName }) {
           </div>
         </div>
       )}
-      {viewingImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          onClick={() => setViewingImage(null)}
-          onKeyDown={(e) => { if (e.key === 'Escape') setViewingImage(null) }}
-          role="dialog"
-          aria-label="Image preview"
-        >
-          <button
-            type="button"
-            onClick={() => setViewingImage(null)}
-            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-            aria-label="Close preview"
-          >
-            <X size={20} strokeWidth={2} />
-          </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={viewingImage.url}
-            alt={viewingImage.label || 'Visit image'}
-            className="max-h-[85vh] max-w-full rounded-lg object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+      <Modal open={!!viewingImage} onOpenChange={(v) => { if (!v) setViewingImage(null) }}>
+        <ModalContent size="md">
+          <ModalHeader title={viewingImage?.label || 'Image'} subtitle="X-ray / oral image" />
+          <ModalBody className="p-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={viewingImage?.url}
+              alt={viewingImage?.label || 'Visit image'}
+              className="max-h-photo w-full bg-surface-subtle object-contain"
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
