@@ -20,7 +20,7 @@ export default function InvoicesPage() {
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [timePeriod, setTimePeriod] = useState('month')
+  const [timePeriod, setTimePeriod] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [clinicName, setClinicName] = useState('')
