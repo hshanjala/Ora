@@ -76,7 +76,7 @@ export default function TemplateSetupModal({ open, onOpenChange, onSaved }) {
     let logo_url = tpl.clinic_logo_url
     if (logoFile) {
       const ext = logoFile.name.split('.').pop()
-      const path = `${user.id}/logo.${ext}`
+      const path = `${user.id}/logo-${Date.now()}.${ext}`
       const { error: upErr } = await supabase.storage.from('patient-photos').upload(path, logoFile, { upsert: true })
       if (!upErr) {
         const { data: { publicUrl } } = supabase.storage.from('patient-photos').getPublicUrl(path)
@@ -187,27 +187,21 @@ export default function TemplateSetupModal({ open, onOpenChange, onSaved }) {
                     <Input name="clinic_address" placeholder="Kabir Khan Market, Dhaka" value={tpl.clinic_address} onChange={handleChange} />
                   </FormField>
                   <FormField label="Clinic logo" hint="Appears on the printed letterhead">
-                    <div className="flex items-center gap-3">
-                      {logoPreview ? (
+                    <FileUpload
+                      accept="image/*"
+                      onFile={handleLogoFile}
+                      label={logoPreview ? 'Tap to change logo' : 'Upload logo'}
+                      compact
+                    >
+                      {logoPreview && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={logoPreview}
                           alt="Clinic logo"
-                          className="h-14 w-14 shrink-0 rounded-md border object-contain"
+                          className="mb-1.5 h-14 w-14 rounded-md border object-contain"
                         />
-                      ) : (
-                        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-dashed border-strong text-micro text-tertiary">
-                          Logo
-                        </span>
                       )}
-                      <FileUpload
-                        accept="image/*"
-                        onFile={handleLogoFile}
-                        label="Upload logo"
-                        compact
-                        className="flex-1"
-                      />
-                    </div>
+                    </FileUpload>
                   </FormField>
                 </div>
               </div>

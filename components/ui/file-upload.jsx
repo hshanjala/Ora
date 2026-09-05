@@ -11,7 +11,7 @@ import { Spinner } from './spinner'
  *             label="Upload X-ray" hint="JPG or PNG" />
  */
 const FileUpload = forwardRef(function FileUpload(
-  { className, accept, onFile, loading = false, disabled = false, label = 'Upload a file', hint, compact = false, ...props },
+  { className, accept, onFile, loading = false, disabled = false, label = 'Upload a file', hint, compact = false, children, ...props },
   ref
 ) {
   const inputRef = useRef(null)
@@ -44,6 +44,7 @@ const FileUpload = forwardRef(function FileUpload(
         )}
         {...props}
       >
+        {children}
         {loading ? (
           <Spinner size={16} className="text-accent-text" />
         ) : (
