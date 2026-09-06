@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import {
   Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalClose,
-  Button, FormField, Combobox, DateInput, TimeInput, Textarea, Alert,
+  Button, FormField, Combobox, DateInput, TimeInput, Input, Textarea, Alert,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
   useToast,
 } from '@/components/ui'
@@ -35,6 +35,7 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate, d
     date: defaultDate || format(new Date(), 'yyyy-MM-dd'),
     time: '09:00',
     procedure: '',
+    doctor_name: '',
     notes: '',
     status: 'scheduled',
   })
@@ -86,6 +87,7 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate, d
       date: form.date,
       time: form.time,
       procedure: form.procedure || null,
+      doctor_name: form.doctor_name || null,
       notes: form.notes || null,
       status: form.status,
     })
@@ -144,6 +146,15 @@ export default function AddAppointmentModal({ onClose, onSuccess, defaultDate, d
                   {PROCEDURES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </FormField>
+
+            <FormField label="Doctor">
+              <Input
+                name="doctor_name"
+                placeholder="Dr. name"
+                value={form.doctor_name}
+                onChange={handleChange}
+              />
             </FormField>
 
             <FormField label="Status">

@@ -285,6 +285,10 @@ export default function SchedulePage() {
                 key: 'procedure', header: 'Procedure', hideBelow: 'sm',
                 cell: (a) => <span className="text-secondary">{a.procedure || '—'}</span>,
               },
+              {
+                key: 'doctor', header: 'Doctor', hideBelow: 'sm',
+                cell: (a) => <span className="text-secondary">{a.doctor_name || '—'}</span>,
+              },
               { key: 'status', header: 'Status', cell: (a) => statusPill(a.status) },
               {
                 key: 'notes', header: 'Notes', hideBelow: 'lg',
@@ -318,6 +322,9 @@ export default function SchedulePage() {
                     <span className="tabular">{fmtTime(a.time)}</span>
                     {a.procedure ? ` · ${a.procedure}` : ''}
                   </p>
+                  {a.doctor_name && (
+                    <p className="mt-0.5 text-label text-tertiary">{a.doctor_name}</p>
+                  )}
                   <div className="mt-1.5">{statusPill(a.status)}</div>
                 </div>
                 {rowActions(a)}
@@ -372,6 +379,7 @@ export default function SchedulePage() {
                             <span className="tabular">
                               {appt.time ? format(new Date(`2000-01-01T${appt.time}`), 'h:mm a') : '—'}
                             </span>
+                            {appt.doctor_name && <> · {appt.doctor_name}</>}
                             {appt.patients?.phone && <> · <span className="tabular">{appt.patients.phone}</span></>}
                           </p>
                         </div>
