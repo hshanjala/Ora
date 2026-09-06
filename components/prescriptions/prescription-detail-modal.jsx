@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Modal, ModalContent, ModalHeader, ModalBody,
   Button, Badge, Alert, Eyebrow, DateInput, EmptyState, SpinnerBlock, Card,
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   useToast,
 } from '@/components/ui'
 import { printPrescription } from '@/lib/buildPrescriptionPrint'
@@ -43,13 +42,12 @@ export default function PrescriptionDetailModal({ prescription, open, onOpenChan
     toast.success('Follow-up date saved')
   }
 
-  function handlePrint(paperSize) {
+  function handlePrint() {
     printPrescription(
       tplSettings?.prescription_template || 1,
       tplSettings || {},
       rx,
       items,
-      { paperSize }
     )
   }
 
@@ -61,18 +59,9 @@ export default function PrescriptionDetailModal({ prescription, open, onOpenChan
           subtitle={`${prescription.patients?.name || '—'} · ${format(new Date(prescription.date), 'MMM d, yyyy')}`}
         >
           <div className="mt-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="sm">
-                  <Printer size={14} strokeWidth={1.75} /> Print
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Paper size</DropdownMenuLabel>
-                <DropdownMenuItem onSelect={() => handlePrint('A4')}>A4</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => handlePrint('A5')}>A5</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button variant="secondary" size="sm" onClick={handlePrint}>
+              <Printer size={14} strokeWidth={1.75} /> Print
+            </Button>
           </div>
         </ModalHeader>
 
