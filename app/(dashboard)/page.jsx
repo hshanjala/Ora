@@ -246,6 +246,10 @@ export default function DashboardPage() {
                 key: 'procedure', header: 'Procedure', hideBelow: 'sm',
                 cell: (a) => <span className="text-secondary">{a.procedure || '—'}</span>,
               },
+              {
+                key: 'doctor', header: 'Doctor', hideBelow: 'sm',
+                cell: (a) => <span className="text-secondary">{a.doctor_name || '—'}</span>,
+              },
               { key: 'status', header: 'Status', cell: (a) => statusPill(a.status) },
               { key: 'actions', header: '', align: 'right', cell: rowActions },
             ]}
@@ -268,6 +272,9 @@ export default function DashboardPage() {
                     <span className="tabular">{fmtTime(a.time)}</span>
                     {a.procedure ? ` · ${a.procedure}` : ''}
                   </p>
+                  {a.doctor_name && (
+                    <p className="mt-0.5 text-label text-tertiary">{a.doctor_name}</p>
+                  )}
                   <div className="mt-1.5">{statusPill(a.status)}</div>
                 </div>
                 {rowActions(a)}
