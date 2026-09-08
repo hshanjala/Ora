@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { CheckCircle2 } from 'lucide-react'
 import { Button, Card, FormField, Input, Alert, Divider } from '@/components/ui'
 
 export default function RegisterPage() {
@@ -18,6 +19,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
   function handleChange(e) {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -68,8 +70,26 @@ export default function RegisterPage() {
       })
     }
 
-    router.push('/')
-    router.refresh()
+    setSuccess(true)
+    setLoading(false)
+  }
+
+  if (success) {
+    return (
+      <Card className="p-6 text-center">
+        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-subtle text-success">
+          <CheckCircle2 size={24} strokeWidth={1.75} />
+        </span>
+        <h2 className="text-h2 text-primary">Account created</h2>
+        <p className="mt-1 text-small text-secondary">
+          Check your email <span className="text-primary">{formData.email}</span> and click the
+          confirmation link to activate your account.
+        </p>
+        <Button className="mt-5 w-full" size="lg" onClick={() => router.push('/login')}>
+          Go to login
+        </Button>
+      </Card>
+    )
   }
 
   return (
