@@ -113,14 +113,12 @@ export default function InvoicesPage() {
           options={PERIOD_FILTERS}
           aria-label="Filter by period"
         />
-        {timePeriod === 'custom' && (
-          <input
-            type="month"
-            value={customMonth}
-            onChange={(e) => setCustomMonth(e.target.value)}
-            className="h-7 rounded-md border border-primary bg-surface px-2 text-label text-primary outline-none focus:ring-2 focus:ring-accent"
-          />
-        )}
+        <input
+          type="month"
+          value={customMonth}
+          onChange={(e) => { setCustomMonth(e.target.value); setTimePeriod('custom') }}
+          className={`h-7 rounded-md border bg-surface px-2 text-label outline-none focus:ring-2 focus:ring-accent ${timePeriod === 'custom' ? 'border-accent text-primary' : 'border-primary text-secondary'}`}
+        />
       </div>
 
       {/* Stats — three across at every width; `compact` keeps them legible on
