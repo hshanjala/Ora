@@ -18,5 +18,4 @@ export const PERIOD_FILTERS = [
   { value: 'month', label: 'This month' },
   { value: 'year', label: 'This year' },
   { value: 'all', label: 'All time' },
-  { value: 'custom', label: 'Pick month' },
 ]
