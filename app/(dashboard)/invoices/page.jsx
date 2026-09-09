@@ -6,7 +6,7 @@ import InvoiceDetailModal from '@/components/invoices/invoice-detail-modal'
 import { INVOICE_STATUS, INVOICE_STATUS_FILTERS, PERIOD_FILTERS } from '@/components/invoices/status'
 import { printInvoice } from '@/lib/printInvoice'
 import { Plus, FileText, Printer, TrendingUp, AlertCircle, Receipt } from 'lucide-react'
-import { format, startOfWeek, startOfMonth, startOfYear } from 'date-fns'
+import { format, startOfWeek, startOfMonth, startOfYear, endOfMonth } from 'date-fns'
 import {
   Button, IconButton, Tooltip, Card, PageHeader, SearchInput,
   DataTable, StatCard, StatusPill, FilterBar, Eyebrow, useToast,
@@ -20,7 +20,8 @@ export default function InvoicesPage() {
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [timePeriod, setTimePeriod] = useState('all')
+  const [timePeriod, setTimePeriod] = useState('month')
+  const [customMonth, setCustomMonth] = useState(() => format(new Date(), 'yyyy-MM'))
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [clinicName, setClinicName] = useState('')
@@ -54,18 +55,26 @@ export default function InvoicesPage() {
     printInvoice(inv, items || [], clinicName, payments || [])
   }
 
-  const periodStart = timePeriod === 'week'
-    ? format(startOfWeek(new Date(), { weekStartsOn: 0 }), 'yyyy-MM-dd')
-    : timePeriod === 'month' ? format(startOfMonth(new Date()), 'yyyy-MM-dd')
-    : timePeriod === 'year' ? format(startOfYear(new Date()), 'yyyy-MM-dd')
-    : null
+  let periodStart = null
+  let periodEnd = null
+  if (timePeriod === 'week') {
+    periodStart = format(startOfWeek(new Date(), { weekStartsOn: 0 }), 'yyyy-MM-dd')
+  } else if (timePeriod === 'month') {
+    periodStart = format(startOfMonth(new Date()), 'yyyy-MM-dd')
+  } else if (timePeriod === 'year') {
+    periodStart = format(startOfYear(new Date()), 'yyyy-MM-dd')
+  } else if (timePeriod === 'custom') {
+    const picked = new Date(customMonth + '-01')
+    periodStart = format(startOfMonth(picked), 'yyyy-MM-dd')
+    periodEnd = format(endOfMonth(picked), 'yyyy-MM-dd')
+  }
 
   const filtered = invoices.filter(inv => {
     const matchSearch =
       (inv.patients?.name || '').toLowerCase().includes(search.toLowerCase()) ||
       (inv.invoice_number || '').includes(search)
     const matchStatus = filterStatus === 'all' || inv.status === filterStatus
-    const matchPeriod = !periodStart || inv.date >= periodStart
+    const matchPeriod = !periodStart || (inv.date >= periodStart && (!periodEnd || inv.date <= periodEnd))
     return matchSearch && matchStatus && matchPeriod
   })
 
@@ -104,6 +113,14 @@ export default function InvoicesPage() {
           options={PERIOD_FILTERS}
           aria-label="Filter by period"
         />
+        {timePeriod === 'custom' && (
+          <input
+            type="month"
+            value={customMonth}
+            onChange={(e) => setCustomMonth(e.target.value)}
+            className="h-7 rounded-md border border-primary bg-surface px-2 text-label text-primary outline-none focus:ring-2 focus:ring-accent"
+          />
+        )}
       </div>
 
       {/* Stats — three across at every width; `compact` keeps them legible on
