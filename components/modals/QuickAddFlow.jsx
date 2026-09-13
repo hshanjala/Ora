@@ -366,7 +366,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
                 )}
                 {step < 4 ? (
                   <Button onClick={handleNext} loading={loading}>
-                    {step === 1 ? 'Save & continue' : 'Next'}
+                    {step === 1 ? (existingPatientId ? 'Continue' : 'Save & continue') : 'Next'}
                     <ChevronRight size={15} strokeWidth={1.75} />
                   </Button>
                 ) : (
