@@ -1,5 +1,6 @@
 'use client'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Camera, Plus, Trash2, User } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import {
@@ -25,11 +26,66 @@ function PatientChip({ name }) {
   )
 }
 
-export function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange }) {
+export function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange, onSelectExisting }) {
   const photoRef = useRef(null)
+  const nameRef = useRef(null)
+  const supabase = createClient()
+  const [suggestions, setSuggestions] = useState([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [selectedExisting, setSelectedExisting] = useState(false)
+  const debounceRef = useRef(null)
+
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
+
+  function handleNameChange(e) {
+    const value = e.target.value
+    setForm(prev => ({ ...prev, name: value }))
+    if (selectedExisting) {
+      setSelectedExisting(false)
+      onSelectExisting?.(null)
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (value.trim().length < 2) { setSuggestions([]); setShowDropdown(false); return }
+    debounceRef.current = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data } = await supabase
+        .from('patients')
+        .select('id, name, phone, email, age, gender, address, medical_history, referred_by, photo_url')
+        .eq('clinic_id', user.id)
+        .ilike('name', `%${value.trim()}%`)
+        .limit(6)
+      setSuggestions(data || [])
+      setShowDropdown((data || []).length > 0)
+    }, 250)
+  }
+
+  function pickPatient(patient) {
+    setForm({
+      name: patient.name || '',
+      phone: patient.phone || '',
+      email: patient.email || '',
+      age: patient.age || '',
+      gender: patient.gender || '',
+      address: patient.address || '',
+      medical_history: patient.medical_history || '',
+      referred_by: patient.referred_by || '',
+    })
+    setSelectedExisting(true)
+    onSelectExisting?.(patient.id)
+    setSuggestions([])
+    setShowDropdown(false)
+  }
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (nameRef.current && !nameRef.current.contains(e.target)) setShowDropdown(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
     <div className="space-y-4">
       {error && <Alert status="danger">{error}</Alert>}
@@ -52,14 +108,37 @@ export function Step1Patient({ form, setForm, error, photoPreview, onPhotoChange
           )}
         </button>
         <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={onPhotoChange} />
-        <FormField label="Full name" required className="flex-1">
+        <FormField label="Full name" required className="relative flex-1" ref={nameRef}>
           <Input
             name="name"
             placeholder="Patient's full name"
             value={form.name}
-            onChange={handleChange}
+            onChange={handleNameChange}
+            onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
+            autoComplete="off"
             required
           />
+          {showDropdown && (
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border bg-surface shadow-lg">
+              {suggestions.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-surface-hover"
+                  onMouseDown={(e) => { e.preventDefault(); pickPatient(p) }}
+                >
+                  <Avatar name={p.name} size="sm" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-body-md text-primary">{p.name}</span>
+                    {p.phone && <span className="block truncate text-label text-tertiary">{p.phone}</span>}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+          {selectedExisting && (
+            <p className="mt-1 text-label text-success">Existing patient selected</p>
+          )}
         </FormField>
       </div>
 
