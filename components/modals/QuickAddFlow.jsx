@@ -102,7 +102,10 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       const { data: { user } } = await supabase.auth.getUser()
       const { data } = await supabase
         .from('clinic_settings').select('*').eq('clinic_id', user.id).single()
-      if (data) setTplSettings(data)
+      if (data) {
+        setTplSettings(data)
+        if (data.doctor_name) setScheduleForm(prev => ({ ...prev, doctor_name: data.doctor_name }))
+      }
     }
     fetchTplSettings()
   }, [])
@@ -111,7 +114,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     name: '', phone: '', email: '', age: '', gender: '', address: '', medical_history: '', referred_by: '',
   })
   const [scheduleForm, setScheduleForm] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'), time: '09:00', procedure: '', notes: '',
+    date: format(new Date(), 'yyyy-MM-dd'), time: '09:00', doctor_name: '', procedure: '', notes: '',
   })
   const [rxForm, setRxForm] = useState({
     chief_complaint: '', on_examination: '', advice: '', follow_up_date: '',
@@ -175,6 +178,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
       patient_id: patientId,
       date: scheduleForm.date,
       time: scheduleForm.time,
+      doctor_name: scheduleForm.doctor_name || null,
       procedure: scheduleForm.procedure || null,
       notes: scheduleForm.notes || null,
       status: 'scheduled',
