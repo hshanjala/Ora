@@ -196,6 +196,9 @@ export function Step2Schedule({ form, setForm, patientName }) {
         <FormField label="Time" required>
           <TimeInput name="time" value={form.time} onChange={handleChange} />
         </FormField>
+        <FormField label="Doctor name" className="sm:col-span-2">
+          <Input name="doctor_name" placeholder="Doctor's name" value={form.doctor_name} onChange={handleChange} />
+        </FormField>
         <FormField label="Procedure" className="sm:col-span-2">
           <Select value={form.procedure || undefined} onValueChange={(v) => setForm(prev => ({ ...prev, procedure: v }))}>
             <SelectTrigger><SelectValue placeholder="Select procedure" /></SelectTrigger>
