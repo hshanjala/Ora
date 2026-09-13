@@ -81,6 +81,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
   const [photoPreview, setPhotoPreview] = useState(null)
 
   const [patientId, setPatientId] = useState(null)
+  const [existingPatientId, setExistingPatientId] = useState(null)
   const [savedInvoice, setSavedInvoice] = useState(null)
   const [savedRx, setSavedRx] = useState(null)
   const [tplSettings, setTplSettings] = useState(null)
@@ -129,6 +130,10 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
     if (!patientForm.name.trim()) {
       setError("Please enter the patient's full name.")
       return false
+    }
+    if (existingPatientId) {
+      setPatientId(existingPatientId)
+      return true
     }
     setError('')
     setLoading(true)
@@ -310,6 +315,7 @@ export default function QuickAddFlow({ onClose, onSuccess }) {
                   error={error}
                   photoPreview={photoPreview}
                   onPhotoChange={handlePhotoChange}
+                  onSelectExisting={setExistingPatientId}
                 />
               )}
               {step === 2 && (
