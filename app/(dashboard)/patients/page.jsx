@@ -125,17 +125,17 @@ export default function PatientsPage() {
               cell: (p) => p.phone || <span className="text-tertiary">—</span>,
             },
             {
-              key: 'email', header: 'Email', hideBelow: 'md',
+              key: 'email', header: 'Email', hideBelow: 'md', width: 'w-[22%]',
               cell: (p) => p.email
                 ? <span className="block max-w-cell truncate text-secondary">{p.email}</span>
                 : <span className="text-tertiary">—</span>,
             },
             {
-              key: 'age', header: 'Age', hideBelow: 'sm', align: 'right', tabular: true,
+              key: 'age', header: 'Age', hideBelow: 'sm', align: 'right', tabular: true, width: 'w-16',
               cell: (p) => p.age ? `${p.age}` : '—',
             },
             {
-              key: 'gender', header: 'Gender', hideBelow: 'sm',
+              key: 'gender', header: 'Gender', hideBelow: 'sm', width: 'w-24',
               cell: (p) => <span className="text-secondary">{p.gender || '—'}</span>,
             },
             {
