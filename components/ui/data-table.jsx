@@ -133,7 +133,14 @@ const DataTable = forwardRef(function DataTable(
 
       {/* Desktop table (always shown when no card renderer) */}
       <div className={cn('overflow-x-auto', renderCard && 'hidden md:block')}>
-        <table className="w-full border-collapse">
+        <table className={cn('w-full border-collapse', columns.some(c => c.width) && 'table-fixed')}>
+          {columns.some(c => c.width) && (
+            <colgroup>
+              {columns.map((col) => (
+                <col key={col.key} className={cn(HIDE[col.hideBelow], col.width)} />
+              ))}
+            </colgroup>
+          )}
           <thead>
             <tr className={cn('border-b bg-surface-subtle', stickyHeader && 'sticky top-0 z-10')}>
               {columns.map((col) => {

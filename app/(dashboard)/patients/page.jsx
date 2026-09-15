@@ -142,7 +142,7 @@ export default function PatientsPage() {
               key: 'created_at', header: 'Joined', hideBelow: 'lg', tabular: true, sortable: true,
               cell: (p) => format(new Date(p.created_at), 'MMM d, yyyy'),
             },
-            { key: 'actions', header: '', align: 'right', cell: rowActions },
+            { key: 'actions', header: '', align: 'right', width: 'w-28', cell: rowActions },
           ]}
           data={filtered}
           loading={loading}
