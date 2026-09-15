@@ -114,7 +114,7 @@ export default function PatientsPage() {
                   <span className="min-w-0">
                     <span className="block truncate text-body-md text-primary">{p.name}</span>
                     <span className="block text-label text-tertiary sm:hidden">
-                      {[p.gender, p.age ? `${p.age} yrs` : null].filter(Boolean).join(' · ')}
+                      {[p.age ? `${p.age} yrs` : null, p.gender].filter(Boolean).join(' · ')}
                     </span>
                   </span>
                 </span>
@@ -131,12 +131,12 @@ export default function PatientsPage() {
                 : <span className="text-tertiary">—</span>,
             },
             {
-              key: 'gender', header: 'Gender', hideBelow: 'sm',
-              cell: (p) => <span className="text-secondary">{p.gender || '—'}</span>,
-            },
-            {
               key: 'age', header: 'Age', hideBelow: 'sm', align: 'right', tabular: true,
               cell: (p) => p.age ? `${p.age}` : '—',
+            },
+            {
+              key: 'gender', header: 'Gender', hideBelow: 'sm',
+              cell: (p) => <span className="text-secondary">{p.gender || '—'}</span>,
             },
             {
               key: 'created_at', header: 'Joined', hideBelow: 'lg', tabular: true, sortable: true,
