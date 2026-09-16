@@ -125,24 +125,24 @@ export default function PatientsPage() {
               cell: (p) => p.phone || <span className="text-tertiary">—</span>,
             },
             {
-              key: 'email', header: 'Email', hideBelow: 'md', width: 'w-[22%]',
+              key: 'email', header: 'Email', hideBelow: 'md',
               cell: (p) => p.email
-                ? <span className="block max-w-cell truncate text-secondary">{p.email}</span>
+                ? <span className="block max-w-[180px] truncate text-secondary">{p.email}</span>
                 : <span className="text-tertiary">—</span>,
             },
             {
-              key: 'age', header: 'Age', hideBelow: 'sm', align: 'right', tabular: true, width: 'w-16',
+              key: 'age', header: 'Age', hideBelow: 'sm', align: 'right', tabular: true,
               cell: (p) => p.age ? `${p.age}` : '—',
             },
             {
-              key: 'gender', header: 'Gender', hideBelow: 'sm', width: 'w-24',
+              key: 'gender', header: 'Gender', hideBelow: 'sm',
               cell: (p) => <span className="text-secondary">{p.gender || '—'}</span>,
             },
             {
               key: 'created_at', header: 'Joined', hideBelow: 'lg', tabular: true, sortable: true,
               cell: (p) => format(new Date(p.created_at), 'MMM d, yyyy'),
             },
-            { key: 'actions', header: '', align: 'right', width: 'w-28', cell: rowActions },
+            { key: 'actions', header: '', align: 'right', cell: rowActions },
           ]}
           data={filtered}
           loading={loading}
