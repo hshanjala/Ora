@@ -131,7 +131,7 @@ export default function PatientsPage() {
                 : <span className="text-tertiary">—</span>,
             },
             {
-              key: 'age', header: 'Age', hideBelow: 'sm', align: 'right', tabular: true,
+              key: 'age', header: 'Age', hideBelow: 'sm', align: 'right', tabular: true, width: 'w-20',
               cell: (p) => p.age ? `${p.age}` : '—',
             },
             {

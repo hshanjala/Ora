@@ -192,7 +192,8 @@ const DataTable = forwardRef(function DataTable(
                       'px-4 py-3 text-small text-primary',
                       ALIGN[col.align || 'left'],
                       HIDE[col.hideBelow],
-                      col.tabular && 'tabular whitespace-nowrap'
+                      col.tabular && 'tabular whitespace-nowrap',
+                      col.width
                     )}
                   >
                     {col.cell ? col.cell(row) : row[col.key]}
