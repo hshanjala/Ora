@@ -43,6 +43,12 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
 
+    if (!formData.phone.trim()) {
+      setError('Please enter a phone number.')
+      setLoading(false)
+      return
+    }
+
     // 1. Sign up the user
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: formData.email,
@@ -132,8 +138,8 @@ export default function RegisterPage() {
         <FormField label="Doctor / owner name" required>
           <Input name="doctorName" placeholder="Dr. Rahman" value={formData.doctorName} onChange={handleChange} required />
         </FormField>
-        <FormField label="Phone number">
-          <Input name="phone" type="tel" placeholder="01XXXXXXXXX" value={formData.phone} onChange={handleChange} />
+        <FormField label="Phone number" required>
+          <Input name="phone" type="tel" placeholder="01XXXXXXXXX" value={formData.phone} onChange={handleChange} required />
         </FormField>
         <FormField label="Email address" required>
           <Input name="email" type="email" placeholder="doctor@clinic.com" value={formData.email} onChange={handleChange} autoComplete="email" required />
