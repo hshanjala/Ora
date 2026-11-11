@@ -40,6 +40,15 @@ const DateInput = forwardRef(function DateInput({ className, onChange, value, ..
     pickerRef.current?.showPicker?.()
   }, [])
 
+  const handleTyping = useCallback((e) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
+    let formatted = digits
+    if (digits.length > 4) formatted = digits.slice(0, 4) + '-' + digits.slice(4)
+    if (digits.length > 6) formatted = digits.slice(0, 4) + '-' + digits.slice(4, 6) + '-' + digits.slice(6)
+    const synth = { ...e, target: { ...e.target, value: formatted, name: e.target.name } }
+    onChange?.(synth)
+  }, [onChange])
+
   return (
     <div className="relative">
       <input
@@ -49,7 +58,7 @@ const DateInput = forwardRef(function DateInput({ className, onChange, value, ..
         placeholder="YYYY-MM-DD"
         pattern="\d{4}-\d{2}-\d{2}"
         value={value || ''}
-        onChange={onChange}
+        onChange={handleTyping}
         className={cn(inputClasses, 'tabular pr-9', className)}
         {...field}
         {...props}
@@ -85,6 +94,14 @@ const TimeInput = forwardRef(function TimeInput({ className, onChange, value, ..
     pickerRef.current?.showPicker?.()
   }, [])
 
+  const handleTyping = useCallback((e) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
+    let formatted = digits
+    if (digits.length > 2) formatted = digits.slice(0, 2) + ':' + digits.slice(2)
+    const synth = { ...e, target: { ...e.target, value: formatted, name: e.target.name } }
+    onChange?.(synth)
+  }, [onChange])
+
   return (
     <div className="relative">
       <input
@@ -94,7 +111,7 @@ const TimeInput = forwardRef(function TimeInput({ className, onChange, value, ..
         placeholder="HH:MM"
         pattern="\d{2}:\d{2}"
         value={value || ''}
-        onChange={onChange}
+        onChange={handleTyping}
         className={cn(inputClasses, 'tabular pr-9', className)}
         {...field}
         {...props}
