@@ -49,6 +49,11 @@ const DateInput = forwardRef(function DateInput({ className, onChange, value, ..
     onChange?.(synth)
   }, [onChange])
 
+  const handlePickerChange = useCallback((e) => {
+    const synth = { ...e, target: { ...e.target, name: props.name } }
+    onChange?.(synth)
+  }, [onChange, props.name])
+
   return (
     <div className="relative">
       <input
@@ -67,11 +72,10 @@ const DateInput = forwardRef(function DateInput({ className, onChange, value, ..
         ref={pickerRef}
         type="date"
         value={value || ''}
-        onChange={onChange}
+        onChange={handlePickerChange}
         className="invisible absolute inset-0 h-0 w-0"
         tabIndex={-1}
         aria-hidden="true"
-        {...(props.name ? { name: undefined } : {})}
       />
       <button
         type="button"
@@ -102,6 +106,11 @@ const TimeInput = forwardRef(function TimeInput({ className, onChange, value, ..
     onChange?.(synth)
   }, [onChange])
 
+  const handlePickerChange = useCallback((e) => {
+    const synth = { ...e, target: { ...e.target, name: props.name } }
+    onChange?.(synth)
+  }, [onChange, props.name])
+
   return (
     <div className="relative">
       <input
@@ -120,11 +129,10 @@ const TimeInput = forwardRef(function TimeInput({ className, onChange, value, ..
         ref={pickerRef}
         type="time"
         value={value || ''}
-        onChange={onChange}
+        onChange={handlePickerChange}
         className="invisible absolute inset-0 h-0 w-0"
         tabIndex={-1}
         aria-hidden="true"
-        {...(props.name ? { name: undefined } : {})}
       />
       <button
         type="button"
