@@ -121,8 +121,9 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ── Font stacks (populated by next/font variables in app/layout.jsx) ──── */
-  --font-sans: var(--font-geist-sans), var(--font-anek-bangla),
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: var(--font-geist-sans),
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif,
+    var(--font-anek-bangla);
   --font-mono: var(--font-geist-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
