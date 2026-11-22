@@ -24,7 +24,6 @@
 
   /* Money, IDs, dates: tabular figures so columns align. */
   .tabular {
-    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
 
